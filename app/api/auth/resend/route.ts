@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import { connectToDatabase } from '@/app/lib/mongoose';
-import { User } from '@/app/lib/models/User';
-import { VerificationCode } from '@/app/lib/models/VerificationCode';
+import { UserModel } from '@/app/lib/models/User';
+import { VerificationCodeModel } from '@/app/lib/models/VerificationCode';
 import nodemailer from 'nodemailer';
 
 function generateCode() {
@@ -16,9 +15,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'ایمیل الزامی است' }, { status: 400 });
     }
 
-    await connectToDatabase();
-
-    const user = await User.findOne({ email });
+    // بررسی وجود کاربر در دیتابیس MySQL
+    const user = await UserModel.findByEmail(email);
     if (!user) {
       return NextResponse.json({ error: 'کاربری با این ایمیل یافت نشد' }, { status: 404 });
     }
@@ -27,22 +25,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'این حساب قبلاً تأیید شده است' }, { status: 400 });
     }
 
-    // حذف کدهای قبلی
-    await VerificationCode.deleteMany({ email });
-
-    // ساخت کد جدید
+    // حذف کدهای قبلی و ساخت کد جدید
+    await VerificationCodeModel.deleteByEmail(email);
     const code = generateCode();
-    await VerificationCode.create({
-      email,
-      code,
-      expiresAt: new Date(Date.now() + 10 * 60 * 1000),
-    });
+    await VerificationCodeModel.create(email, code);
 
-    // ارسال ایمیل
+    // ارسال ایمیل کد جدید
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT),
-      secure: false,
+      secure: process.env.SMTP_PORT === '465',
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
@@ -67,9 +59,12 @@ export async function POST(request: Request) {
       `,
     });
 
-    return NextResponse.json({ success: true, message: 'کد جدید ارسال شد' });
+    return NextResponse.json({ 
+      success: true, 
+      message: 'کد جدید به ایمیل شما ارسال شد' 
+    });
   } catch (error) {
-    console.error(error);
+    console.error('❌ خطا در ارسال مجدد کد:', error);
     return NextResponse.json({ error: 'خطا در ارسال مجدد کد' }, { status: 500 });
   }
 }

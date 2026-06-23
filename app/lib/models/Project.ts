@@ -11,11 +11,10 @@ export interface Project {
 
 export const ProjectModel = {
   async create(project: Omit<Project, 'id' | 'createdAt'>) {
-    const result = await query(
+    await query(
       'INSERT INTO projects (title, `desc`, tech, link) VALUES (?, ?, ?, ?)',
       [project.title, project.desc, project.tech, project.link]
     );
-    return result;
   },
 
   async findAll() {
@@ -37,15 +36,13 @@ export const ProjectModel = {
     if (data.link) { fields.push('link = ?'); values.push(data.link); }
     if (fields.length === 0) return null;
     values.push(id);
-    const result = await query(
+    await query(
       `UPDATE projects SET ${fields.join(', ')} WHERE id = ?`,
       values
     );
-    return result;
   },
 
   async delete(id: number) {
-    const result = await query('DELETE FROM projects WHERE id = ?', [id]);
-    return result;
+    await query('DELETE FROM projects WHERE id = ?', [id]);
   },
 };

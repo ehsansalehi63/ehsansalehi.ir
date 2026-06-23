@@ -1,6 +1,7 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import { query } from '@/app/lib/mysql';
 
-export interface IMessage extends Document {
+export interface Message {
+  id: number;
   name: string;
   email: string;
   message: string;
@@ -8,12 +9,16 @@ export interface IMessage extends Document {
   createdAt: Date;
 }
 
-const MessageSchema = new Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true },
-  message: { type: String, required: true },
-  read: { type: Boolean, default: false },
-  createdAt: { type: Date, default: Date.now },
-});
+export const MessageModel = {
+  async create(name: string, email: string, message: string) {
+    await query(
+      'INSERT INTO messages (name, email, message, `read`) VALUES (?, ?, ?, ?)',
+      [name, email, message, 0]
+    );
+  },
 
-export const Message = mongoose.models.Message || mongoose.model<IMessage>('Message', MessageSchema);
+  async getAll() {
+    const rows = await query('SELECT * FROM messages ORDER BY createdAt DESC');
+    return rows;
+  },
+};

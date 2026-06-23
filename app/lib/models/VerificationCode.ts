@@ -1,18 +1,23 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import { query } from '@/app/lib/mysql';
 
-export interface IVerificationCode extends Document {
-  email: string;
-  code: string;
-  expiresAt: Date;
-  createdAt: Date;
-}
+export const VerificationCodeModel = {
+  async create(email: string, code: string) {
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    await query(
+      'INSERT INTO verification_codes (email, code, expiresAt) VALUES (?, ?, ?)',
+      [email, code, expiresAt]
+    );
+  },
 
-const VerificationCodeSchema = new Schema({
-  email: { type: String, required: true },
-  code: { type: String, required: true },
-  expiresAt: { type: Date, required: true },
-  createdAt: { type: Date, default: Date.now },
-});
+  async findValid(email: string, code: string) {
+    const rows = await query(
+      'SELECT * FROM verification_codes WHERE email = ? AND code = ? AND expiresAt > NOW()',
+      [email, code]
+    );
+    return (rows as any[])[0] || null;
+  },
 
-export const VerificationCode = mongoose.models.VerificationCode || 
-  mongoose.model<IVerificationCode>('VerificationCode', VerificationCodeSchema);
+  async deleteByEmail(email: string) {
+    await query('DELETE FROM verification_codes WHERE email = ?', [email]);
+  },
+};

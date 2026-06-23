@@ -1,28 +1,21 @@
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
-import { connectToDatabase } from '@/app/lib/mongoose';
-import { Message } from '@/app/lib/models/Message';
+import { MessageModel } from '@/app/lib/models/Message';
 
 export async function POST(request: Request) {
   try {
     const { name, email, message } = await request.json();
-    console.log('📝 درخواست تماس:', { name, email });
 
     if (!name || !email || !message) {
       return NextResponse.json({ error: 'تمام فیلدها الزامی است' }, { status: 400 });
     }
 
-    console.log('🔄 اتصال به دیتابیس...');
-    await connectToDatabase();
-    await Message.create({ name, email, message });
-    console.log('✅ پیام در دیتابیس ذخیره شد');
+    await MessageModel.create(name, email, message);
 
-    // ارسال ایمیل
-    console.log('📧 ارسال ایمیل به مدیر...');
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT),
-      secure: process.env.SMTP_PORT === '465',
+      secure: false,
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
@@ -44,14 +37,10 @@ export async function POST(request: Request) {
         </div>
       `,
     });
-    console.log('✅ ایمیل ارسال شد');
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    console.error('❌ خطا در ارسال پیام:', error);
-    return NextResponse.json({
-      error: error.message || 'خطا در ارسال پیام',
-      stack: error.stack,
-    }, { status: 500 });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ error: 'خطا در ارسال پیام' }, { status: 500 });
   }
 }

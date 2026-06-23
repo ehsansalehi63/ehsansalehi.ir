@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { connectToDatabase } from '@/app/lib/mongoose';
-import { User } from '@/app/lib/models/User';
-import { VerificationCode } from '@/app/lib/models/VerificationCode';
+import { UserModel } from '@/app/lib/models/User';
+import { VerificationCodeModel } from '@/app/lib/models/VerificationCode';
 import nodemailer from 'nodemailer';
 
 function generateCode() {
@@ -12,39 +11,33 @@ function generateCode() {
 export async function POST(request: Request) {
   try {
     const { name, email, password } = await request.json();
-    console.log('📝 درخواست ثبت نام:', { name, email });
 
     if (!name || !email || !password) {
       return NextResponse.json({ error: 'تمام فیلدها الزامی است' }, { status: 400 });
     }
 
-    console.log('🔄 اتصال به دیتابیس...');
-    await connectToDatabase();
-
-    const existingUser = await User.findOne({ email });
+    // بررسی تکراری نبودن ایمیل
+    const existingUser = await UserModel.findByEmail(email);
     if (existingUser) {
       return NextResponse.json({ error: 'این ایمیل قبلاً ثبت شده است' }, { status: 400 });
     }
 
+    // هش کردن رمز عبور
     const hashedPassword = bcrypt.hashSync(password, 10);
-    const user = await User.create({
+
+    // ایجاد کاربر در دیتابیس MySQL
+    await UserModel.create({
       name,
       email,
       password: hashedPassword,
       isVerified: false,
     });
-    console.log('✅ کاربر ساخته شد:', user._id);
 
+    // ساخت کد تأیید ۶ رقمی
     const code = generateCode();
-    await VerificationCode.create({
-      email,
-      code,
-      expiresAt: new Date(Date.now() + 10 * 60 * 1000),
-    });
-    console.log('✅ کد تأیید ساخته شد:', code);
+    await VerificationCodeModel.create(email, code);
 
-    // ارسال ایمیل
-    console.log('📧 ارسال ایمیل به:', email);
+    // ارسال ایمیل کد تأیید
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT),
@@ -72,18 +65,14 @@ export async function POST(request: Request) {
         </div>
       `,
     });
-    console.log('✅ ایمیل ارسال شد');
 
     return NextResponse.json({
       success: true,
       message: 'کد تأیید به ایمیل شما ارسال شد',
-      email: email,
+      email,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('❌ خطا در ثبت نام:', error);
-    return NextResponse.json({
-      error: error.message || 'خطا در ثبت نام',
-      stack: error.stack,
-    }, { status: 500 });
+    return NextResponse.json({ error: 'خطا در ثبت نام' }, { status: 500 });
   }
 }
