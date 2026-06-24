@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
-import { UserModel } from '@/app/lib/models/User';
-import { VerificationCodeModel } from '@/app/lib/models/VerificationCode';
+import { supabase } from '@/lib/supabaseClient';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 
@@ -13,23 +12,51 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'ایمیل و کد الزامی است' }, { status: 400 });
     }
 
-    // بررسی اعتبار کد در دیتابیس MySQL
-    const verification = await VerificationCodeModel.findValid(email, code);
-    if (!verification) {
+    // پیدا کردن کد در Supabase
+    const { data: codes, error: findError } = await supabase
+      .from('verification_codes')
+      .select('*')
+      .eq('email', email)
+      .eq('code', code)
+      .gte('expiresAt', new Date().toISOString());
+
+    if (findError) {
+      console.error('❌ Supabase error (verify):', findError);
+      return NextResponse.json({ error: `Supabase error: ${findError.message}` }, { status: 500 });
+    }
+
+    if (!codes || codes.length === 0) {
       return NextResponse.json({ error: 'کد نامعتبر یا منقضی شده است' }, { status: 400 });
     }
 
     // فعال‌سازی کاربر
-    await UserModel.verify(email);
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({ isVerified: true })
+      .eq('email', email);
 
-    // حذف کد از دیتابیس (استفاده یکبار مصرف)
-    await VerificationCodeModel.deleteByEmail(email);
+    if (updateError) {
+      console.error('❌ Supabase error (verify update):', updateError);
+      return NextResponse.json({ error: `Supabase error: ${updateError.message}` }, { status: 500 });
+    }
 
-    // دریافت اطلاعات کاربر برای ساخت توکن
-    const user = await UserModel.findByEmail(email);
-    if (!user) {
+    // حذف کدهای مصرف‌شده
+    await supabase
+      .from('verification_codes')
+      .delete()
+      .eq('email', email);
+
+    // دریافت اطلاعات کاربر
+    const { data: users, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email);
+
+    if (userError || !users || users.length === 0) {
       return NextResponse.json({ error: 'کاربر یافت نشد' }, { status: 404 });
     }
+
+    const user = users[0];
 
     // ساخت توکن JWT
     const token = jwt.sign(
@@ -50,7 +77,7 @@ export async function POST(request: Request) {
       }
     });
   } catch (error) {
-    console.error('❌ خطا در تأیید کد:', error);
+    console.error('❌ General error (verify):', error);
     return NextResponse.json({ error: 'خطا در تأیید کد' }, { status: 500 });
   }
 }
