@@ -9,20 +9,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'تمام فیلدها الزامی است' }, { status: 400 });
     }
 
-    // ذخیره در Supabase
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('messages')
-      .insert([{ name, email, message }]);
+      .insert([{ name, email, message }])
+      .select();
 
     if (error) {
       console.error('❌ Supabase error:', error);
-      return NextResponse.json({ error: 'خطا در ذخیره پیام' }, { status: 500 });
+      return NextResponse.json({ error: `Supabase error: ${error.message}` }, { status: 500 });
     }
 
-    // (اختیاری) ارسال ایمیل با Resend یا Web3Forms
-    // فعلاً فقط ذخیره در دیتابیس رو تست می‌کنیم
-
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data });
   } catch (error) {
     console.error('❌ General error:', error);
     return NextResponse.json({ error: 'خطا در ارسال پیام' }, { status: 500 });
