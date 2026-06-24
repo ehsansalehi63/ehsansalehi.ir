@@ -4,7 +4,12 @@ import { supabase } from '@/lib/supabaseClient';
 // ویرایش پروژه
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
-    const id = parseInt(params.id);
+    // تبدیل شناسه به عدد
+    const id = parseInt(params.id, 10);
+    if (isNaN(id)) {
+      return NextResponse.json({ error: 'شناسه پروژه نامعتبر است' }, { status: 400 });
+    }
+
     const { title, desc, tech, link } = await request.json();
 
     if (!title || !desc) {
@@ -36,7 +41,10 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 // حذف پروژه
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
-    const id = parseInt(params.id);
+    const id = parseInt(params.id, 10);
+    if (isNaN(id)) {
+      return NextResponse.json({ error: 'شناسه پروژه نامعتبر است' }, { status: 400 });
+    }
 
     const { data, error } = await supabase
       .from('projects')
