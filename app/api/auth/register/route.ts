@@ -1,6 +1,13 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
+import { Resend } from 'resend';
 import { supabase } from '@/lib/supabaseClient';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+function generateCode() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
 
 export async function POST(request: Request) {
   try {
@@ -10,26 +17,70 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'تمام فیلدها الزامی است' }, { status: 400 });
     }
 
-    // هش کردن رمز عبور
+    // 1. ثبت کاربر
     const hashedPassword = bcrypt.hashSync(password, 10);
 
-    // ذخیره در Supabase
-    const { data, error } = await supabase
+    const { data: existingUser } = await supabase
       .from('users')
-      .insert([{ name, email, password: hashedPassword, isVerified: false }])
-      .select();
+      .select('id')
+      .eq('email', email)
+      .maybeSingle();
 
-    if (error) {
-      console.error('❌ Supabase error (register):', error);
-      return NextResponse.json({ error: `Supabase error: ${error.message}` }, { status: 500 });
+    if (existingUser) {
+      return NextResponse.json({ error: 'این ایمیل قبلاً ثبت شده است' }, { status: 400 });
     }
 
-    // (اختیاری) ارسال کد تأیید با Resend یا Web3Forms
-    // فعلاً فقط ثبت‌نام را تست می‌کنیم
+    const { data: newUser, error: userError } = await supabase
+      .from('users')
+      .insert([{ name, email, password: hashedPassword, isVerified: false }])
+      .select()
+      .single();
 
-    return NextResponse.json({ success: true, user: data[0] });
+    if (userError) {
+      console.error('❌ Supabase error (register):', userError);
+      return NextResponse.json({ error: 'خطا در ثبت نام' }, { status: 500 });
+    }
+
+    // 2. ذخیره کد تأیید
+    const code = generateCode();
+    const { error: codeError } = await supabase
+      .from('verification_codes')
+      .insert([{ email, code, expiresAt: new Date(Date.now() + 10 * 60 * 1000).toISOString() }]);
+
+    if (codeError) {
+      console.error('❌ Supabase error (code):', codeError);
+      return NextResponse.json({ error: 'خطا در ایجاد کد تأیید' }, { status: 500 });
+    }
+
+    // 3. ارسال ایمیل با Resend
+    const { error } = await resend.emails.send({
+      from: `"احسان صالحی" <noreply@ehsansalehi.ir>`,
+      to: [email],
+      subject: 'کد تأیید ثبت نام',
+      html: `
+        <div dir="rtl" style="font-family:Tahoma, sans-serif; padding:20px;">
+          <h2>✅ کد تأیید شما</h2>
+          <p>${name} گرامی،</p>
+          <p>کد تأیید ثبت نام شما:</p>
+          <h1 style="font-size:32px; color:#2563eb; letter-spacing:4px;">${code}</h1>
+          <p>این کد تا ۱۰ دقیقه اعتبار دارد.</p>
+          <hr>
+          <p style="color:#737373; font-size:12px;">این ایمیل به صورت خودکار ارسال شده است.</p>
+        </div>
+      `,
+    });
+
+    if (error) {
+      console.error('❌ Resend error:', error);
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'کد تأیید به ایمیل شما ارسال شد',
+      email,
+    });
   } catch (error) {
-    console.error('❌ General error:', error);
+    console.error('❌ General error (register):', error);
     return NextResponse.json({ error: 'خطا در ثبت نام' }, { status: 500 });
   }
 }

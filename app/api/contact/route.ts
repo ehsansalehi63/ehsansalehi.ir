@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
+import { Resend } from 'resend';
 import { supabase } from '@/lib/supabaseClient';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: Request) {
   try {
@@ -9,17 +12,38 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'تمام فیلدها الزامی است' }, { status: 400 });
     }
 
-    const { data, error } = await supabase
+    // 1. ذخیره در Supabase
+    const { error: dbError } = await supabase
       .from('messages')
-      .insert([{ name, email, message }])
-      .select();
+      .insert([{ name, email, message }]);
 
-    if (error) {
-      console.error('❌ Supabase error:', error);
-      return NextResponse.json({ error: `Supabase error: ${error.message}` }, { status: 500 });
+    if (dbError) {
+      console.error('❌ Supabase error:', dbError);
+      return NextResponse.json({ error: 'خطا در ذخیره پیام' }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true, data });
+    // 2. ارسال ایمیل به مدیر با Resend
+    const { error } = await resend.emails.send({
+      from: `"فرم تماس سایت" <noreply@ehsansalehi.ir>`,
+      to: ['info@ehsansalehi.ir'],
+      subject: `تماس جدید از ${name}`,
+      replyTo: email,
+      html: `
+        <div dir="rtl" style="font-family:Tahoma, sans-serif; padding:20px;">
+          <h2 style="color:#2563eb;">📩 پیام جدید</h2>
+          <p><strong>نام:</strong> ${name}</p>
+          <p><strong>ایمیل:</strong> ${email}</p>
+          <p><strong>پیام:</strong><br/>${message.replace(/\n/g, '<br>')}</p>
+        </div>
+      `,
+    });
+
+    if (error) {
+      console.error('❌ Resend error:', error);
+      // ایمیل ارسال نشد اما پیام در دیتابیس ذخیره شده است
+    }
+
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('❌ General error:', error);
     return NextResponse.json({ error: 'خطا در ارسال پیام' }, { status: 500 });
