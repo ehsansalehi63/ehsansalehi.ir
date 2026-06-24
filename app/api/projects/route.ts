@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
 
-// دریافت لیست export async function GET() {پروژه
+// دریافت لیست پروژه‌ها
+export async function GET() {
   try {
     const { data, error } = await supabase
       .from('projects')
