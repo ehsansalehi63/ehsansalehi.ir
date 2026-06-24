@@ -1,19 +1,14 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
-
 // ویرایش پروژه
-export async function PUT(request: Request, { params }: RouteParams) {
+export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
-    const id = parseInt(params.id, 10);
-    
+    const id = parseInt(params.id);
+
     if (isNaN(id)) {
-      return NextResponse.json({ error: 'شناسه پروژه نامعتب    }
+      return NextResponse.json({ error: 'شناسه پروژه نامعتبر است' }, { status: 400 });
+    }
 
     const body = await request.json();
     const { title, desc, tech, link } = body;
@@ -24,12 +19,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
 
     const { data, error } = await supabase
       .from('projects')
-      .update({ 
-        title, 
-        desc, 
-        tech: tech || null, 
-        link: link || null 
-      })
+      .update({ title, desc, tech, link })
       .eq('id', id)
       .select();
 
@@ -50,10 +40,10 @@ export async function PUT(request: Request, { params }: RouteParams) {
 }
 
 // حذف پروژه
-export async function DELETE(request: Request, { params }: RouteParams) {
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
-    const id = parseInt(params.id, 10);
-    
+    const id = parseInt(params.id);
+
     if (isNaN(id)) {
       return NextResponse.json({ error: 'شناسه پروژه نامعتبر است' }, { status: 400 });
     }
