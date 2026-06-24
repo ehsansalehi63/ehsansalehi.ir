@@ -13,7 +13,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'ایمیل و رمز عبور الزامی است' }, { status: 400 });
     }
 
-    // پیدا کردن کاربر در Supabase
     const { data: users, error } = await supabase
       .from('users')
       .select('*')
@@ -30,15 +29,13 @@ export async function POST(request: Request) {
 
     const user = users[0];
 
-    // بررسی رمز عبور
     const isValid = bcrypt.compareSync(password, user.password);
     if (!isValid) {
       return NextResponse.json({ error: 'ایمیل یا رمز عبور اشتباه است' }, { status: 401 });
     }
 
-    // ساخت توکن JWT
     const token = jwt.sign(
-      { id: user.id, email: user.email, name: user.name },
+      { id: user.id, email: user.email, name: user.name, isAdmin: user.isAdmin || false },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -51,6 +48,7 @@ export async function POST(request: Request) {
         name: user.name,
         email: user.email,
         isVerified: user.isVerified,
+        isAdmin: user.isAdmin || false,
       }
     });
   } catch (error) {
