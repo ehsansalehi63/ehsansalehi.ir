@@ -8,7 +8,8 @@ export async function POST(request: Request) {
   try {
     const { name, email, message } = await request.json();
     if (!name || !email || !message) {
-      return NextResponse.json({ error: 'تمام فیل    }
+      return NextResponse.json({ error: 'تمام فیلدها الزامی است' }, { status: 400 });
+    }
     await MessageModel.create(name, email, message);
 
     const { error } = await resend.emails.send({
