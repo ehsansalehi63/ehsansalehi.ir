@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { UserModel } from '@/app/lib/models/User';
+import { supabase } from '@/lib/supabaseClient';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 
@@ -13,20 +13,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'ایمیل و رمز عبور الزامی است' }, { status: 400 });
     }
 
-    // جستجوی کاربر در دیتابیس MySQL
-    const user = await UserModel.findByEmail(email);
-    if (!user) {
+    // پیدا کردن کاربر در Supabase
+    const { data: users, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email);
+
+    if (error) {
+      console.error('❌ Supabase error (login):', error);
+      return NextResponse.json({ error: `Supabase error: ${error.message}` }, { status: 500 });
+    }
+
+    if (!users || users.length === 0) {
       return NextResponse.json({ error: 'ایمیل یا رمز عبور اشتباه است' }, { status: 401 });
     }
 
-    // بررسی تأیید بودن حساب کاربری
-    if (!user.isVerified) {
-      return NextResponse.json({ 
-        error: 'حساب شما تأیید نشده است. ابتدا کد تأیید را وارد کنید' 
-      }, { status: 401 });
-    }
+    const user = users[0];
 
-    // بررسی صحت رمز عبور
+    // بررسی رمز عبور
     const isValid = bcrypt.compareSync(password, user.password);
     if (!isValid) {
       return NextResponse.json({ error: 'ایمیل یا رمز عبور اشتباه است' }, { status: 401 });
@@ -50,7 +54,7 @@ export async function POST(request: Request) {
       }
     });
   } catch (error) {
-    console.error('❌ خطا در ورود:', error);
+    console.error('❌ General error (login):', error);
     return NextResponse.json({ error: 'خطا در ورود' }, { status: 500 });
   }
 }
