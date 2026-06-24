@@ -1,16 +1,22 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
 
-// ویرایش پروژه
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
-  try {
-    // تبدیل شناسه به عدد
-    const id = parseInt(params.id, 10);
-    if (isNaN(id)) {
-      return NextResponse.json({ error: 'شناسه پروژه نامعتبر است' }, { status: 400 });
-    }
+interface RouteParams {
+  params: {
+    id: string;
+  };
+}
 
-    const { title, desc, tech, link } = await request.json();
+// ویرایش پروژه
+export async function PUT(request: Request, { params }: RouteParams) {
+  try {
+    const id = parseInt(params.id, 10);
+    
+    if (isNaN(id)) {
+      return NextResponse.json({ error: 'شناسه پروژه نامعتب    }
+
+    const body = await request.json();
+    const { title, desc, tech, link } = body;
 
     if (!title || !desc) {
       return NextResponse.json({ error: 'عنوان و توضیحات الزامی است' }, { status: 400 });
@@ -18,7 +24,12 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
     const { data, error } = await supabase
       .from('projects')
-      .update({ title, desc, tech, link })
+      .update({ 
+        title, 
+        desc, 
+        tech: tech || null, 
+        link: link || null 
+      })
       .eq('id', id)
       .select();
 
@@ -39,9 +50,10 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 }
 
 // حذف پروژه
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, { params }: RouteParams) {
   try {
     const id = parseInt(params.id, 10);
+    
     if (isNaN(id)) {
       return NextResponse.json({ error: 'شناسه پروژه نامعتبر است' }, { status: 400 });
     }
