@@ -7,20 +7,24 @@ export async function POST(request: Request) {
     const { name, email, message } = await request.json();
 
     if (!name || !email || !message) {
-      return NextResponse.json({ error: 'تمام فیلدها الزامی است' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'تمام فیلدها الزامی است' },
+        { status: 400 }
+      );
     }
 
-    // 1. ذخیره در Supabase
     const { error: dbError } = await supabase
       .from('messages')
       .insert([{ name, email, message }]);
 
     if (dbError) {
       console.error('❌ Supabase error:', dbError);
-      return NextResponse.json({ error: 'خطا در ذخیره پیام' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'خطا در ذخیره پیام' },
+        { status: 500 }
+      );
     }
 
-    // 2. ارسال ایمیل با SMTP هاست
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT),
@@ -47,9 +51,20 @@ export async function POST(request: Request) {
       `,
     });
 
-    return NextResponse.json({ success: true });
+    // هدر Cache-Control برای پاسخ
+    return NextResponse.json(
+      { success: true },
+      {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+        },
+      }
+    );
   } catch (error) {
     console.error('❌ General error:', error);
-    return NextResponse.json({ error: 'خطا در ارسال پیام' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'خطا در ارسال پیام' },
+      { status: 500 }
+    );
   }
 }

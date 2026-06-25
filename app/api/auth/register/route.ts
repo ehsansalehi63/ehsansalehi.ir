@@ -12,7 +12,10 @@ export async function POST(request: Request) {
     const { name, email, password } = await request.json();
 
     if (!name || !email || !password) {
-      return NextResponse.json({ error: 'تمام فیلدها الزامی است' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'تمام فیلدها الزامی است' },
+        { status: 400 }
+      );
     }
 
     const hashedPassword = bcrypt.hashSync(password, 10);
@@ -24,7 +27,10 @@ export async function POST(request: Request) {
       .maybeSingle();
 
     if (existingUser) {
-      return NextResponse.json({ error: 'این ایمیل قبلاً ثبت شده است' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'این ایمیل قبلاً ثبت شده است' },
+        { status: 400 }
+      );
     }
 
     const { data: newUser, error: userError } = await supabase
@@ -35,7 +41,10 @@ export async function POST(request: Request) {
 
     if (userError) {
       console.error('❌ Supabase error (register):', userError);
-      return NextResponse.json({ error: 'خطا در ثبت نام' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'خطا در ثبت نام' },
+        { status: 500 }
+      );
     }
 
     const code = generateCode();
@@ -45,10 +54,12 @@ export async function POST(request: Request) {
 
     if (codeError) {
       console.error('❌ Supabase error (code):', codeError);
-      return NextResponse.json({ error: 'خطا در ایجاد کد تأیید' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'خطا در ایجاد کد تأیید' },
+        { status: 500 }
+      );
     }
 
-    // ارسال ایمیل با SMTP هاست
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT),
@@ -77,13 +88,23 @@ export async function POST(request: Request) {
       `,
     });
 
-    return NextResponse.json({
-      success: true,
-      message: 'کد تأیید به ایمیل شما ارسال شد',
-      email,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        message: 'کد تأیید به ایمیل شما ارسال شد',
+        email,
+      },
+      {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+        },
+      }
+    );
   } catch (error) {
     console.error('❌ General error (register):', error);
-    return NextResponse.json({ error: 'خطا در ثبت نام' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'خطا در ثبت نام' },
+      { status: 500 }
+    );
   }
 }

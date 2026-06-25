@@ -8,10 +8,12 @@ export async function POST(request: Request) {
     const { email } = await request.json();
 
     if (!email) {
-      return NextResponse.json({ error: 'ایمیل الزامی است' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'ایمیل الزامی است' },
+        { status: 400 }
+      );
     }
 
-    // بررسی وجود کاربر
     const { data: user, error: userError } = await supabase
       .from('users')
       .select('id, name')
@@ -19,27 +21,29 @@ export async function POST(request: Request) {
       .maybeSingle();
 
     if (userError || !user) {
-      return NextResponse.json({ error: 'کاربری با این ایمیل یافت نشد' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'کاربری با این ایمیل یافت نشد' },
+        { status: 404 }
+      );
     }
 
-    // ساخت توکن تصادفی
     const token = crypto.randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 ساعت
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
 
-    // حذف توکن‌های قبلی
     await supabase.from('password_resets').delete().eq('email', email);
 
-    // ذخیره توکن جدید
     const { error: tokenError } = await supabase
       .from('password_resets')
       .insert([{ email, token, expiresAt: expiresAt.toISOString() }]);
 
     if (tokenError) {
       console.error('❌ Supabase error (forgot password):', tokenError);
-      return NextResponse.json({ error: 'خطا در ایجاد لینک بازیابی' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'خطا در ایجاد لینک بازیابی' },
+        { status: 500 }
+      );
     }
 
-    // ارسال ایمیل با SMTP هاست
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT),
@@ -76,12 +80,22 @@ export async function POST(request: Request) {
       `,
     });
 
-    return NextResponse.json({
-      success: true,
-      message: 'لینک بازیابی به ایمیل شما ارسال شد',
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        message: 'لینک بازیابی به ایمیل شما ارسال شد',
+      },
+      {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+        },
+      }
+    );
   } catch (error) {
     console.error('❌ General error (forgot password):', error);
-    return NextResponse.json({ error: 'خطا در ارسال لینک بازیابی' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'خطا در ارسال لینک بازیابی' },
+      { status: 500 }
+    );
   }
 }

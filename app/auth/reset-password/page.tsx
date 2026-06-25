@@ -5,7 +5,6 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Toaster, toast } from 'sonner';
 
-// کامپوننت داخلی که از useSearchParams استفاده می‌کند
 function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -167,7 +166,6 @@ function ResetPasswordContent() {
   );
 }
 
-// صفحه اصلی با Suspense
 export default function ResetPasswordPage() {
   return (
     <Suspense fallback={

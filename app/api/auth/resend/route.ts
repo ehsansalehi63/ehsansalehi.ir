@@ -11,7 +11,10 @@ export async function POST(request: Request) {
     const { email } = await request.json();
 
     if (!email) {
-      return NextResponse.json({ error: 'ایمیل الزامی است' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'ایمیل الزامی است' },
+        { status: 400 }
+      );
     }
 
     const { data: user, error: userError } = await supabase
@@ -21,11 +24,17 @@ export async function POST(request: Request) {
       .maybeSingle();
 
     if (userError || !user) {
-      return NextResponse.json({ error: 'کاربری با این ایمیل یافت نشد' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'کاربری با این ایمیل یافت نشد' },
+        { status: 404 }
+      );
     }
 
     if (user.isVerified) {
-      return NextResponse.json({ error: 'این حساب قبلاً تأیید شده است' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'این حساب قبلاً تأیید شده است' },
+        { status: 400 }
+      );
     }
 
     await supabase.from('verification_codes').delete().eq('email', email);
@@ -37,7 +46,10 @@ export async function POST(request: Request) {
 
     if (codeError) {
       console.error('❌ Supabase error (resend):', codeError);
-      return NextResponse.json({ error: 'خطا در ایجاد کد جدید' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'خطا در ایجاد کد جدید' },
+        { status: 500 }
+      );
     }
 
     const transporter = nodemailer.createTransport({
@@ -68,12 +80,22 @@ export async function POST(request: Request) {
       `,
     });
 
-    return NextResponse.json({
-      success: true,
-      message: 'کد جدید به ایمیل شما ارسال شد',
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        message: 'کد جدید به ایمیل شما ارسال شد',
+      },
+      {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+        },
+      }
+    );
   } catch (error) {
     console.error('❌ General error (resend):', error);
-    return NextResponse.json({ error: 'خطا در ارسال مجدد کد' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'خطا در ارسال مجدد کد' },
+      { status: 500 }
+    );
   }
 }

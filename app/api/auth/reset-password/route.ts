@@ -7,14 +7,19 @@ export async function POST(request: Request) {
     const { email, token, newPassword } = await request.json();
 
     if (!email || !token || !newPassword) {
-      return NextResponse.json({ error: 'تمام فیلدها الزامی است' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'تمام فیلدها الزامی است' },
+        { status: 400 }
+      );
     }
 
     if (newPassword.length < 6) {
-      return NextResponse.json({ error: 'رمز عبور باید حداقل ۶ کاراکتر باشد' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'رمز عبور باید حداقل ۶ کاراکتر باشد' },
+        { status: 400 }
+      );
     }
 
-    // بررسی توکن
     const { data: resetData, error: findError } = await supabase
       .from('password_resets')
       .select('*')
@@ -24,13 +29,14 @@ export async function POST(request: Request) {
       .maybeSingle();
 
     if (findError || !resetData) {
-      return NextResponse.json({ error: 'لینک نامعتبر یا منقضی شده است' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'لینک نامعتبر یا منقضی شده است' },
+        { status: 400 }
+      );
     }
 
-    // هش کردن رمز جدید
     const hashedPassword = bcrypt.hashSync(newPassword, 10);
 
-    // به‌روزرسانی رمز کاربر
     const { error: updateError } = await supabase
       .from('users')
       .update({ password: hashedPassword })
@@ -38,22 +44,34 @@ export async function POST(request: Request) {
 
     if (updateError) {
       console.error('❌ Supabase error (reset password):', updateError);
-      return NextResponse.json({ error: 'خطا در بازنشانی رمز' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'خطا در بازنشانی رمز' },
+        { status: 500 }
+      );
     }
 
-    // حذف توکن مصرف‌شده
     await supabase
       .from('password_resets')
       .delete()
       .eq('email', email)
       .eq('token', token);
 
-    return NextResponse.json({
-      success: true,
-      message: 'رمز عبور با موفقیت تغییر کرد',
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        message: 'رمز عبور با موفقیت تغییر کرد',
+      },
+      {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+        },
+      }
+    );
   } catch (error) {
     console.error('❌ General error (reset password):', error);
-    return NextResponse.json({ error: 'خطا در بازنشانی رمز' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'خطا در بازنشانی رمز' },
+      { status: 500 }
+    );
   }
 }
