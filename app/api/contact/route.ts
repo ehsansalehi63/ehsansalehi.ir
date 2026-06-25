@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 import { supabase } from '@/lib/supabaseClient';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: Request) {
   try {
@@ -22,10 +20,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'خطا در ذخیره پیام' }, { status: 500 });
     }
 
-    // 2. ارسال ایمیل به مدیر با Resend
-    const { error } = await resend.emails.send({
-      from: `"فرم تماس سایت" <noreply@ehsansalehi.ir>`,
-      to: ['info@ehsansalehi.ir'],
+    // 2. ارسال ایمیل با SMTP هاست
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT),
+      secure: process.env.SMTP_PORT === '465',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+      tls: { rejectUnauthorized: false },
+    });
+
+    await transporter.sendMail({
+      from: `"فرم تماس سایت" <${process.env.SMTP_USER}>`,
+      to: 'info@ehsansalehi.ir',
       subject: `تماس جدید از ${name}`,
       replyTo: email,
       html: `
@@ -37,11 +46,6 @@ export async function POST(request: Request) {
         </div>
       `,
     });
-
-    if (error) {
-      console.error('❌ Resend error:', error);
-      // ایمیل ارسال نشد اما پیام در دیتابیس ذخیره شده است
-    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

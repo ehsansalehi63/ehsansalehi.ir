@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 import { supabase } from '@/lib/supabaseClient';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 function generateCode() {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -17,7 +15,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'تمام فیلدها الزامی است' }, { status: 400 });
     }
 
-    // 1. ثبت کاربر
     const hashedPassword = bcrypt.hashSync(password, 10);
 
     const { data: existingUser } = await supabase
@@ -41,7 +38,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'خطا در ثبت نام' }, { status: 500 });
     }
 
-    // 2. ذخیره کد تأیید
     const code = generateCode();
     const { error: codeError } = await supabase
       .from('verification_codes')
@@ -52,10 +48,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'خطا در ایجاد کد تأیید' }, { status: 500 });
     }
 
-    // 3. ارسال ایمیل با Resend
-    const { error } = await resend.emails.send({
-      from: `"احسان صالحی" <noreply@ehsansalehi.ir>`,
-      to: [email],
+    // ارسال ایمیل با SMTP هاست
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT),
+      secure: process.env.SMTP_PORT === '465',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+      tls: { rejectUnauthorized: false },
+    });
+
+    await transporter.sendMail({
+      from: `"احسان صالحی" <${process.env.SMTP_USER}>`,
+      to: email,
       subject: 'کد تأیید ثبت نام',
       html: `
         <div dir="rtl" style="font-family:Tahoma, sans-serif; padding:20px;">
@@ -69,10 +76,6 @@ export async function POST(request: Request) {
         </div>
       `,
     });
-
-    if (error) {
-      console.error('❌ Resend error:', error);
-    }
 
     return NextResponse.json({
       success: true,
