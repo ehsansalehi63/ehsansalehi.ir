@@ -13,6 +13,7 @@ export default function Home() {
   const fullText = "احسان صالحی رباطی";
   const formRef = useRef<HTMLFormElement>(null);
 
+  // تایپ‌رایتر
   useEffect(() => {
     setText(fullText);
     let index = 0;
@@ -24,6 +25,7 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
+  // دریافت پروژه‌ها
   useEffect(() => {
     fetch('/api/projects')
       .then(res => res.json())
@@ -34,6 +36,7 @@ export default function Home() {
       .catch(() => setLoading(false));
   }, []);
 
+  // بررسی لاگین
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -53,6 +56,23 @@ export default function Home() {
           localStorage.removeItem('user');
         });
     }
+  }, []);
+
+  // ✅ **IntersectionObserver برای نمایش بخش‌ها هنگام اسکرول**
+  useEffect(() => {
+    const sections = document.querySelectorAll('.section-hidden');
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('section-visible');
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+    sections.forEach((section) => observer.observe(section));
+    return () => observer.disconnect();
   }, []);
 
   const skills = [
@@ -132,7 +152,7 @@ export default function Home() {
       `}</style>
 
       <main className="min-h-screen bg-[#0a0a0a] text-white font-vazir" dir="rtl">
-        {/* PARTICLE BACKGROUND */}
+        {/* Particle Background */}
         <canvas id="particleCanvas" className="fixed inset-0 pointer-events-none z-0" />
 
         {/* HEADER */}
@@ -194,13 +214,13 @@ export default function Home() {
             <div className="flex justify-center lg:justify-end order-2 lg:order-1">
               <div className="relative group">
                 <div className="absolute -inset-4 bg-gradient-to-r from-amber-500 to-blue-600 rounded-full blur-2xl opacity-60 group-hover:opacity-100 transition duration-700"></div>
-                <div className="profile-image relative w-64 h-64 lg:w-[420px] lg:h-[420px] rounded-full overflow-hidden border-4 border-amber-500/40 shadow-2xl">
+                <div className="relative w-64 h-64 lg:w-[420px] lg:h-[420px] rounded-full overflow-hidden border-4 border-amber-500/40 shadow-2xl">
                   <Image src="/images/profile.jpg" alt="احسان صالحی رباطی" width={420} height={420} className="w-full h-full object-cover hover:scale-110 transition duration-1000" priority />
                 </div>
               </div>
             </div>
 
-            <div className="hero-text text-center lg:text-right order-1 lg:order-2 animate-fade-up">
+            <div className="text-center lg:text-right order-1 lg:order-2 animate-fade-up">
               <div className="inline-flex items-center gap-2 mb-6 px-5 py-2 glass rounded-full text-sm tracking-wider">
                 <span className="text-amber-400">✦</span>
                 <span className="text-amber-300">۱۶ سال تجربه پیشرو در IT</span>
@@ -220,7 +240,7 @@ export default function Home() {
           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-amber-400/60 animate-bounce text-3xl">↓</div>
         </section>
 
-        {/* ABOUT */}
+        {/* ABOUT - با کلاس section-hidden */}
         <section id="about" className="py-24 px-4 glass border-y border-white/5 section-hidden">
           <div className="max-w-7xl mx-auto">
             <h2 className="text-5xl font-bold text-center mb-4 bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">درباره من</h2>
