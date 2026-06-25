@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Toaster, toast } from 'sonner';
 
 export default function RegisterPage() {
@@ -170,11 +171,27 @@ export default function RegisterPage() {
           </button>
         </form>
         
+        <div style={{ textAlign: 'center', marginTop: '16px' }}>
+          <Link
+            href="/auth/forgot-password"
+            style={{
+              color: '#60a5fa',
+              textDecoration: 'none',
+              fontSize: '14px',
+              transition: 'color 0.2s',
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.color = '#93c5fd'}
+            onMouseLeave={(e) => e.currentTarget.style.color = '#60a5fa'}
+          >
+            🔑 فراموشی رمز عبور؟
+          </Link>
+        </div>
+        
         <p style={{ textAlign: 'center', marginTop: '16px', color: '#a3a3a3', fontSize: '14px' }}>
           قبلاً ثبت نام کرده‌اید؟{' '}
-          <a href="/auth/login" style={{ color: '#60a5fa', textDecoration: 'none' }}>
+          <Link href="/auth/login" style={{ color: '#60a5fa', textDecoration: 'none' }}>
             ورود
-          </a>
+          </Link>
         </p>
       </div>
       <Toaster position="top-center" richColors />
