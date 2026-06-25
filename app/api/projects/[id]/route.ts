@@ -1,7 +1,45 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
 
-// ویرایش پروژه
+// GET - دریافت یک پروژه با id
+export async function GET(request: Request, { params }: { params: { id: string } }) {
+  console.log('📡 API request for project:', params);
+
+  try {
+    const id = parseInt(params.id);
+
+    if (isNaN(id)) {
+      console.log('❌ شناسه نامعتبر');
+      return NextResponse.json({ error: 'شناسه پروژه نامعتبر است' }, { status: 400 });
+    }
+
+    console.log('🔍 Searching for project ID:', id);
+
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (error) {
+      console.error('❌ Supabase error:', error);
+      return NextResponse.json({ error: `Supabase error: ${error.message}` }, { status: 500 });
+    }
+
+    if (!data) {
+      console.log('❌ Project not found');
+      return NextResponse.json({ error: 'پروژه یافت نشد' }, { status: 404 });
+    }
+
+    console.log('✅ Project found:', data.title);
+    return NextResponse.json({ success: true, data });
+  } catch (error) {
+    console.error('❌ General error:', error);
+    return NextResponse.json({ error: 'خطا در دریافت پروژه' }, { status: 500 });
+  }
+}
+
+// PUT - ویرایش پروژه
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
     const id = parseInt(params.id);
@@ -11,7 +49,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     }
 
     const body = await request.json();
-    const { title, desc, tech, link } = body;
+    const { title, desc, tech, link, image_url } = body;
 
     if (!title || !desc) {
       return NextResponse.json({ error: 'عنوان و توضیحات الزامی است' }, { status: 400 });
@@ -19,7 +57,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
     const { data, error } = await supabase
       .from('projects')
-      .update({ title, desc, tech, link })
+      .update({ title, desc, tech, link, image_url })
       .eq('id', id)
       .select();
 
@@ -39,7 +77,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   }
 }
 
-// حذف پروژه
+// DELETE - حذف پروژه
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
     const id = parseInt(params.id);
