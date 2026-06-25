@@ -13,7 +13,6 @@ export default function Home() {
   const fullText = "احسان صالحی رباطی";
   const formRef = useRef<HTMLFormElement>(null);
 
-  // تایپ‌رایتر
   useEffect(() => {
     setText(fullText);
     let index = 0;
@@ -21,11 +20,10 @@ export default function Home() {
       setText(fullText.slice(0, index));
       index++;
       if (index > fullText.length) clearInterval(interval);
-    }, 100);
+    }, 120);
     return () => clearInterval(interval);
   }, []);
 
-  // دریافت پروژه‌ها از دیتابیس
   useEffect(() => {
     fetch('/api/projects')
       .then(res => res.json())
@@ -36,7 +34,6 @@ export default function Home() {
       .catch(() => setLoading(false));
   }, []);
 
-  // بررسی وضعیت لاگین
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -102,18 +99,6 @@ export default function Home() {
     toast.success('خروج موفق');
   };
 
-  // لیست پروژه‌های واقعی (اگر از دیتابیس نیامد، اینها نمایش داده شوند)
-  const defaultProjects = [
-    { _id: '1', title: "شبکه هولدینگ تجارت بین‌الملل دانا", desc: "اجرا، تامین و تجهیز کامل شبکه سازمانی", tech: "Cisco, Fortinet, Veeam", link: "#" },
-    { _id: '2', title: "شبکه هولدینگ پارس پندار نهاد", desc: "اجرا و تجهیز شبکه کامل", tech: "Network Infrastructure", link: "#" },
-    { _id: '3', title: "شبکه شرکت دانش‌بنیان آرین بهرنگ", desc: "اجرا و تجهیز شبکه سازمانی", tech: "Networking", link: "#" },
-    { _id: '4', title: "شبکه آموزشگاه فن پردازان", desc: "راه‌اندازی شبکه کامل", tech: "Network Setup", link: "#" },
-    { _id: '5', title: "بازگردانی اطلاعات Qnap شهرداری اصفهان", desc: "بازگردانی و بازیابی اطلاعات", tech: "Qnap, Data Recovery", link: "#" },
-    { _id: '6', title: "سایت deltadasht.com و drmoeini.ir", desc: "طراحی و راه‌اندازی سایت‌های حرفه‌ای", tech: "WordPress, Elementor", link: "#" },
-  ];
-
-  const displayProjects = projects.length > 0 ? projects : defaultProjects;
-
   const navItems = [
     { name: "خانه", href: "#" },
     { name: "درباره", href: "#about" },
@@ -124,704 +109,362 @@ export default function Home() {
   ];
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#0a0a0a',
-      color: 'white',
-      fontFamily: 'Vazirmatn, Tahoma, sans-serif',
-      direction: 'rtl',
-      padding: 0,
-      margin: 0,
-      boxSizing: 'border-box'
-    }}>
+    <>
       <style>{`
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { margin: 0; padding: 0; overflow-x: hidden; }
-        .nav-link { 
-          color: #d4d4d4; 
-          text-decoration: none; 
-          font-size: 14px; 
-          padding: 6px 12px;
-          border-radius: 8px;
-          transition: all 0.2s;
-          white-space: nowrap;
-        }
-        .nav-link:hover { 
-          color: white; 
-          background: rgba(255,255,255,0.05);
-        }
-        .mobile-nav-link {
-          color: #d4d4d4;
-          text-decoration: none;
-          font-size: 16px;
-          padding: 10px 20px;
-          width: 100%;
-          text-align: center;
-          border-bottom: 1px solid rgba(255,255,255,0.05);
-          transition: all 0.2s;
-        }
-        .mobile-nav-link:hover {
-          color: white;
-          background: rgba(255,255,255,0.05);
-        }
-        .btn-primary {
-          padding: 10px 20px;
-          background: white;
-          color: black;
-          border-radius: 12px;
-          font-weight: 500;
-          text-decoration: none;
-          font-size: 14px;
-          transition: all 0.2s;
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-        }
-        .btn-primary:hover { background: #e5e5e5; }
-        .btn-secondary {
-          padding: 10px 20px;
-          border: 1px solid rgba(255,255,255,0.2);
-          border-radius: 12px;
-          color: white;
-          text-decoration: none;
-          font-size: 14px;
-          transition: all 0.2s;
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-        }
-        .btn-secondary:hover { background: rgba(255,255,255,0.05); }
-        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.5); }
-        .service-hover:hover { transform: scale(1.03); box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
-        .skill-hover:hover { background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.6); }
-        .btn-auth { 
-          padding: 6px 14px; 
-          border-radius: 8px; 
-          font-size: 13px; 
-          font-weight: 500;
-          text-decoration: none;
-          transition: all 0.2s;
-        }
-        .btn-auth-login { color: #60a5fa; }
-        .btn-auth-login:hover { background: rgba(59,130,246,0.1); }
-        .btn-auth-register { 
-          background: rgba(59,130,246,0.15); 
-          color: #60a5fa; 
-        }
-        .btn-auth-register:hover { background: rgba(59,130,246,0.25); }
-        .btn-auth-logout { 
-          color: #ef4444; 
-          background: none; 
-          border: none; 
-          cursor: pointer; 
-          font-family: inherit;
-          font-size: 13px;
-          padding: 6px 12px;
-          border-radius: 8px;
-        }
-        .btn-auth-logout:hover { background: rgba(239,68,68,0.1); }
-        .btn-auth-dashboard { color: #60a5fa; }
-        .btn-auth-dashboard:hover { background: rgba(59,130,246,0.1); }
-        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0; } }
-        @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-        @media (max-width: 768px) {
-          .hero-grid { grid-template-columns: 1fr !important; text-align: center !important; }
-          .hero-text { text-align: center !important; }
-          .hero-buttons { justify-content: center !important; }
-          .about-grid { grid-template-columns: 1fr !important; }
-          .services-grid { grid-template-columns: 1fr !important; }
-          .projects-grid { grid-template-columns: 1fr !important; }
-          .contact-grid { grid-template-columns: 1fr !important; }
-          .profile-image { width: 180px !important; height: 180px !important; }
-          .section-title { font-size: 24px !important; }
-          .hero-title { font-size: 28px !important; }
-          .nav-desktop { display: none !important; }
-          .nav-mobile-toggle { display: block !important; }
-          .nav-auth-desktop { display: none !important; }
-        }
-        @media (min-width: 769px) {
-          .nav-mobile-toggle { display: none !important; }
-          .nav-mobile-menu { display: none !important; }
-          .nav-auth-mobile { display: none !important; }
-        }
+        .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); }
+        .glass-hover:hover { background: rgba(255,255,255,0.1); border-color: rgba(59,130,246,0.3); }
+        .btn-neon { background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; border: none; padding: 12px 32px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.3s; }
+        .btn-neon:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(245,158,11,0.4); }
+        .btn-outline { background: transparent; border: 2px solid rgba(255,255,255,0.2); color: #fff; padding: 12px 32px; border-radius: 12px; font-weight: 500; cursor: pointer; transition: all 0.3s; }
+        .btn-outline:hover { border-color: #f59e0b; background: rgba(245,158,11,0.1); }
+        .skill-bar { height: 6px; border-radius: 3px; background: #27272a; overflow: hidden; }
+        .skill-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #f59e0b, #3b82f6); transition: width 1.5s ease; width: 0%; }
+        .section-hidden { opacity: 0; transform: translateY(50px); transition: all 0.8s ease; }
+        .section-visible { opacity: 1; transform: translateY(0); }
+        .project-card { transition: all 0.4s ease; cursor: pointer; }
+        .project-card:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 20px 60px rgba(59,130,246,0.2); }
+        .project-image { height: 200px; overflow: hidden; background: #1a1a1a; }
+        .project-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
+        .project-card:hover .project-image img { transform: scale(1.05); }
+        @keyframes gradientFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        .animate-gradient { background-size: 300% 300%; animation: gradientFlow 8s ease infinite; }
+        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
       `}</style>
 
-      {/* HEADER */}
-      <header style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 50,
-        background: 'rgba(10,10,10,0.9)',
-        backdropFilter: 'blur(12px)',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
-        padding: '10px 16px',
-      }}>
-        <div style={{
-          maxWidth: '1200px',
-          margin: '0 auto',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '8px',
-        }}>
-          <a href="#" style={{
-            fontSize: 'clamp(18px, 3vw, 24px)',
-            fontWeight: 'bold',
-            color: 'white',
-            textDecoration: 'none',
-          }}>احسان صالحی</a>
-          
-          {/* منوی دسکتاپ */}
-          <nav className="nav-desktop" style={{
-            display: 'flex',
-            gap: '4px',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-          }}>
-            {navItems.map((item) => (
-              <a key={item.name} href={item.href} className="nav-link">
-                {item.name}
-              </a>
-            ))}
-            
-            {/* گزینه‌های احراز هویت - دسکتاپ */}
-            <span className="nav-auth-desktop" style={{ display: 'flex', gap: '4px', alignItems: 'center', marginRight: '8px' }}>
+      <main className="min-h-screen bg-[#0a0a0a] text-white font-vazir" dir="rtl">
+        {/* PARTICLE BACKGROUND */}
+        <canvas id="particleCanvas" className="fixed inset-0 pointer-events-none z-0" />
+
+        {/* HEADER */}
+        <header className="fixed top-0 left-0 right-0 z-50 glass px-4 py-3">
+          <div className="max-w-7xl mx-auto flex justify-between items-center">
+            <a href="#" className="text-2xl font-black bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">
+              احسان صالحی
+            </a>
+            <nav className="hidden md:flex gap-1 text-zinc-300">
+              {navItems.map((item) => (
+                <a key={item.name} href={item.href} className="nav-link-custom px-4 py-2 text-sm font-medium hover:text-white">
+                  {item.name}
+                </a>
+              ))}
               {user ? (
                 <>
-                  <a href="/dashboard" className="btn-auth btn-auth-dashboard">داشبورد</a>
-                  <button onClick={handleLogout} className="btn-auth btn-auth-logout">خروج</button>
+                  <a href="/dashboard" className="px-4 py-2 text-sm font-medium text-blue-400">داشبورد</a>
+                  <button onClick={handleLogout} className="px-4 py-2 text-sm font-medium text-red-400 hover:text-red-300">خروج</button>
                 </>
               ) : (
                 <>
-                  <a href="/auth/login" className="btn-auth btn-auth-login">ورود</a>
-                  <a href="/auth/register" className="btn-auth btn-auth-register">ثبت نام</a>
+                  <a href="/auth/login" className="px-4 py-2 text-sm font-medium text-blue-400">ورود</a>
+                  <a href="/auth/register" className="px-4 py-2 text-sm font-medium bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30">ثبت نام</a>
                 </>
               )}
-            </span>
-          </nav>
-
-          {/* دکمه منوی موبایل */}
-          <button 
-            className="nav-mobile-toggle"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'white',
-              fontSize: '24px',
-              cursor: 'pointer',
-              padding: '4px 8px',
-            }}
-          >
-            {mobileMenuOpen ? '✕' : '☰'}
-          </button>
-        </div>
-
-        {/* منوی موبایل */}
-        {mobileMenuOpen && (
-          <div className="nav-mobile-menu" style={{
-            position: 'absolute',
-            top: '100%',
-            left: 0,
-            right: 0,
-            background: 'rgba(10,10,10,0.98)',
-            backdropFilter: 'blur(12px)',
-            borderBottom: '1px solid rgba(255,255,255,0.06)',
-            padding: '8px 0',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-          }}>
-            {navItems.map((item) => (
-              <a 
-                key={item.name} 
-                href={item.href} 
-                className="mobile-nav-link"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {item.name}
-              </a>
-            ))}
-            
-            {/* گزینه‌های احراز هویت - موبایل */}
-            <div className="nav-auth-mobile" style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: '4px', paddingTop: '8px' }}>
+            </nav>
+            <button className="md:hidden text-white text-2xl" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+              {mobileMenuOpen ? '✕' : '☰'}
+            </button>
+          </div>
+          {mobileMenuOpen && (
+            <div className="md:hidden mt-3 glass rounded-xl p-4 flex flex-col gap-2">
+              {navItems.map((item) => (
+                <a key={item.name} href={item.href} className="px-4 py-2 hover:bg-white/5 rounded-lg" onClick={() => setMobileMenuOpen(false)}>
+                  {item.name}
+                </a>
+              ))}
               {user ? (
                 <>
-                  <a href="/dashboard" className="mobile-nav-link" style={{ color: '#60a5fa' }}>داشبورد</a>
-                  <button onClick={handleLogout} className="mobile-nav-link" style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}>
-                    خروج
-                  </button>
+                  <a href="/dashboard" className="px-4 py-2 text-blue-400">داشبورد</a>
+                  <button onClick={handleLogout} className="px-4 py-2 text-red-400 text-right">خروج</button>
                 </>
               ) : (
                 <>
-                  <a href="/auth/login" className="mobile-nav-link" style={{ color: '#60a5fa' }}>ورود</a>
-                  <a href="/auth/register" className="mobile-nav-link" style={{ color: '#60a5fa' }}>ثبت نام</a>
+                  <a href="/auth/login" className="px-4 py-2 text-blue-400">ورود</a>
+                  <a href="/auth/register" className="px-4 py-2 bg-blue-500/20 text-blue-400 rounded-lg">ثبت نام</a>
                 </>
               )}
             </div>
-          </div>
-        )}
-      </header>
+          )}
+        </header>
 
-      {/* HERO */}
-      <section style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '80px 16px 40px',
-      }}>
-        <div className="hero-grid" style={{
-          maxWidth: '1200px',
-          margin: '0 auto',
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: '30px',
-          alignItems: 'center',
-          width: '100%',
-        }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            order: '2',
-          }}>
-            <div className="profile-image" style={{
-              width: 'clamp(160px, 25vw, 280px)',
-              height: 'clamp(160px, 25vw, 280px)',
-              borderRadius: '50%',
-              overflow: 'hidden',
-              border: '3px solid rgba(59,130,246,0.25)',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
-              flexShrink: 0,
-            }}>
-              <Image
-                src="/images/profile.jpg"
-                alt="احسان صالحی رباطی"
-                width={280}
-                height={280}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                }}
-                priority
-              />
-            </div>
-          </div>
-
-          <div className="hero-text" style={{
-            textAlign: 'right',
-            order: '1',
-          }}>
-            <div style={{
-              display: 'inline-block',
-              marginBottom: '12px',
-              padding: '4px 14px',
-              background: 'rgba(59,130,246,0.1)',
-              borderRadius: '9999px',
-              color: '#60a5fa',
-              fontSize: 'clamp(11px, 1.2vw, 14px)',
-            }}>متخصص IT با ۱۶ سال تجربه</div>
-            
-            <h1 className="hero-title" style={{
-              fontSize: 'clamp(28px, 5vw, 56px)',
-              fontWeight: 'bold',
-              marginBottom: '12px',
-              lineHeight: 1.2,
-            }}>
-              {text}
-              <span style={{ animation: 'pulse 1s infinite' }}>|</span>
-            </h1>
-            
-            <p style={{
-              fontSize: 'clamp(16px, 1.8vw, 24px)',
-              color: '#a3a3a3',
-              marginBottom: '12px',
-            }}>توسعه‌دهنده وب • متخصص شبکه و زیرساخت</p>
-            
-            <p style={{
-              color: '#737373',
-              marginBottom: '24px',
-              fontSize: 'clamp(14px, 1.2vw, 18px)',
-              maxWidth: '500px',
-            }}>۱۶ سال تجربه در اجرا و تجهیز شبکه‌های سازمانی، طراحی سایت و مدیریت IT</p>
-            
-            <div className="hero-buttons" style={{
-              display: 'flex',
-              gap: '8px',
-              flexWrap: 'wrap',
-              justifyContent: 'flex-start',
-            }}>
-              <a href="#about" className="btn-primary">درباره من</a>
-              <a href="#services" className="btn-secondary">خدمات من</a>
-              <a href="#projects" className="btn-secondary">نمونه‌کارها</a>
-              <a href="#contact" className="btn-secondary">تماس</a>
-            </div>
-          </div>
-        </div>
-        
-        <div style={{
-          position: 'absolute',
-          bottom: '20px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          color: '#4b5563',
-          animation: 'bounce 2s infinite',
-          fontSize: '24px',
-        }}>↓</div>
-      </section>
-
-      {/* ABOUT */}
-      <section id="about" style={{
-        padding: '60px 16px',
-        background: 'rgba(24,24,27,0.3)',
-        borderTop: '1px solid rgba(255,255,255,0.04)',
-        borderBottom: '1px solid rgba(255,255,255,0.04)',
-      }}>
-        <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-          <h2 className="section-title" style={{
-            fontSize: 'clamp(24px, 4vw, 40px)',
-            fontWeight: 'bold',
-            textAlign: 'center',
-            marginBottom: '8px',
-          }}>درباره من</h2>
-          <p style={{
-            color: '#a3a3a3',
-            textAlign: 'center',
-            marginBottom: '32px',
-            fontSize: 'clamp(14px, 1.2vw, 18px)',
-          }}>۱۶ سال تجربه واقعی در فناوری اطلاعات</p>
+        {/* HERO */}
+        <section className="relative min-h-screen flex items-center justify-center pt-20 px-4 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-purple-900/40 to-black animate-gradient" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%, rgba(245,158,11,0.08), transparent)]" />
           
-          <div className="about-grid" style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '30px',
-            textAlign: 'right',
-          }}>
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px',
-            }}>
-              <p style={{ color: '#d4d4d4', lineHeight: 1.8, fontSize: 'clamp(14px, 1.1vw, 16px)' }}>
-                با بیش از ۱۶ سال سابقه کاری مستمر، تجربه گسترده‌ای در طراحی و اجرای شبکه‌های سازمانی، مدیریت IT، طراحی سایت وردپرسی و پشتیبانی فنی دارم.
-              </p>
-              <p style={{ color: '#d4d4d4', lineHeight: 1.8, fontSize: 'clamp(14px, 1.1vw, 16px)' }}>
-                از پروژه‌های بزرگ دولتی و هولدینگ‌ها تا شرکت‌های دانش‌بنیان، همیشه بر ارائه راه‌حل‌های پایدار و حرفه‌ای تمرکز داشته‌ام.
-              </p>
-            </div>
-            
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '16px',
-            }}>
-              <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                <span style={{ fontSize: '24px', color: '#60a5fa' }}>📅</span>
-                <div>
-                  <div style={{ color: '#60a5fa', fontSize: '13px' }}>۱۳۸۸ - تاکنون</div>
-                  <h3 style={{ fontSize: 'clamp(16px, 1.3vw, 20px)', fontWeight: 'bold' }}>تجربه گسترده IT و شبکه</h3>
-                  <p style={{ color: '#a3a3a3', fontSize: 'clamp(13px, 1vw, 15px)' }}>سرپرست IT در اداره کار، فرمانداری و شرکت‌های خصوصی</p>
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                <span style={{ fontSize: '24px', color: '#60a5fa' }}>💻</span>
-                <div>
-                  <div style={{ color: '#60a5fa', fontSize: '13px' }}>تخصص طراحی سایت</div>
-                  <h3 style={{ fontSize: 'clamp(16px, 1.3vw, 20px)', fontWeight: 'bold' }}>وردپرس حرفه‌ای</h3>
-                  <p style={{ color: '#a3a3a3', fontSize: 'clamp(13px, 1vw, 15px)' }}>طراحی سایت deltadasht.com و drmoeini.ir</p>
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                <span style={{ fontSize: '24px', color: '#60a5fa' }}>🖥️</span>
-                <div>
-                  <div style={{ color: '#60a5fa', fontSize: '13px' }}>شبکه و سخت‌افزار</div>
-                  <h3 style={{ fontSize: 'clamp(16px, 1.3vw, 20px)', fontWeight: 'bold' }}>اجرا و تجهیز شبکه‌های سازمانی</h3>
-                  <p style={{ color: '#a3a3a3', fontSize: 'clamp(13px, 1vw, 15px)' }}>هولدینگ‌ها، ادارات دولتی و شرکت‌های دانش‌بنیان</p>
+          <div className="relative z-10 max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center w-full">
+            <div className="flex justify-center lg:justify-end order-2 lg:order-1">
+              <div className="relative group">
+                <div className="absolute -inset-4 bg-gradient-to-r from-amber-500 to-blue-600 rounded-full blur-2xl opacity-60 group-hover:opacity-100 transition duration-700"></div>
+                <div className="profile-image relative w-64 h-64 lg:w-[420px] lg:h-[420px] rounded-full overflow-hidden border-4 border-amber-500/40 shadow-2xl">
+                  <Image src="/images/profile.jpg" alt="احسان صالحی رباطی" width={420} height={420} className="w-full h-full object-cover hover:scale-110 transition duration-1000" priority />
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
 
-      {/* SERVICES */}
-      <section id="services" style={{ padding: '60px 16px' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <h2 className="section-title" style={{
-            fontSize: 'clamp(24px, 4vw, 40px)',
-            fontWeight: 'bold',
-            textAlign: 'center',
-            marginBottom: '8px',
-          }}>خدمات من</h2>
-          <p style={{
-            color: '#a3a3a3',
-            textAlign: 'center',
-            marginBottom: '32px',
-            fontSize: 'clamp(14px, 1.2vw, 18px)',
-          }}>راه‌حل‌های تخصصی برای کسب‌وکار شما</p>
-          
-          <div className="services-grid" style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: '16px',
-          }}>
-            {[
-              { icon: '🌐', title: "طراحی و توسعه سایت", desc: "سایت وردپرسی حرفه‌ای، فروشگاهی و شرکتی" },
-              { icon: '🖥️', title: "شبکه و زیرساخت IT", desc: "طراحی، اجرا و تجهیز شبکه‌های سازمانی" },
-              { icon: '🤖', title: "پشتیبانی و اتوماسیون", desc: "هلپ‌دسک، تعمیرات سخت‌افزار و اتوماسیون اداری" }
-            ].map((service, idx) => (
-              <div key={idx} className="service-hover" style={{
-                background: '#18181b',
-                padding: '20px',
-                borderRadius: '16px',
-                transition: 'all 0.3s',
-                textAlign: 'center',
-              }}>
-                <div style={{ fontSize: 'clamp(32px, 4vw, 40px)', marginBottom: '12px' }}>{service.icon}</div>
-                <h3 style={{ fontSize: 'clamp(16px, 1.3vw, 20px)', fontWeight: 'bold', marginBottom: '6px' }}>{service.title}</h3>
-                <p style={{ color: '#a3a3a3', fontSize: 'clamp(13px, 1vw, 15px)' }}>{service.desc}</p>
+            <div className="hero-text text-center lg:text-right order-1 lg:order-2 animate-fade-up">
+              <div className="inline-flex items-center gap-2 mb-6 px-5 py-2 glass rounded-full text-sm tracking-wider">
+                <span className="text-amber-400">✦</span>
+                <span className="text-amber-300">۱۶ سال تجربه پیشرو در IT</span>
               </div>
-            ))}
+              <h1 className="text-5xl lg:text-7xl font-black mb-6 tracking-tighter bg-gradient-to-r from-white via-amber-200 to-blue-300 bg-clip-text text-transparent">
+                {text}
+                <span className="inline-block w-1 h-12 bg-amber-400 animate-pulse ml-1"></span>
+              </h1>
+              <p className="text-2xl lg:text-3xl text-zinc-300 mb-4">معمار شبکه • توسعه‌دهنده فول استک</p>
+              <p className="text-xl text-zinc-400 mb-10 max-w-xl">ایجاد زیرساخت‌های امن و مدرن، طراحی وب‌سایت‌های هوشمند و اتوماسیون با هوش مصنوعی</p>
+              <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
+                <a href="#projects" className="btn-neon">مشاهده پروژه‌ها <span>→</span></a>
+                <a href="#contact" className="btn-outline">ارتباط با من</a>
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-amber-400/60 animate-bounce text-3xl">↓</div>
+        </section>
 
-      {/* SKILLS */}
-      <section id="skills" style={{
-        padding: '60px 16px',
-        background: 'rgba(24,24,27,0.3)',
-        borderTop: '1px solid rgba(255,255,255,0.04)',
-        borderBottom: '1px solid rgba(255,255,255,0.04)',
-      }}>
-        <div style={{ maxWidth: '1000px', margin: '0 auto', textAlign: 'center' }}>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '8px' }}>
-            <span style={{ fontSize: 'clamp(28px, 3vw, 32px)' }}>🏆</span>
-            <h2 className="section-title" style={{
-              fontSize: 'clamp(24px, 4vw, 40px)',
-              fontWeight: 'bold',
-            }}>مهارت‌های تخصصی</h2>
+        {/* ABOUT */}
+        <section id="about" className="py-24 px-4 glass border-y border-white/5 section-hidden">
+          <div className="max-w-7xl mx-auto">
+            <h2 className="text-5xl font-bold text-center mb-4 bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">درباره من</h2>
+            <p className="text-center text-zinc-400 text-xl mb-16">۱۶ سال کدنویسی، معماری و رهبری تیم‌های فنی</p>
+            <div className="grid lg:grid-cols-2 gap-14 items-center">
+              <div className="space-y-6 text-lg leading-relaxed text-zinc-300">
+                <p>از سال ۱۳۸۸ تا امروز، در نقش‌های سرپرست IT، مشاور امنیت، توسعه‌دهنده ارشد و معمار شبکه، پروژه‌های کلیدی در سازمان‌های دولتی، هلدینگ‌های خصوصی و شرکت‌های دانش‌بنیان را رهبری کرده‌ام.</p>
+                <p>ایده من: تبدیل نیازهای پیچیده کسب‌وکار به راه‌حل‌های ساده، مقیاس‌پذیر و قدرتمند.</p>
+              </div>
+              <div className="space-y-8">
+                {[
+                  { icon: '📅', label: '۱۳۸۸ - اکنون', title: 'تجربه ۱۶ ساله IT', desc: 'اداره کار، فرمانداری، هلدینگ‌های بزرگ' },
+                  { icon: '💻', label: 'تخصص اصلی', title: 'وردپرس و فول استک', desc: 'Next.js، Tailwind، TypeScript، API' },
+                  { icon: '🖥️', label: 'شبکه و سخت‌افزار', title: 'اجرای ۵۰+ پروژه شبکه', desc: 'هولدینگ‌ها، سازمان‌ها، شرکت‌های دانش‌بنیان' }
+                ].map((item, i) => (
+                  <div key={i} className="flex gap-5 p-5 glass rounded-2xl border-l-4 border-amber-500 hover:scale-[1.02] transition-all duration-300">
+                    <span className="text-3xl">{item.icon}</span>
+                    <div>
+                      <div className="text-amber-400 text-sm font-bold">{item.label}</div>
+                      <h3 className="text-xl font-bold">{item.title}</h3>
+                      <p className="text-zinc-400">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-          <p style={{
-            color: '#a3a3a3',
-            marginBottom: '24px',
-            fontSize: 'clamp(14px, 1.2vw, 18px)',
-          }}>فناوری‌ها و تخصص‌های من</p>
-          <div style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            justifyContent: 'center',
-            gap: '8px',
-          }}>
-            {skills.map((skill, idx) => (
-              <span key={idx} className="skill-hover" style={{
-                padding: '6px 14px',
-                background: '#27272a',
-                borderRadius: '9999px',
-                fontSize: 'clamp(12px, 1vw, 14px)',
-                color: '#93c5fd',
-                border: '1px solid rgba(59,130,246,0.15)',
-                transition: 'all 0.2s',
-              }}>
-                {skill}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
+        </section>
 
-      {/* PROJECTS */}
-      <section id="projects" style={{ padding: '60px 16px' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <h2 className="section-title" style={{
-            fontSize: 'clamp(24px, 4vw, 40px)',
-            fontWeight: 'bold',
-            textAlign: 'center',
-            marginBottom: '8px',
-          }}>نمونه‌کارها</h2>
-          <p style={{
-            color: '#a3a3a3',
-            textAlign: 'center',
-            marginBottom: '32px',
-            fontSize: 'clamp(14px, 1.2vw, 18px)',
-          }}>پروژه‌های منتخب</p>
-          
-          <div className="projects-grid" style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: '16px',
-          }}>
-            {loading ? (
-              <p style={{ color: '#737373', gridColumn: '1 / -1', textAlign: 'center' }}>در حال بارگذاری...</p>
-            ) : (
-              displayProjects.map((project: any) => (
-                <div key={project._id} className="card-hover" style={{
-                  background: '#18181b',
-                  borderRadius: '16px',
-                  overflow: 'hidden',
-                  transition: 'all 0.3s',
-                }}>
-                  <div style={{
-                    height: '140px',
-                    background: 'linear-gradient(to right, rgba(30,58,138,0.3), #18181b)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '48px',
-                    opacity: 0.3,
-                  }}>💼</div>
-                  <div style={{ padding: '16px', textAlign: 'right' }}>
-                    <h3 style={{ fontSize: 'clamp(16px, 1.3vw, 18px)', fontWeight: 'bold', marginBottom: '6px' }}>{project.title}</h3>
-                    <p style={{ color: '#a3a3a3', fontSize: 'clamp(13px, 1vw, 14px)', marginBottom: '8px' }}>{project.desc}</p>
-                    <div style={{ color: '#60a5fa', fontSize: 'clamp(11px, 0.9vw, 12px)', marginBottom: '8px' }}>{project.tech}</div>
-                    <a href={project.link || "#"} style={{
-                      color: 'white',
-                      textDecoration: 'none',
-                      fontSize: 'clamp(13px, 1vw, 14px)',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      transition: 'color 0.2s',
-                    }} onMouseEnter={(e) => e.currentTarget.style.color = '#60a5fa'} onMouseLeave={(e) => e.currentTarget.style.color = 'white'}>
-                      جزئیات پروژه →
-                    </a>
+        {/* SERVICES */}
+        <section id="services" className="py-24 px-4 section-hidden">
+          <div className="max-w-7xl mx-auto">
+            <h2 className="text-5xl font-bold text-center mb-4 bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">خدمات من</h2>
+            <p className="text-center text-zinc-400 text-xl mb-16">راه‌حل‌های سفارشی برای کسب‌وکار شما</p>
+            <div className="grid md:grid-cols-3 gap-8">
+              {[
+                { icon: '🌐', title: "طراحی وب‌سایت وردپرسی", desc: "سایت شرکتی، فروشگاهی، خبری با سرعت بالا و سئوی عالی" },
+                { icon: '🖥️', title: "شبکه و زیرساخت امن", desc: "طراحی، پیاده‌سازی و پشتیبانی شبکه‌های سازمانی" },
+                { icon: '🤖', title: "هوش مصنوعی و اتوماسیون", desc: "ربات‌های چت، سیستم‌های تحلیل داده، اتوماسیون فرآیندها" }
+              ].map((s, i) => (
+                <div key={i} className="service-card relative p-8 glass rounded-2xl border border-white/10 hover:border-amber-500/50 transition-all duration-300">
+                  <div className="text-5xl mb-4">{s.icon}</div>
+                  <h3 className="text-2xl font-bold mb-3">{s.title}</h3>
+                  <p className="text-zinc-400">{s.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* SKILLS */}
+        <section id="skills" className="py-24 px-4 glass border-y border-white/5 section-hidden">
+          <div className="max-w-5xl mx-auto">
+            <div className="flex items-center justify-center gap-3 mb-8">
+              <span className="text-4xl">🏆</span>
+              <h2 className="text-5xl font-bold text-center bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">مهارت‌های تخصصی</h2>
+            </div>
+            <p className="text-center text-zinc-400 text-xl mb-12">تسلط من بر ابزارها و فناوری‌های روز</p>
+            <div className="space-y-6">
+              {[
+                { name: "WordPress & Plugin Dev", level: 95 },
+                { name: "Network+ & Routing (Cisco)", level: 92 },
+                { name: "ESXI / vCenter / Veeam", level: 88 },
+                { name: "Next.js / Tailwind / TS", level: 90 },
+                { name: "IT Management & Helpdesk", level: 95 },
+                { name: "امنیت و پشتیبانی", level: 89 }
+              ].map((skill, idx) => (
+                <div key={idx}>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-zinc-300 font-medium">{skill.name}</span>
+                    <span className="text-amber-400 font-bold">{skill.level}%</span>
+                  </div>
+                  <div className="skill-bar">
+                    <div className="skill-fill" style={{ width: `${skill.level}%` }}></div>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* CONTACT */}
-      <section id="contact" style={{
-        padding: '60px 16px',
-        background: 'rgba(24,24,27,0.15)',
-        borderTop: '1px solid rgba(255,255,255,0.04)',
-      }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
-          <h2 className="section-title" style={{
-            fontSize: 'clamp(24px, 4vw, 40px)',
-            fontWeight: 'bold',
-            marginBottom: '8px',
-          }}>تماس با من</h2>
-          <p style={{
-            color: '#a3a3a3',
-            marginBottom: '24px',
-            fontSize: 'clamp(14px, 1.2vw, 18px)',
-          }}>برای مشاوره، پروژه جدید یا همکاری در ارتباط باشید</p>
-          
-          <form ref={formRef} onSubmit={handleSubmit} style={{
-            maxWidth: '600px',
-            margin: '0 auto 32px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '12px',
-            textAlign: 'right',
-          }}>
-            <input type="text" name="name" required style={{
-              padding: '10px 14px',
-              background: '#27272a',
-              border: '1px solid #3f3f46',
-              borderRadius: '12px',
-              color: 'white',
-              fontSize: 'clamp(14px, 1vw, 16px)',
-              outline: 'none',
-              transition: 'border-color 0.2s',
-            }} placeholder="نام و نام خانوادگی" onFocus={(e) => e.currentTarget.style.borderColor = '#3b82f6'} onBlur={(e) => e.currentTarget.style.borderColor = '#3f3f46'} />
-            
-            <input type="email" name="email" required style={{
-              padding: '10px 14px',
-              background: '#27272a',
-              border: '1px solid #3f3f46',
-              borderRadius: '12px',
-              color: 'white',
-              fontSize: 'clamp(14px, 1vw, 16px)',
-              outline: 'none',
-              transition: 'border-color 0.2s',
-            }} placeholder="آدرس ایمیل" onFocus={(e) => e.currentTarget.style.borderColor = '#3b82f6'} onBlur={(e) => e.currentTarget.style.borderColor = '#3f3f46'} />
-            
-            <textarea name="message" required rows={4} style={{
-              padding: '10px 14px',
-              background: '#27272a',
-              border: '1px solid #3f3f46',
-              borderRadius: '12px',
-              color: 'white',
-              fontSize: 'clamp(14px, 1vw, 16px)',
-              outline: 'none',
-              resize: 'vertical',
-              transition: 'border-color 0.2s',
-            }} placeholder="متن پیام..." onFocus={(e) => e.currentTarget.style.borderColor = '#3b82f6'} onBlur={(e) => e.currentTarget.style.borderColor = '#3f3f46'} />
-            
-            <button type="submit" style={{
-              padding: '10px',
-              background: '#2563eb',
-              borderRadius: '12px',
-              fontWeight: '500',
-              border: 'none',
-              color: 'white',
-              fontSize: 'clamp(14px, 1vw, 16px)',
-              cursor: 'pointer',
-              transition: 'background 0.2s',
-            }} onMouseEnter={(e) => e.currentTarget.style.background = '#1d4ed8'} onMouseLeave={(e) => e.currentTarget.style.background = '#2563eb'}>
-              ارسال پیام
-            </button>
-          </form>
-
-          <div className="contact-grid" style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-            gap: '16px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-              <span style={{ fontSize: '24px' }}>📞</span>
-              <p style={{ fontSize: 'clamp(13px, 1vw, 15px)' }}>۰۹۱۳۳۲۸۷۹۸۴</p>
-              <p style={{ color: '#737373', fontSize: 'clamp(12px, 0.9vw, 13px)' }}>۰۹۱۰۸۳۰۸۷۹۹</p>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-              <span style={{ fontSize: '24px' }}>✉️</span>
-              <p style={{ fontSize: 'clamp(13px, 1vw, 15px)' }}>info@ehsansalehi.ir</p>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-              <span style={{ fontSize: '24px' }}>📍</span>
-              <p style={{ fontSize: 'clamp(13px, 1vw, 15px)' }}>اصفهان و حومه</p>
+              ))}
             </div>
           </div>
+        </section>
 
-          <a href="https://wa.me/989133287984" target="_blank" style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '10px 20px',
-            background: '#16a34a',
-            borderRadius: '12px',
-            color: 'white',
-            textDecoration: 'none',
-            fontSize: 'clamp(14px, 1vw, 16px)',
-            transition: 'background 0.2s',
-          }} onMouseEnter={(e) => e.currentTarget.style.background = '#15803d'} onMouseLeave={(e) => e.currentTarget.style.background = '#16a34a'}>
-            پیام در واتساپ
-          </a>
-        </div>
-      </section>
+        {/* PROJECTS */}
+        <section id="projects" className="py-24 px-4 section-hidden">
+          <div className="max-w-7xl mx-auto">
+            <h2 className="text-5xl font-bold text-center mb-4 bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">نمونه‌کارها</h2>
+            <p className="text-center text-zinc-400 text-xl mb-16">برخی از پروژه‌های شاخص من</p>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {loading ? (
+                <p className="text-zinc-500 col-span-full text-center">در حال بارگذاری...</p>
+              ) : projects.length === 0 ? (
+                <p className="text-zinc-500 col-span-full text-center">هیچ پروژه‌ای یافت نشد</p>
+              ) : (
+                projects.map((project: any) => (
+                  <div key={project.id} className="project-card glass rounded-2xl overflow-hidden border border-white/10 hover:border-amber-500/40">
+                    <div className="project-image">
+                      {project.image_url ? (
+                        <img src={project.image_url} alt={project.title} />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-6xl opacity-30">💼</div>
+                      )}
+                    </div>
+                    <div className="p-6 text-right">
+                      <h3 className="text-xl font-bold mb-2 group-hover:text-amber-400 transition-colors">{project.title}</h3>
+                      <p className="text-zinc-400 text-sm mb-4">{project.desc}</p>
+                      <div className="text-xs text-amber-400 font-mono mb-4">{project.tech}</div>
+                      <a href={project.link || "#"} className="text-white hover:text-amber-400 transition-colors inline-flex items-center gap-2 text-sm">
+                        جزئیات پروژه <span>→</span>
+                      </a>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </section>
 
-      <footer style={{
-        padding: '20px 16px',
-        textAlign: 'center',
-        color: '#737373',
-        fontSize: 'clamp(12px, 0.9vw, 14px)',
-        borderTop: '1px solid rgba(255,255,255,0.04)',
-      }}>
-        <p>© ۱۴۰۵ احسان صالحی رباطی - تمام حقوق محفوظ است</p>
-        <p style={{ marginTop: '4px' }}>ساخته شده با Next.js</p>
-      </footer>
+        {/* CONTACT */}
+        <section id="contact" className="py-24 px-4 glass border-t border-white/5 section-hidden">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-5xl font-bold mb-4 bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">تماس با من</h2>
+            <p className="text-xl text-zinc-400 mb-12">برای مشاوره، همکاری یا فقط سلام کردن – خوشحال می‌شم بشنوم</p>
+            <form ref={formRef} onSubmit={handleSubmit} className="max-w-2xl mx-auto mb-16 space-y-5 text-right">
+              <input type="text" name="name" required className="input-glass w-full px-6 py-4 rounded-xl text-white placeholder:text-zinc-500" placeholder="نام و نام خانوادگی" />
+              <input type="email" name="email" required className="input-glass w-full px-6 py-4 rounded-xl text-white placeholder:text-zinc-500" placeholder="آدرس ایمیل" />
+              <textarea name="message" required rows={5} className="input-glass w-full px-6 py-4 rounded-xl text-white placeholder:text-zinc-500 resize-none" placeholder="پیام خود را بنویسید..."></textarea>
+              <button type="submit" className="btn-neon w-full justify-center text-lg">ارسال پیام <span>📨</span></button>
+            </form>
+            <div className="grid sm:grid-cols-3 gap-8 mb-12">
+              {[
+                { icon: '📞', text: '۰۹۱۳۳۲۸۷۹۸۴', sub: '۰۹۱۰۸۳۰۸۷۹۹' },
+                { icon: '✉️', text: 'info@ehsansalehi.ir' },
+                { icon: '📍', text: 'اصفهان، ایران', sub: 'حضوری و ریموت' }
+              ].map((item, i) => (
+                <div key={i} className="flex flex-col items-center gap-2 p-6 glass rounded-2xl">
+                  <span className="text-3xl">{item.icon}</span>
+                  <p className="font-medium text-lg">{item.text}</p>
+                  {item.sub && <p className="text-zinc-500 text-sm">{item.sub}</p>}
+                </div>
+              ))}
+            </div>
+            <a href="https://wa.me/989133287984" target="_blank" className="inline-flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 text-white text-xl font-bold rounded-2xl transition-all shadow-xl hover:shadow-green-500/30">
+              پیام مستقیم در واتساپ
+            </a>
+          </div>
+        </section>
 
-      <Toaster position="top-center" richColors />
-    </div>
+        <footer className="py-12 text-center text-zinc-500 text-sm border-t border-white/5 px-4">
+          <p className="mb-2">© ۱۴۰۴ احسان صالحی رباطی – تمامی حقوق محفوظ است</p>
+          <p>طراحی و پیاده‌سازی با Next.js، CSS پیشرفته و معماری فول استک</p>
+        </footer>
+
+        <Toaster position="top-center" richColors theme="dark" />
+      </main>
+
+      {/* Particle Script */}
+      <script dangerouslySetInnerHTML={{
+        __html: `
+          (function() {
+            const canvas = document.getElementById('particleCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+            let mouse = { x: null, y: null };
+            let w, h;
+
+            function resize() {
+              w = canvas.width = window.innerWidth;
+              h = canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            class Particle {
+              constructor() {
+                this.x = Math.random() * w;
+                this.y = Math.random() * h;
+                this.size = Math.random() * 2 + 1;
+                this.speedX = (Math.random() - 0.5) * 0.5;
+                this.speedY = (Math.random() - 0.5) * 0.5;
+              }
+              update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.x > w || this.x < 0) this.speedX *= -1;
+                if (this.y > h || this.y < 0) this.speedY *= -1;
+                if (mouse.x && mouse.y) {
+                  const dx = this.x - mouse.x;
+                  const dy = this.y - mouse.y;
+                  const dist = Math.sqrt(dx * dx + dy * dy);
+                  if (dist < 100) {
+                    const angle = Math.atan2(dy, dx);
+                    const force = (100 - dist) / 1000;
+                    this.speedX += Math.cos(angle) * force;
+                    this.speedY += Math.sin(angle) * force;
+                  }
+                }
+              }
+              draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(59, 130, 246, 0.6)';
+                ctx.fill();
+              }
+            }
+
+            for (let i = 0; i < 60; i++) {
+              particles.push(new Particle());
+            }
+
+            function drawLines() {
+              for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                  const dx = particles[i].x - particles[j].x;
+                  const dy = particles[i].y - particles[j].y;
+                  const dist = Math.sqrt(dx * dx + dy * dy);
+                  if (dist < 120) {
+                    ctx.beginPath();
+                    ctx.moveTo(particles[i].x, particles[i].y);
+                    ctx.lineTo(particles[j].x, particles[j].y);
+                    ctx.strokeStyle = \`rgba(59, 130, 246, \${0.15 * (1 - dist / 120)})\`;
+                    ctx.lineWidth = 0.5;
+                    ctx.stroke();
+                  }
+                }
+              }
+            }
+
+            function animate() {
+              ctx.clearRect(0, 0, w, h);
+              particles.forEach(p => { p.update(); p.draw(); });
+              drawLines();
+              requestAnimationFrame(animate);
+            }
+
+            animate();
+
+            window.addEventListener('mousemove', (e) => {
+              mouse.x = e.clientX;
+              mouse.y = e.clientY;
+            });
+            window.addEventListener('mouseleave', () => { mouse.x = null; mouse.y = null; });
+          })();
+        `
+      }} />
+    </>
   );
 }
-// new deploy
