@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { Toaster, toast } from "sonner";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Home() {
   const [text, setText] = useState("");
@@ -58,7 +59,7 @@ export default function Home() {
     }
   }, []);
 
-  // ✅ **IntersectionObserver برای نمایش بخش‌ها هنگام اسکرول**
+  // IntersectionObserver برای نمایش بخش‌ها هنگام اسکرول
   useEffect(() => {
     const sections = document.querySelectorAll('.section-hidden');
     const observer = new IntersectionObserver(
@@ -240,7 +241,7 @@ export default function Home() {
           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-amber-400/60 animate-bounce text-3xl">↓</div>
         </section>
 
-        {/* ABOUT - با کلاس section-hidden */}
+        {/* ABOUT */}
         <section id="about" className="py-24 px-4 glass border-y border-white/5 section-hidden">
           <div className="max-w-7xl mx-auto">
             <h2 className="text-5xl font-bold text-center mb-4 bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">درباره من</h2>
@@ -346,9 +347,9 @@ export default function Home() {
                       <h3 className="text-xl font-bold mb-2 group-hover:text-amber-400 transition-colors">{project.title}</h3>
                       <p className="text-zinc-400 text-sm mb-4">{project.desc}</p>
                       <div className="text-xs text-amber-400 font-mono mb-4">{project.tech}</div>
-                      <a href={project.link || "#"} className="text-white hover:text-amber-400 transition-colors inline-flex items-center gap-2 text-sm">
+                      <Link href={`/projects/${project.id}`} className="text-white hover:text-amber-400 transition-colors inline-flex items-center gap-2 text-sm">
                         جزئیات پروژه <span>→</span>
-                      </a>
+                      </Link>
                     </div>
                   </div>
                 ))
