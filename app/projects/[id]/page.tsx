@@ -2,56 +2,22 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabaseClient';
 
+// غیرفعال کردن تولید استاتیک و استفاده از رندر داینامیک
+export const dynamic = 'force-dynamic';
+
 // دریافت اطلاعات یک پروژه از دیتابیس
 async function getProject(id: string) {
-  console.log('🔍 Fetching project with id:', id);
   const { data, error } = await supabase
     .from('projects')
     .select('*')
     .eq('id', parseInt(id))
     .maybeSingle();
 
-  if (error) {
-    console.error('❌ Supabase error:', error);
+  if (error || !data) {
     return null;
   }
 
-  if (!data) {
-    console.log('⚠️ No project found with id:', id);
-    return null;
-  }
-
-  console.log('✅ Project found:', data.title);
   return data;
-}
-
-// این تابع برای تولید صفحات استاتیک در زمان بیلد است
-// اگر خطا بدهد، می‌توانیم آن را غیرفعال کنیم
-export async function generateStaticParams() {
-  try {
-    console.log('🔍 Generating static params for projects...');
-    const { data: projects, error } = await supabase
-      .from('projects')
-      .select('id');
-
-    if (error) {
-      console.error('❌ Error fetching projects for static params:', error);
-      return [];
-    }
-
-    if (!projects || projects.length === 0) {
-      console.log('⚠️ No projects found for static params');
-      return [];
-    }
-
-    console.log(`✅ Found ${projects.length} projects for static params`);
-    return projects.map((project) => ({
-      id: String(project.id),
-    }));
-  } catch (error) {
-    console.error('❌ Error in generateStaticParams:', error);
-    return [];
-  }
 }
 
 // دیکشنری توضیحات تکمیلی برای هر پروژه
@@ -63,7 +29,7 @@ const projectDetails: Record<number, {
   myRole: string;
   techStack: string[];
 }> = {
-  1: {
+  4: {
     fullDescription: "این پروژه شامل طراحی و پیاده‌سازی شبکه کامل برای هلدینگ تجارت بین‌الملل دانا بود. هدف اصلی ایجاد یک زیرساخت شبکه امن، مقیاس‌پذیر و با قابلیت اطمینان بالا برای پشتیبانی از عملیات‌های حیاتی هلدینگ بود. این شبکه شامل ۵ ساختمان مجزا با بیش از ۲۰۰ کاربر فعال و نیاز به اتصال پایدار به مرکز داده اصلی بود.",
     challenges: [
       "یکپارچه‌سازی سیستم‌های قدیمی (Legacy Systems) با تجهیزات جدید شبکه",
@@ -81,7 +47,7 @@ const projectDetails: Record<number, {
     myRole: "معمار شبکه و سرپرست تیم پیاده‌سازی (۱۳۹۹-۱۴۰۰) - مسئول طراحی کلی، انتخاب تجهیزات، نظارت بر اجرا و آموزش تیم پشتیبانی",
     techStack: ["Cisco Catalyst", "Fortinet FortiGate", "Veeam Backup", "VMware ESXi", "Ubiquiti UniFi", "STP", "VRRP", "QoS"]
   },
-  2: {
+  5: {
     fullDescription: "پروژه هیئت حل اختلاف اداره کار اصفهان شامل اجرای شبکه سالن با تمرکز بر پایداری و امنیت بالا برای ارتباطات داخلی و جلسات حساس بود. این سالن به‌عنوان مرکز برگزاری جلسات مهم و مذاکرات حقوقی استفاده می‌شد و نیاز به امنیت و پایداری فوق‌العاده داشت.",
     challenges: [
       "نیاز به امنیت بالا برای ارتباطات داخلی و جلوگیری از شنود",
@@ -99,7 +65,7 @@ const projectDetails: Record<number, {
     myRole: "مشاور و مجری شبکه (۱۳۹۷) - مسئول طراحی فیزیکی و منطقی شبکه، انتخاب تجهیزات، اجرای کابل‌کشی و راه‌اندازی نهایی",
     techStack: ["MikroTik RouterOS", "Ubiquiti UniFi", "CAT6 Cabling", "UPS Systems", "QoS", "VLAN", "VPN"]
   },
-  3: {
+  6: {
     fullDescription: "طراحی و راه‌اندازی سایت deltadasht.com به عنوان یک وب‌سایت شرکتی برای نمایش خدمات، پروژه‌ها و معرفی برند شرکت دلتا دشت. این سایت به‌عنوان ویترین دیجیتال شرکت طراحی شده و هدف آن جذب مشتریان جدید و نمایش توانمندی‌های شرکت است.",
     challenges: [
       "طراحی جذاب و مدرن مطابق با هویت برند شرکت (رنگ‌های سازمانی، لوگو و فونت)",
@@ -119,7 +85,7 @@ const projectDetails: Record<number, {
     myRole: "طراح و توسعه‌دهنده وردپرس (۱۴۰۱) - مسئول پیاده‌سازی کامل سایت، انتخاب افزونه‌ها، بهینه‌سازی سرعت و امنیت، آموزش تیم محتوا",
     techStack: ["WordPress", "Elementor Pro", "PHP 8.1", "MySQL", "WP Rocket", "Yoast SEO", "Wordfence", "Cloudflare CDN"]
   },
-  4: {
+  7: {
     fullDescription: "سایت drmoeini.ir یک وب‌سایت شخصی و حرفه‌ای برای دکتر معینی، با هدف نمایش مقالات علمی، سوابق تحصیلی، فعالیت‌های پژوهشی و ارتباط با مخاطبان (دانشجویان، همکاران و علاقه‌مندان) طراحی شده است.",
     challenges: [
       "ساخت یک وب‌سایت ساده ولی حرفه‌ای با تمرکز بر محتوا و خوانایی بالا",
@@ -143,12 +109,9 @@ const projectDetails: Record<number, {
 
 // صفحه جزئیات پروژه
 export default async function ProjectPage({ params }: { params: { id: string } }) {
-  console.log('📄 Rendering project page for id:', params.id);
-  
   const project = await getProject(params.id);
 
   if (!project) {
-    console.log('❌ Project not found, returning 404');
     notFound();
   }
 
