@@ -1,10 +1,12 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Toaster, toast } from 'sonner';
 
-export default function ResetPasswordPage() {
+// کامپوننت داخلی که از useSearchParams استفاده می‌کند
+function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get('email') || '';
@@ -162,5 +164,26 @@ export default function ResetPasswordPage() {
       </div>
       <Toaster position="top-center" richColors />
     </div>
+  );
+}
+
+// صفحه اصلی با Suspense
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#0a0a0a',
+        color: 'white',
+        fontFamily: 'Vazirmatn, sans-serif',
+      }}>
+        <p>در حال بارگذاری...</p>
+      </div>
+    }>
+      <ResetPasswordContent />
+    </Suspense>
   );
 }
