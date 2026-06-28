@@ -7,6 +7,7 @@ import {
   BarChart3, Plus, Edit, Trash2, Upload, X
 } from 'lucide-react';
 
+// ============ TYPES ============
 interface Project {
   id: number;
   title: string;
@@ -51,7 +52,7 @@ const AdminLogin = ({ onLogin }: { onLogin: () => void }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] text-white">
+    <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] text-white font-vazir">
       <form onSubmit={handleSubmit} className="bg-[#18181b] p-10 rounded-2xl w-full max-w-md shadow-2xl border border-white/10">
         <h1 className="text-3xl font-bold text-center mb-2">پنل مدیریت</h1>
         <p className="text-zinc-500 text-center mb-8">احسان صالحی رباطی</p>
@@ -61,7 +62,7 @@ const AdminLogin = ({ onLogin }: { onLogin: () => void }) => {
             placeholder="نام کاربری"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700 rounded-xl focus:border-blue-500 focus:outline-none"
+            className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700 rounded-xl focus:border-blue-500 focus:outline-none transition"
             required
           />
           <input
@@ -69,7 +70,7 @@ const AdminLogin = ({ onLogin }: { onLogin: () => void }) => {
             placeholder="رمز عبور"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700 rounded-xl focus:border-blue-500 focus:outline-none"
+            className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700 rounded-xl focus:border-blue-500 focus:outline-none transition"
             required
           />
           <button
@@ -81,6 +82,22 @@ const AdminLogin = ({ onLogin }: { onLogin: () => void }) => {
         </div>
       </form>
       <Toaster position="top-center" richColors theme="dark" />
+    </div>
+  );
+};
+
+// ============ STAT CARD ============
+const StatCard = ({ label, value, color }: { label: string; value: number; color: 'blue' | 'amber' | 'green' | 'purple' }) => {
+  const colors = {
+    blue: 'bg-blue-600/10 text-blue-400 border-blue-500/20',
+    amber: 'bg-amber-600/10 text-amber-400 border-amber-500/20',
+    green: 'bg-green-600/10 text-green-400 border-green-500/20',
+    purple: 'bg-purple-600/10 text-purple-400 border-purple-500/20',
+  };
+  return (
+    <div className={`p-4 rounded-2xl border ${colors[color]} backdrop-blur-sm`}>
+      <p className="text-sm font-medium">{label}</p>
+      <p className="text-2xl font-bold mt-2">{value}</p>
     </div>
   );
 };
@@ -134,7 +151,6 @@ export default function AdminPage() {
     setLoading(false);
   };
 
-  // ============ UPLOAD IMAGE ============
   const handleUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) {
@@ -145,10 +161,14 @@ export default function AdminPage() {
     setUploading(true);
     const formData = new FormData();
     formData.append('file', file);
+    const token = localStorage.getItem('token');
 
     try {
       const res = await fetch('/api/upload', {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
         body: formData,
       });
       const data = await res.json();
@@ -159,7 +179,6 @@ export default function AdminPage() {
         toast.error(data.error || 'خطا در آپلود');
       }
     } catch (error) {
-      console.error('❌ خطا در آپلود:', error);
       toast.error('خطا در آپلود');
     }
     setUploading(false);
@@ -171,7 +190,6 @@ export default function AdminPage() {
     toast.info('عکس حذف شد');
   };
 
-  // ============ PROJECTS CRUD ============
   const handleSubmitProject = async (e: React.FormEvent) => {
     e.preventDefault();
     const token = localStorage.getItem('token');
@@ -197,7 +215,6 @@ export default function AdminPage() {
         toast.error(data.error || 'خطا در ذخیره');
       }
     } catch (error) {
-      console.error('❌ خطا در پروژه:', error);
       toast.error('خطا');
     }
   };
@@ -269,8 +286,8 @@ export default function AdminPage() {
   const tabs = [
     { id: 'dashboard', label: 'داشبورد', icon: BarChart3 },
     { id: 'projects', label: 'پروژه‌ها', icon: FolderOpen },
-    { id: 'users', label: 'کاربران', icon: Users },
     { id: 'blog', label: 'وبلاگ', icon: FileText },
+    { id: 'users', label: 'کاربران', icon: Users },
     { id: 'courses', label: 'دوره‌ها', icon: ShoppingBag },
   ];
 
@@ -537,18 +554,3 @@ export default function AdminPage() {
     </div>
   );
 }
-
-const StatCard = ({ label, value, color }: { label: string; value: number; color: 'blue' | 'amber' | 'green' | 'purple' }) => {
-  const colors = {
-    blue: 'bg-blue-600/10 text-blue-400 border-blue-500/20',
-    amber: 'bg-amber-600/10 text-amber-400 border-amber-500/20',
-    green: 'bg-green-600/10 text-green-400 border-green-500/20',
-    purple: 'bg-purple-600/10 text-purple-400 border-purple-500/20',
-  };
-  return (
-    <div className={`p-4 rounded-2xl border ${colors[color]} backdrop-blur-sm`}>
-      <p className="text-sm font-medium">{label}</p>
-      <p className="text-2xl font-bold mt-2">{value}</p>
-    </div>
-  );
-};
