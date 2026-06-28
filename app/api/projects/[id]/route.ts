@@ -1,19 +1,25 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+// PUT - ویرایش پروژه
+export async function PUT(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    console.log('📝 params.id:', params.id);
-    const id = Number(params.id);
-    console.log('📝 تبدیل شده به عدد:', id);
-    
+    // ✅ await کردن params برای دریافت id
+    const { id: idStr } = await params;
+    const id = Number(idStr);
+
+    console.log('📝 دریافت شناسه:', idStr, '→ تبدیل به عدد:', id);
+
     if (isNaN(id) || id <= 0) {
-      console.log('❌ شناسه نامعتبر:', params.id);
+      console.log('❌ شناسه نامعتبر:', idStr);
       return NextResponse.json({ error: 'شناسه پروژه نامعتبر است' }, { status: 400 });
     }
 
     const body = await request.json();
-    console.log('📝 داده‌های دریافتی برای ویرایش:', body);
+    console.log('📝 داده‌های دریافتی:', body);
 
     const { title, desc, tech, link, image_url } = body;
 
@@ -48,9 +54,15 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+// DELETE - حذف پروژه
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const id = Number(params.id);
+    const { id: idStr } = await params;
+    const id = Number(idStr);
+
     if (isNaN(id) || id <= 0) {
       return NextResponse.json({ error: 'شناسه نامعتبر' }, { status: 400 });
     }
