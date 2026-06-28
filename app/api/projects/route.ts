@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
 
-// دریافت لیست پروژه‌ها
+// GET - دریافت لیست پروژه‌ها
 export async function GET() {
   try {
     const { data, error } = await supabase
@@ -11,7 +11,7 @@ export async function GET() {
 
     if (error) {
       console.error('❌ Supabase error (projects GET):', error);
-      return NextResponse.json({ error: `Supabase error: ${error.message}` }, { status: 500 });
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, data });
@@ -21,10 +21,11 @@ export async function GET() {
   }
 }
 
-// اضافه کردن پروژه جدید
+// POST - ایجاد پروژه جدید
 export async function POST(request: Request) {
   try {
-    const { title, desc, tech, link } = await request.json();
+    const body = await request.json();
+    const { title, desc, tech, link, image_url } = body;
 
     if (!title || !desc) {
       return NextResponse.json({ error: 'عنوان و توضیحات الزامی است' }, { status: 400 });
@@ -32,12 +33,12 @@ export async function POST(request: Request) {
 
     const { data, error } = await supabase
       .from('projects')
-      .insert([{ title, desc, tech, link }])
+      .insert([{ title, desc, tech, link, image_url }])
       .select();
 
     if (error) {
       console.error('❌ Supabase error (projects POST):', error);
-      return NextResponse.json({ error: `Supabase error: ${error.message}` }, { status: 500 });
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, data: data[0] });
