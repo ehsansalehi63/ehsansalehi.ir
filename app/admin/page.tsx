@@ -7,7 +7,6 @@ import {
   BarChart3, Plus, Edit, Trash2, Upload, X
 } from 'lucide-react';
 
-// ============ TYPES ============
 interface Project {
   id: number;
   title: string;
@@ -25,14 +24,6 @@ interface User {
   isVerified: boolean;
   isAdmin: boolean;
   createdAt: string;
-}
-
-interface Stats {
-  totalUsers: number;
-  totalProjects: number;
-  totalPosts: number;
-  totalSales: number;
-  revenue: number;
 }
 
 // ============ ADMIN LOGIN ============
@@ -70,7 +61,7 @@ const AdminLogin = ({ onLogin }: { onLogin: () => void }) => {
             placeholder="نام کاربری"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700 rounded-xl focus:border-blue-500 focus:outline-none transition"
+            className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700 rounded-xl focus:border-blue-500 focus:outline-none"
             required
           />
           <input
@@ -78,7 +69,7 @@ const AdminLogin = ({ onLogin }: { onLogin: () => void }) => {
             placeholder="رمز عبور"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700 rounded-xl focus:border-blue-500 focus:outline-none transition"
+            className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700 rounded-xl focus:border-blue-500 focus:outline-none"
             required
           />
           <button
@@ -94,22 +85,6 @@ const AdminLogin = ({ onLogin }: { onLogin: () => void }) => {
   );
 };
 
-// ============ STAT CARD ============
-const StatCard = ({ label, value, color }: { label: string; value: number; color: 'blue' | 'amber' | 'green' | 'purple' }) => {
-  const colors = {
-    blue: 'bg-blue-600/10 text-blue-400 border-blue-500/20',
-    amber: 'bg-amber-600/10 text-amber-400 border-amber-500/20',
-    green: 'bg-green-600/10 text-green-400 border-green-500/20',
-    purple: 'bg-purple-600/10 text-purple-400 border-purple-500/20',
-  };
-  return (
-    <div className={`p-4 rounded-2xl border ${colors[color]} backdrop-blur-sm`}>
-      <p className="text-sm font-medium">{label}</p>
-      <p className="text-2xl font-bold mt-2">{value}</p>
-    </div>
-  );
-};
-
 // ============ MAIN ADMIN PAGE ============
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -117,24 +92,14 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const [users, setUsers] = useState<User[]>([]);
-  const [stats, setStats] = useState<Stats>({
-    totalUsers: 0,
-    totalProjects: 0,
-    totalPosts: 0,
-    totalSales: 0,
-    revenue: 0,
-  });
+  const [stats, setStats] = useState({ totalUsers: 0, totalProjects: 0, totalPosts: 0, totalSales: 0, revenue: 0 });
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [projectForm, setProjectForm] = useState({ title: '', desc: '', tech: '', link: '#', image_url: '' });
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // ============ GET TOKEN ============
-  const getToken = () => localStorage.getItem('token');
-
-  // ============ CHECK TOKEN ON MOUNT ============
   useEffect(() => {
-    const token = getToken();
+    const token = localStorage.getItem('token');
     const userStr = localStorage.getItem('user');
     if (token && userStr) {
       try {
@@ -149,33 +114,21 @@ export default function AdminPage() {
     }
   }, []);
 
-  // ============ FETCH DATA ============
   const fetchData = async () => {
-    const token = getToken();
-    if (!token) return;
-
     setLoading(true);
     try {
-      const headers = {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      };
-
       const [projectsRes, usersRes, statsRes] = await Promise.all([
-        fetch('/api/projects', { headers }),
-        fetch('/api/admin/users', { headers }),
-        fetch('/api/admin/stats', { headers }),
+        fetch('/api/projects'),
+        fetch('/api/admin/users'),
+        fetch('/api/admin/stats'),
       ]);
-
       const projectsData = await projectsRes.json();
       const usersData = await usersRes.json();
       const statsData = await statsRes.json();
-
       if (projectsData.success) setProjects(projectsData.data);
       if (usersData.success) setUsers(usersData.data);
       if (statsData.success) setStats(statsData.data);
     } catch (error) {
-      console.error('خطا در دریافت داده:', error);
       toast.error('خطا در دریافت داده‌ها');
     }
     setLoading(false);
@@ -184,11 +137,8 @@ export default function AdminPage() {
   // ============ UPLOAD IMAGE ============
   const handleUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-
-    const token = getToken();
-    if (!token) {
-      toast.error('لطفاً وارد شوید');
+    if (!file) {
+      toast.error('فایلی انتخاب نشده');
       return;
     }
 
@@ -199,9 +149,6 @@ export default function AdminPage() {
     try {
       const res = await fetch('/api/upload', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
         body: formData,
       });
       const data = await res.json();
@@ -212,6 +159,7 @@ export default function AdminPage() {
         toast.error(data.error || 'خطا در آپلود');
       }
     } catch (error) {
+      console.error('❌ خطا در آپلود:', error);
       toast.error('خطا در آپلود');
     }
     setUploading(false);
@@ -226,12 +174,7 @@ export default function AdminPage() {
   // ============ PROJECTS CRUD ============
   const handleSubmitProject = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = getToken();
-    if (!token) {
-      toast.error('لطفاً وارد شوید');
-      return;
-    }
-
+    const token = localStorage.getItem('token');
     const url = editingProject ? `/api/projects/${editingProject.id}` : '/api/projects';
     const method = editingProject ? 'PUT' : 'POST';
 
@@ -245,7 +188,6 @@ export default function AdminPage() {
         body: JSON.stringify(projectForm),
       });
       const data = await res.json();
-
       if (res.ok) {
         toast.success(editingProject ? 'پروژه ویرایش شد ✅' : 'پروژه اضافه شد ✅');
         setProjectForm({ title: '', desc: '', tech: '', link: '#', image_url: '' });
@@ -253,25 +195,20 @@ export default function AdminPage() {
         fetchData();
       } else {
         toast.error(data.error || 'خطا در ذخیره');
-        console.error('خطا در ذخیره:', data);
       }
     } catch (error) {
-      console.error('خطا:', error);
-      toast.error('خطا در ذخیره');
+      console.error('❌ خطا در پروژه:', error);
+      toast.error('خطا');
     }
   };
 
   const handleDeleteProject = async (id: number) => {
     if (!confirm('آیا از حذف این پروژه مطمئن هستید؟')) return;
-    const token = getToken();
-    if (!token) return;
-
+    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`/api/projects/${id}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        headers: { 'Authorization': `Bearer ${token}` },
       });
       if (res.ok) {
         toast.success('پروژه حذف شد');
@@ -285,9 +222,7 @@ export default function AdminPage() {
   };
 
   const handleToggleAdmin = async (userId: number, currentIsAdmin: boolean) => {
-    const token = getToken();
-    if (!token) return;
-
+    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`/api/admin/users/${userId}`, {
         method: 'PUT',
@@ -310,15 +245,11 @@ export default function AdminPage() {
 
   const handleDeleteUser = async (userId: number) => {
     if (!confirm('آیا از حذف این کاربر مطمئن هستید؟')) return;
-    const token = getToken();
-    if (!token) return;
-
+    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`/api/admin/users/${userId}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        headers: { 'Authorization': `Bearer ${token}` },
       });
       if (res.ok) {
         toast.success('کاربر حذف شد');
@@ -345,7 +276,6 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white font-vazir" dir="rtl">
-      {/* HEADER */}
       <header className="sticky top-0 z-50 bg-zinc-900/80 backdrop-blur-md border-b border-white/5 px-4 py-3">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <h1 className="text-xl font-bold bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">
@@ -364,7 +294,6 @@ export default function AdminPage() {
         </div>
       </header>
 
-      {/* NAV */}
       <nav className="sticky top-[60px] z-40 bg-zinc-900/40 backdrop-blur-md border-b border-white/5 px-4 py-2 overflow-x-auto">
         <div className="max-w-7xl mx-auto flex gap-1">
           {tabs.map((tab) => (
@@ -384,9 +313,7 @@ export default function AdminPage() {
         </div>
       </nav>
 
-      {/* CONTENT */}
       <main className="max-w-7xl mx-auto p-4">
-        {/* ===== DASHBOARD ===== */}
         {activeTab === 'dashboard' && (
           <div>
             <h2 className="text-2xl font-bold mb-6">داشبورد</h2>
@@ -402,7 +329,6 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* ===== PROJECTS ===== */}
         {activeTab === 'projects' && (
           <div>
             <div className="flex justify-between items-center mb-6">
@@ -418,7 +344,6 @@ export default function AdminPage() {
               </button>
             </div>
 
-            {/* FORM */}
             {(editingProject || projectForm.title) && (
               <form onSubmit={handleSubmitProject} className="bg-zinc-900/50 p-6 rounded-2xl border border-white/5 mb-6 grid gap-4">
                 <input
@@ -452,7 +377,6 @@ export default function AdminPage() {
                   className="px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-xl focus:border-blue-500 focus:outline-none"
                 />
 
-                {/* IMAGE UPLOAD */}
                 <div className="border border-dashed border-zinc-600 p-4 rounded-xl">
                   <label className="block text-sm text-zinc-400 mb-2">عکس پروژه</label>
                   <div className="flex items-center gap-3 flex-wrap">
@@ -484,9 +408,6 @@ export default function AdminPage() {
                         </button>
                       </div>
                     )}
-                    {projectForm.image_url && (
-                      <span className="text-xs text-zinc-500 truncate max-w-[200px]">{projectForm.image_url}</span>
-                    )}
                   </div>
                 </div>
 
@@ -508,7 +429,6 @@ export default function AdminPage() {
               </form>
             )}
 
-            {/* PROJECTS LIST */}
             <div className="space-y-3">
               {loading ? (
                 <p className="text-zinc-500">در حال بارگذاری...</p>
@@ -530,13 +450,7 @@ export default function AdminPage() {
                       <button
                         onClick={() => {
                           setEditingProject(project);
-                          setProjectForm({
-                            title: project.title,
-                            desc: project.desc,
-                            tech: project.tech || '',
-                            link: project.link || '#',
-                            image_url: project.image_url || '',
-                          });
+                          setProjectForm({ title: project.title, desc: project.desc, tech: project.tech || '', link: project.link || '#', image_url: project.image_url || '' });
                         }}
                         className="p-2 bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 rounded-lg transition"
                       >
@@ -556,7 +470,6 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* ===== USERS ===== */}
         {activeTab === 'users' && (
           <div>
             <h2 className="text-2xl font-bold mb-6">👥 مدیریت کاربران</h2>
@@ -605,7 +518,6 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* ===== BLOG ===== */}
         {activeTab === 'blog' && (
           <div>
             <h2 className="text-2xl font-bold mb-6">📝 مدیریت وبلاگ</h2>
@@ -613,7 +525,6 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* ===== COURSES ===== */}
         {activeTab === 'courses' && (
           <div>
             <h2 className="text-2xl font-bold mb-6">📚 مدیریت دوره‌ها</h2>
@@ -626,3 +537,18 @@ export default function AdminPage() {
     </div>
   );
 }
+
+const StatCard = ({ label, value, color }: { label: string; value: number; color: 'blue' | 'amber' | 'green' | 'purple' }) => {
+  const colors = {
+    blue: 'bg-blue-600/10 text-blue-400 border-blue-500/20',
+    amber: 'bg-amber-600/10 text-amber-400 border-amber-500/20',
+    green: 'bg-green-600/10 text-green-400 border-green-500/20',
+    purple: 'bg-purple-600/10 text-purple-400 border-purple-500/20',
+  };
+  return (
+    <div className={`p-4 rounded-2xl border ${colors[color]} backdrop-blur-sm`}>
+      <p className="text-sm font-medium">{label}</p>
+      <p className="text-2xl font-bold mt-2">{value}</p>
+    </div>
+  );
+};
