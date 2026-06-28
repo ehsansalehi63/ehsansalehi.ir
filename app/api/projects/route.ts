@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
 
-// GET - دریافت لیست پروژه‌ها
 export async function GET() {
   try {
     const { data, error } = await supabase
@@ -10,18 +9,17 @@ export async function GET() {
       .order('createdAt', { ascending: false });
 
     if (error) {
-      console.error('❌ Supabase error (projects GET):', error);
+      console.error('❌ Supabase error:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, data });
   } catch (error) {
-    console.error('❌ General error (projects GET):', error);
+    console.error('❌ General error:', error);
     return NextResponse.json({ error: 'خطا در دریافت پروژه‌ها' }, { status: 500 });
   }
 }
 
-// POST - ایجاد پروژه جدید
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -37,13 +35,13 @@ export async function POST(request: Request) {
       .select();
 
     if (error) {
-      console.error('❌ Supabase error (projects POST):', error);
+      console.error('❌ Supabase error:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, data: data[0] });
   } catch (error) {
-    console.error('❌ General error (projects POST):', error);
+    console.error('❌ General error:', error);
     return NextResponse.json({ error: 'خطا در ایجاد پروژه' }, { status: 500 });
   }
 }

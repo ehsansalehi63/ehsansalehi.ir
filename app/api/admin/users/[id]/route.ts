@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
 
-// PUT - تغییر نقش کاربر (ادمین/عادی)
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
     const id = parseInt(params.id);
@@ -23,7 +22,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       .select('id, name, email, isVerified, isAdmin, createdAt');
 
     if (error) {
-      console.error('❌ Supabase error (user PUT):', error);
+      console.error('❌ Supabase error:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
@@ -33,12 +32,11 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
     return NextResponse.json({ success: true, data: data[0] });
   } catch (error) {
-    console.error('❌ General error (user PUT):', error);
+    console.error('❌ General error:', error);
     return NextResponse.json({ error: 'خطا در ویرایش کاربر' }, { status: 500 });
   }
 }
 
-// DELETE - حذف کاربر
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
     const id = parseInt(params.id);
@@ -53,7 +51,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
       .select('id, name, email');
 
     if (error) {
-      console.error('❌ Supabase error (user DELETE):', error);
+      console.error('❌ Supabase error:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
@@ -63,7 +61,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
 
     return NextResponse.json({ success: true, message: 'کاربر حذف شد' });
   } catch (error) {
-    console.error('❌ General error (user DELETE):', error);
+    console.error('❌ General error:', error);
     return NextResponse.json({ error: 'خطا در حذف کاربر' }, { status: 500 });
   }
 }

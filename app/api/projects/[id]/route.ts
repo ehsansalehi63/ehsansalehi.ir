@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
 
-// PUT - ویرایش پروژه
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
     const id = parseInt(params.id);
@@ -23,7 +22,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       .select();
 
     if (error) {
-      console.error('❌ Supabase error (projects PUT):', error);
+      console.error('❌ Supabase error:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
@@ -33,12 +32,11 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
     return NextResponse.json({ success: true, data: data[0] });
   } catch (error) {
-    console.error('❌ General error (projects PUT):', error);
+    console.error('❌ General error:', error);
     return NextResponse.json({ error: 'خطا در ویرایش پروژه' }, { status: 500 });
   }
 }
 
-// DELETE - حذف پروژه
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
     const id = parseInt(params.id);
@@ -53,7 +51,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
       .select();
 
     if (error) {
-      console.error('❌ Supabase error (projects DELETE):', error);
+      console.error('❌ Supabase error:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
@@ -63,7 +61,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
 
     return NextResponse.json({ success: true, message: 'پروژه حذف شد' });
   } catch (error) {
-    console.error('❌ General error (projects DELETE):', error);
+    console.error('❌ General error:', error);
     return NextResponse.json({ error: 'خطا در حذف پروژه' }, { status: 500 });
   }
 }
