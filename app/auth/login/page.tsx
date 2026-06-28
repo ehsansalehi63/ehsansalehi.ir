@@ -1,17 +1,33 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Toaster, toast } from 'sonner';
 
 export default function LoginPage() {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
+
+  // بررسی توکن در ابتدای کار
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+    if (token && user) {
+      try {
+        const userData = JSON.parse(user);
+        if (userData.isAdmin) {
+          window.location.href = '/admin';
+        } else {
+          window.location.href = '/dashboard';
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,16 +44,19 @@ export default function LoginPage() {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
 
-        // ✅ تشخیص نقش کاربر برای هدایت
-        if (data.user.isAdmin) {
-          router.push('/admin');
-        } else {
-          router.push('/dashboard');
-        }
+        // ✅ هدایت با window.location.href (مطمئن‌ترین روش)
+        setTimeout(() => {
+          if (data.user.isAdmin) {
+            window.location.href = '/admin';
+          } else {
+            window.location.href = '/dashboard';
+          }
+        }, 200);
       } else {
         toast.error(data.error || 'خطا در ورود');
       }
     } catch (error) {
+      console.error('❌ خطا در لاگین:', error);
       toast.error('خطا در ارتباط با سرور');
     }
     setLoading(false);
