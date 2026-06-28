@@ -2,11 +2,32 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Toaster, toast } from 'sonner';
+import { BookOpen, Clock, CheckCircle, ShoppingBag, User, LogOut } from 'lucide-react';
+
+interface UserData {
+  id: number;
+  name: string;
+  email: string;
+  isVerified: boolean;
+  isAdmin: boolean;
+}
+
+interface PurchasedCourse {
+  id: number;
+  title: string;
+  description: string;
+  image_url: string;
+  price: number;
+  purchased_at: string;
+  progress: number;
+}
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<UserData | null>(null);
+  const [purchases, setPurchases] = useState<PurchasedCourse[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -16,25 +37,37 @@ export default function DashboardPage() {
       return;
     }
 
-    fetch('/api/auth/me', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          setUser(data.user);
-        } else {
+    const fetchData = async () => {
+      try {
+        // دریافت اطلاعات کاربر
+        const userRes = await fetch('/api/auth/me', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        const userData = await userRes.json();
+        if (!userData.success) {
           localStorage.removeItem('token');
           localStorage.removeItem('user');
           router.push('/auth/login');
+          return;
         }
-      })
-      .catch(() => {
-        router.push('/auth/login');
-      })
-      .finally(() => setLoading(false));
+        setUser(userData.user);
+
+        // دریافت دوره‌های خریداری شده
+        const purchasesRes = await fetch('/api/user/purchases', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        const purchasesData = await purchasesRes.json();
+        if (purchasesData.success) {
+          setPurchases(purchasesData.data);
+        }
+      } catch (error) {
+        toast.error('خطا در دریافت اطلاعات');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, [router]);
 
   const handleLogout = () => {
@@ -46,82 +79,112 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#0a0a0a',
-        color: 'white',
-        fontFamily: 'Vazirmatn, sans-serif',
-      }}>
+      <div className="min-h-screen bg-[#0a0a0a] text-white font-vazir flex items-center justify-center">
         <p>در حال بارگذاری...</p>
       </div>
     );
   }
 
+  if (!user) {
+    return null;
+  }
+
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#0a0a0a',
-      color: 'white',
-      fontFamily: 'Vazirmatn, sans-serif',
-      padding: '80px 20px 20px',
-      direction: 'rtl',
-    }}>
-      <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '32px',
-        }}>
-          <h1 style={{ fontSize: '28px', fontWeight: 'bold' }}>داشبورد کاربری</h1>
-          <button
-            onClick={handleLogout}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: '#dc2626',
-              borderRadius: '8px',
-              border: 'none',
-              color: 'white',
-              cursor: 'pointer',
-            }}
-          >
-            خروج
-          </button>
+    <div className="min-h-screen bg-[#0a0a0a] text-white font-vazir" dir="rtl">
+      {/* هدر */}
+      <header className="sticky top-0 z-50 bg-zinc-900/80 backdrop-blur-md border-b border-white/5 px-4 py-3">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <Link href="/" className="text-xl font-bold bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">
+            احسان صالحی
+          </Link>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-zinc-400">{user.name}</span>
+            <button
+              onClick={handleLogout}
+              className="p-2 hover:bg-white/5 rounded-xl transition"
+            >
+              <LogOut size={18} className="text-red-400" />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto p-4">
+        {/* اطلاعات کاربر */}
+        <div className="bg-zinc-900/50 p-6 rounded-2xl border border-white/5 mb-8">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-amber-500 to-blue-500 flex items-center justify-center text-2xl font-bold">
+              {user.name.charAt(0)}
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">{user.name}</h1>
+              <p className="text-zinc-400">{user.email}</p>
+              <div className="flex gap-2 mt-1">
+                <span className={`text-xs ${user.isVerified ? 'text-green-400' : 'text-red-400'}`}>
+                  {user.isVerified ? '✅ تأیید شده' : '⏳ تأیید نشده'}
+                </span>
+                {user.isAdmin && (
+                  <Link href="/admin" className="text-xs text-amber-400 hover:underline">
+                    👑 پنل مدیریت
+                  </Link>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div style={{
-          backgroundColor: '#18181b',
-          padding: '24px',
-          borderRadius: '16px',
-          marginBottom: '24px',
-        }}>
-          <h2 style={{ marginBottom: '16px' }}>اطلاعات کاربری</h2>
-          <p><strong>نام:</strong> {user?.name}</p>
-          <p><strong>ایمیل:</strong> {user?.email}</p>
-          <p><strong>وضعیت:</strong> {user?.isVerified ? '✅ تأیید شده' : '⏳ در انتظار تأیید'}</p>
-          <p><strong>تاریخ ثبت نام:</strong> {new Date(user?.createdAt).toLocaleDateString('fa-IR')}</p>
-        </div>
+        {/* دوره‌های خریداری شده */}
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              <BookOpen size={20} className="text-blue-400" />
+              دوره‌های من
+            </h2>
+            <Link href="/courses" className="text-sm text-blue-400 hover:underline">
+              مشاهده همه دوره‌ها
+            </Link>
+          </div>
 
-        <div style={{
-          backgroundColor: '#18181b',
-          padding: '24px',
-          borderRadius: '16px',
-        }}>
-          <h2 style={{ marginBottom: '16px' }}>📊 آمار</h2>
-          <p>تعداد پروژه‌ها: ۰</p>
-          <p>پیام‌های دریافتی: ۰</p>
+          {purchases.length === 0 ? (
+            <div className="bg-zinc-900/30 p-8 rounded-2xl border border-white/5 text-center">
+              <p className="text-zinc-500">شما هنوز هیچ دوره‌ای خریداری نکرده‌اید.</p>
+              <Link href="/courses" className="inline-block mt-4 px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded-xl transition">
+                مشاهده دوره‌ها
+              </Link>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {purchases.map((course) => (
+                <div key={course.id} className="bg-zinc-900/50 p-4 rounded-2xl border border-white/5 hover:border-blue-500/30 transition">
+                  <div className="aspect-video rounded-xl overflow-hidden bg-zinc-800 mb-3">
+                    {course.image_url ? (
+                      <img src={course.image_url} alt={course.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-4xl opacity-30">📚</div>
+                    )}
+                  </div>
+                  <h3 className="font-bold">{course.title}</h3>
+                  <p className="text-sm text-zinc-400 line-clamp-2">{course.description}</p>
+                  <div className="flex justify-between items-center mt-3">
+                    <span className="text-xs text-green-400 flex items-center gap-1">
+                      <CheckCircle size={14} />
+                      خریداری شده
+                    </span>
+                    <Link
+                      href={`/courses/${course.id}`}
+                      className="text-sm text-blue-400 hover:underline"
+                    >
+                      مشاهده دوره
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
+      </main>
 
-        <div style={{ marginTop: '24px', textAlign: 'center' }}>
-          <a href="/" style={{ color: '#60a5fa', textDecoration: 'none' }}>
-            بازگشت به صفحه اصلی
-          </a>
-        </div>
-      </div>
-      <Toaster position="top-center" richColors />
+      <Toaster position="top-center" richColors theme="dark" />
     </div>
   );
 }
