@@ -27,7 +27,13 @@ export default function LoginPage() {
         toast.success('ورود موفق ✅');
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
-        router.push('/dashboard');
+
+        // ✅ تشخیص نقش کاربر برای هدایت
+        if (data.user.isAdmin) {
+          router.push('/admin');
+        } else {
+          router.push('/dashboard');
+        }
       } else {
         toast.error(data.error || 'خطا در ورود');
       }
