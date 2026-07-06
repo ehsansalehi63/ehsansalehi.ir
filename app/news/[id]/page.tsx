@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { pool } from '../../../lib/db';
+import { pool } from '../../lib/db';
 import Link from 'next/link';
 
 interface NewsPageProps {
