@@ -100,7 +100,7 @@ export async function POST(request: Request) {
         },
       }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ General error (register):', error);
     return NextResponse.json(
       { error: 'خطا در ثبت نام' },

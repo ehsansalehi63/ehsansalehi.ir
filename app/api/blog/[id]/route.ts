@@ -1,69 +1,83 @@
-import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabaseClient';
+import { NextRequest, NextResponse } from 'next/server';
+import { pool } from '../../../lib/mysql';
 
-// PUT - ویرایش پست
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const id = parseInt(params.id);
-    if (isNaN(id)) {
-      return NextResponse.json({ error: 'شناسه نامعتبر' }, { status: 400 });
+    const { id } = await params;
+    const [rows] = await pool.execute(
+      'SELECT * FROM blog_posts WHERE id = ?',
+      [id]
+    );
+
+    const post = (rows as any[])[0];
+    if (!post) {
+      return NextResponse.json(
+        { success: false, error: 'پست یافت نشد' },
+        { status: 404 }
+      );
     }
 
-    const body = await request.json();
-    const { title, slug, excerpt, content, image_url, status } = body;
-
-    if (!title || !slug || !content) {
-      return NextResponse.json({ error: 'عنوان، اسلاگ و محتوا الزامی است' }, { status: 400 });
-    }
-
-    const { data, error } = await supabase
-      .from('blog_posts')
-      .update({ title, slug, excerpt, content, image_url, status, updated_at: new Date().toISOString() })
-      .eq('id', id)
-      .select();
-
-    if (error) {
-      console.error('❌ Supabase error (blog PUT):', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    if (!data || data.length === 0) {
-      return NextResponse.json({ error: 'پست یافت نشد' }, { status: 404 });
-    }
-
-    return NextResponse.json({ success: true, data: data[0] });
-  } catch (error) {
-    console.error('❌ General error (blog PUT):', error);
-    return NextResponse.json({ error: 'خطا در ویرایش پست' }, { status: 500 });
+    return NextResponse.json({ success: true, data: post });
+  } catch (error: any) {
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 }
+    );
   }
 }
 
-// DELETE - حذف پست
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const id = parseInt(params.id);
-    if (isNaN(id)) {
-      return NextResponse.json({ error: 'شناسه نامعتبر' }, { status: 400 });
-    }
+    const { id } = await params;
+    const body = await request.json();
 
-    const { data, error } = await supabase
-      .from('blog_posts')
-      .delete()
-      .eq('id', id)
-      .select();
+    await pool.execute(
+      `UPDATE blog_posts 
+       SET title = ?, slug = ?, excerpt = ?, content = ?, image_url = ?, status = ?
+       WHERE id = ?`,
+      [
+        body.title,
+        body.slug,
+        body.excerpt,
+        body.content,
+        body.image_url,
+        body.status,
+        id
+      ]
+    );
 
-    if (error) {
-      console.error('❌ Supabase error (blog DELETE):', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 }
+    );
+  }
+}
 
-    if (!data || data.length === 0) {
-      return NextResponse.json({ error: 'پست یافت نشد' }, { status: 404 });
-    }
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
 
-    return NextResponse.json({ success: true, message: 'پست حذف شد' });
-  } catch (error) {
-    console.error('❌ General error (blog DELETE):', error);
-    return NextResponse.json({ error: 'خطا در حذف پست' }, { status: 500 });
+    await pool.execute(
+      'DELETE FROM blog_posts WHERE id = ?',
+      [id]
+    );
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 }
+    );
   }
 }

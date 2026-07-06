@@ -45,7 +45,7 @@ export async function POST(request: Request) {
 
     console.log('✅ آپلود موفق:', urlData.publicUrl);
     return NextResponse.json({ success: true, url: urlData.publicUrl });
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ General error:', error);
     return NextResponse.json({ error: 'خطا در آپلود' }, { status: 500 });
   }

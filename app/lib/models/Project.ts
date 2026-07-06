@@ -1,4 +1,4 @@
-import { query } from '@/app/lib/mysql';
+import { query } from '../../lib/mysql';
 
 export interface Project {
   id: number;
@@ -6,43 +6,34 @@ export interface Project {
   desc: string;
   tech: string;
   link: string;
-  createdAt: Date;
+  image_url: string;
+  createdAt: string;
 }
 
 export const ProjectModel = {
-  async create(project: Omit<Project, 'id' | 'createdAt'>) {
-    await query(
-      'INSERT INTO projects (title, `desc`, tech, link) VALUES (?, ?, ?, ?)',
-      [project.title, project.desc, project.tech, project.link]
+  async getAll(): Promise<Project[]> {
+    return query<Project>('SELECT * FROM projects ORDER BY createdAt DESC');
+  },
+
+  async getById(id: number): Promise<Project | null> {
+    const rows = await query<Project>('SELECT * FROM projects WHERE id = ?', [id]);
+    return rows.length ? rows[0] : null;
+  },
+
+  async create(data: Omit<Project, 'id' | 'createdAt'>): Promise<any> {
+    return query(
+      'INSERT INTO projects (title, desc, tech, link, image_url) VALUES (?, ?, ?, ?, ?)',
+      [data.title, data.desc, data.tech, data.link, data.image_url]
     );
   },
 
-  async findAll() {
-    const rows = await query('SELECT * FROM projects ORDER BY createdAt DESC');
-    return rows;
+  async update(id: number, data: Partial<Project>): Promise<void> {
+    const fields = Object.keys(data).map(key => `${key} = ?`).join(', ');
+    const values = Object.values(data);
+    await query(`UPDATE projects SET ${fields} WHERE id = ?`, [...values, id]);
   },
 
-  async findById(id: number) {
-    const rows = await query('SELECT * FROM projects WHERE id = ?', [id]);
-    return (rows as any[])[0] || null;
-  },
-
-  async update(id: number, data: Partial<Project>) {
-    const fields = [];
-    const values = [];
-    if (data.title) { fields.push('title = ?'); values.push(data.title); }
-    if (data.desc) { fields.push('`desc` = ?'); values.push(data.desc); }
-    if (data.tech) { fields.push('tech = ?'); values.push(data.tech); }
-    if (data.link) { fields.push('link = ?'); values.push(data.link); }
-    if (fields.length === 0) return null;
-    values.push(id);
-    await query(
-      `UPDATE projects SET ${fields.join(', ')} WHERE id = ?`,
-      values
-    );
-  },
-
-  async delete(id: number) {
+  async delete(id: number): Promise<void> {
     await query('DELETE FROM projects WHERE id = ?', [id]);
   },
 };

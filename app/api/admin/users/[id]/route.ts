@@ -1,67 +1,79 @@
-import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabaseClient';
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const id = parseInt(params.id);
-    if (isNaN(id)) {
-      return NextResponse.json({ error: 'شناسه نامعتبر' }, { status: 400 });
-    }
-
-    const body = await request.json();
-    const { isAdmin } = body;
-
-    if (typeof isAdmin !== 'boolean') {
-      return NextResponse.json({ error: 'مقدار isAdmin باید boolean باشد' }, { status: 400 });
-    }
-
+    const { id } = await params;
     const { data, error } = await supabase
       .from('users')
-      .update({ isAdmin })
+      .select('*')
       .eq('id', id)
-      .select('id, name, email, isVerified, isAdmin, createdAt');
+      .single();
 
-    if (error) {
-      console.error('❌ Supabase error:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    if (error) throw error;
 
-    if (!data || data.length === 0) {
-      return NextResponse.json({ error: 'کاربر یافت نشد' }, { status: 404 });
-    }
-
-    return NextResponse.json({ success: true, data: data[0] });
-  } catch (error) {
-    console.error('❌ General error:', error);
-    return NextResponse.json({ error: 'خطا در ویرایش کاربر' }, { status: 500 });
+    return NextResponse.json({ success: true, data });
+  } catch (error: any) {
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 }
+    );
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const id = parseInt(params.id);
-    if (isNaN(id)) {
-      return NextResponse.json({ error: 'شناسه نامعتبر' }, { status: 400 });
-    }
+    const { id } = await params;
+    const body = await request.json();
 
     const { data, error } = await supabase
       .from('users')
-      .delete()
+      .update(body)
       .eq('id', id)
-      .select('id, name, email');
+      .select()
+      .single();
 
-    if (error) {
-      console.error('❌ Supabase error:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    if (error) throw error;
 
-    if (!data || data.length === 0) {
-      return NextResponse.json({ error: 'کاربر یافت نشد' }, { status: 404 });
-    }
+    return NextResponse.json({ success: true, data });
+  } catch (error: any) {
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 }
+    );
+  }
+}
 
-    return NextResponse.json({ success: true, message: 'کاربر حذف شد' });
-  } catch (error) {
-    console.error('❌ General error:', error);
-    return NextResponse.json({ error: 'خطا در حذف کاربر' }, { status: 500 });
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+
+    const { error } = await supabase
+      .from('users')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 }
+    );
   }
 }

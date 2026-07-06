@@ -1,90 +1,79 @@
-import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabaseClient';
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
-// PUT - ویرایش پروژه
-export async function PUT(
-  request: Request,
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+export async function GET(
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // ✅ await کردن params برای دریافت id
-    const { id: idStr } = await params;
-    const id = Number(idStr);
-
-    console.log('📝 دریافت شناسه:', idStr, '→ تبدیل به عدد:', id);
-
-    if (isNaN(id) || id <= 0) {
-      console.log('❌ شناسه نامعتبر:', idStr);
-      return NextResponse.json({ error: 'شناسه پروژه نامعتبر است' }, { status: 400 });
-    }
-
-    const body = await request.json();
-    console.log('📝 داده‌های دریافتی:', body);
-
-    const { title, desc, tech, link, image_url } = body;
-
-    if (!title || !desc) {
-      return NextResponse.json({ error: 'عنوان و توضیحات الزامی است' }, { status: 400 });
-    }
-
-    const updateData: any = { title, desc };
-    if (tech !== undefined) updateData.tech = tech || null;
-    if (link !== undefined) updateData.link = link || '#';
-    if (image_url !== undefined) updateData.image_url = image_url || null;
-
+    const { id } = await params;
     const { data, error } = await supabase
       .from('projects')
-      .update(updateData)
+      .select('*')
       .eq('id', id)
-      .select();
+      .single();
 
-    if (error) {
-      console.error('❌ Supabase error:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    if (error) throw error;
 
-    if (!data || data.length === 0) {
-      return NextResponse.json({ error: 'پروژه یافت نشد' }, { status: 404 });
-    }
-
-    return NextResponse.json({ success: true, data: data[0] });
-  } catch (error) {
-    console.error('❌ General error:', error);
-    return NextResponse.json({ error: 'خطا در ویرایش پروژه' }, { status: 500 });
+    return NextResponse.json({ success: true, data });
+  } catch (error: any) {
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 }
+    );
   }
 }
 
-// DELETE - حذف پروژه
-export async function DELETE(
-  request: Request,
+export async function PUT(
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: idStr } = await params;
-    const id = Number(idStr);
-
-    if (isNaN(id) || id <= 0) {
-      return NextResponse.json({ error: 'شناسه نامعتبر' }, { status: 400 });
-    }
+    const { id } = await params;
+    const body = await request.json();
 
     const { data, error } = await supabase
       .from('projects')
-      .delete()
+      .update(body)
       .eq('id', id)
-      .select();
+      .select()
+      .single();
 
-    if (error) {
-      console.error('❌ Supabase error:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    if (error) throw error;
 
-    if (!data || data.length === 0) {
-      return NextResponse.json({ error: 'پروژه یافت نشد' }, { status: 404 });
-    }
+    return NextResponse.json({ success: true, data });
+  } catch (error: any) {
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 }
+    );
+  }
+}
 
-    return NextResponse.json({ success: true, message: 'پروژه حذف شد' });
-  } catch (error) {
-    console.error('❌ General error:', error);
-    return NextResponse.json({ error: 'خطا در حذف پروژه' }, { status: 500 });
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+
+    const { error } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 }
+    );
   }
 }

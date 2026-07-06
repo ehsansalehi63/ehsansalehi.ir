@@ -67,7 +67,7 @@ export async function POST(request: Request) {
         },
       }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ General error (reset password):', error);
     return NextResponse.json(
       { error: 'خطا در بازنشانی رمز' },

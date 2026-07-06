@@ -93,7 +93,7 @@ export async function POST(request: Request) {
         },
       }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ General error (verify):', error);
     return NextResponse.json(
       { error: 'خطا در تأیید کد' },

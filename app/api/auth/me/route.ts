@@ -38,7 +38,7 @@ export async function GET(request: Request) {
         },
       }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ General error (me):', error);
     return NextResponse.json(
       { error: 'توکن نامعتبر است' },

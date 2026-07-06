@@ -14,7 +14,7 @@ export async function GET() {
     }
 
     return NextResponse.json({ success: true, data });
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ General error:', error);
     return NextResponse.json({ error: 'خطا در دریافت پروژه‌ها' }, { status: 500 });
   }
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ success: true, data: data[0] });
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ General error:', error);
     return NextResponse.json({ error: 'خطا در ایجاد پروژه' }, { status: 500 });
   }

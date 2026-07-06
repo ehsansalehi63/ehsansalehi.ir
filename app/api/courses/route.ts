@@ -14,7 +14,7 @@ export async function GET() {
     }
 
     return NextResponse.json({ success: true, data });
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ General error (courses GET):', error);
     return NextResponse.json({ error: 'خطا در دریافت دوره‌ها' }, { status: 500 });
   }

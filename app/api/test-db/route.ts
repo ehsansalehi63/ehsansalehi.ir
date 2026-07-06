@@ -13,7 +13,7 @@ export async function GET() {
     await connection.query('SELECT 1');
     await connection.end();
     return NextResponse.json({ success: true, message: '✅ اتصال به دیتابیس برقرار است' });
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ خطا در اتصال به دیتابیس:', error);
     return NextResponse.json({ error: error instanceof Error ? error.message : 'خطا' }, { status: 500 });
   }

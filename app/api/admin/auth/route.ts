@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
     return NextResponse.json({ error: 'خطا در احراز هویت' }, { status: 500 });
   }
 }

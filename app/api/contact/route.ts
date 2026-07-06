@@ -60,7 +60,7 @@ export async function POST(request: Request) {
         },
       }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ General error:', error);
     return NextResponse.json(
       { error: 'خطا در ارسال پیام' },

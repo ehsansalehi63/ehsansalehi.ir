@@ -30,7 +30,7 @@ export async function GET() {
         revenue,
       }
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ General error:', error);
     return NextResponse.json({ error: 'خطا در دریافت آمار' }, { status: 500 });
   }

@@ -91,7 +91,7 @@ export async function POST(request: Request) {
         },
       }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ General error (forgot password):', error);
     return NextResponse.json(
       { error: 'خطا در ارسال لینک بازیابی' },
