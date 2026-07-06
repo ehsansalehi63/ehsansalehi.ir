@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { Toaster, toast } from "sonner";
 import Image from "next/image";
 import Link from "next/link";
+import NewsSection from "./components/NewsSection";
 
 export default function Home() {
   const [text, setText] = useState("");
@@ -14,7 +15,6 @@ export default function Home() {
   const fullText = "احسان صالحی رباطی";
   const formRef = useRef<HTMLFormElement>(null);
 
-  // تایپ‌رایتر
   useEffect(() => {
     setText(fullText);
     let index = 0;
@@ -26,7 +26,6 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  // دریافت پروژه‌ها
   useEffect(() => {
     fetch('/api/projects')
       .then(res => res.json())
@@ -37,7 +36,6 @@ export default function Home() {
       .catch(() => setLoading(false));
   }, []);
 
-  // بررسی لاگین
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -59,7 +57,6 @@ export default function Home() {
     }
   }, []);
 
-  // IntersectionObserver برای نمایش بخش‌ها هنگام اسکرول
   useEffect(() => {
     const sections = document.querySelectorAll('.section-hidden');
     const observer = new IntersectionObserver(
@@ -75,11 +72,6 @@ export default function Home() {
     sections.forEach((section) => observer.observe(section));
     return () => observer.disconnect();
   }, []);
-
-  const skills = [
-    "WordPress", "Network+", "ESXI & Vcenter", "Veeam", "Kerio Control",
-    "Next.js", "Tailwind CSS", "TypeScript", "IT Management", "Hardware Repair"
-  ];
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -126,6 +118,7 @@ export default function Home() {
     { name: "خدمات", href: "#services" },
     { name: "مهارت‌ها", href: "#skills" },
     { name: "پروژه‌ها", href: "#projects" },
+    { name: "اخبار", href: "#news" },
     { name: "تماس", href: "#contact" },
   ];
 
@@ -147,16 +140,21 @@ export default function Home() {
         .project-image { height: 200px; overflow: hidden; background: #1a1a1a; }
         .project-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
         .project-card:hover .project-image img { transform: scale(1.05); }
+        .news-card { transition: all 0.4s ease; cursor: pointer; }
+        .news-card:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 20px 60px rgba(59,130,246,0.2); }
+        .news-image { height: 200px; overflow: hidden; background: #1a1a1a; }
+        .news-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
+        .news-card:hover .news-image img { transform: scale(1.05); }
+        .news-source { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; color: #f59e0b; }
+        .news-date { position: absolute; bottom: 12px; right: 12px; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; color: #9ca3af; }
         @keyframes gradientFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
         .animate-gradient { background-size: 300% 300%; animation: gradientFlow 8s ease infinite; }
         @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
       `}</style>
 
       <main className="min-h-screen bg-[#0a0a0a] text-white font-vazir" dir="rtl">
-        {/* Particle Background */}
         <canvas id="particleCanvas" className="fixed inset-0 pointer-events-none z-0" />
 
-        {/* HEADER */}
         <header className="fixed top-0 left-0 right-0 z-50 glass px-4 py-3">
           <div className="max-w-7xl mx-auto flex justify-between items-center">
             <a href="#" className="text-2xl font-black bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">
@@ -206,11 +204,9 @@ export default function Home() {
           )}
         </header>
 
-        {/* HERO */}
         <section className="relative min-h-screen flex items-center justify-center pt-20 px-4 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-purple-900/40 to-black animate-gradient" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%, rgba(245,158,11,0.08), transparent)]" />
-          
           <div className="relative z-10 max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center w-full">
             <div className="flex justify-center lg:justify-end order-2 lg:order-1">
               <div className="relative group">
@@ -241,7 +237,6 @@ export default function Home() {
           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-amber-400/60 animate-bounce text-3xl">↓</div>
         </section>
 
-        {/* ABOUT */}
         <section id="about" className="py-24 px-4 glass border-y border-white/5 section-hidden">
           <div className="max-w-7xl mx-auto">
             <h2 className="text-5xl font-bold text-center mb-4 bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">درباره من</h2>
@@ -271,7 +266,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* SERVICES */}
         <section id="services" className="py-24 px-4 section-hidden">
           <div className="max-w-7xl mx-auto">
             <h2 className="text-5xl font-bold text-center mb-4 bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">خدمات من</h2>
@@ -292,7 +286,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* SKILLS */}
         <section id="skills" className="py-24 px-4 glass border-y border-white/5 section-hidden">
           <div className="max-w-5xl mx-auto">
             <div className="flex items-center justify-center gap-3 mb-8">
@@ -323,7 +316,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* PROJECTS */}
         <section id="projects" className="py-24 px-4 section-hidden">
           <div className="max-w-7xl mx-auto">
             <h2 className="text-5xl font-bold text-center mb-4 bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">نمونه‌کارها</h2>
@@ -358,7 +350,21 @@ export default function Home() {
           </div>
         </section>
 
-        {/* CONTACT */}
+        <section id="news" className="py-24 px-4 glass border-y border-white/5 section-hidden">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center justify-between mb-10">
+              <div>
+                <h2 className="text-5xl font-bold bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">📰 آخرین اخبار تکنولوژی</h2>
+                <p className="text-zinc-400 text-xl mt-2">جدیدترین رویدادهای دنیای فناوری</p>
+              </div>
+              <Link href="/news" className="text-amber-400 hover:text-amber-300 transition-colors font-medium inline-flex items-center gap-1 text-lg">
+                مشاهده همه اخبار <span>→</span>
+              </Link>
+            </div>
+            <NewsSection />
+          </div>
+        </section>
+
         <section id="contact" className="py-24 px-4 glass border-t border-white/5 section-hidden">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-5xl font-bold mb-4 bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">تماس با من</h2>
@@ -396,7 +402,6 @@ export default function Home() {
         <Toaster position="top-center" richColors theme="dark" />
       </main>
 
-      {/* Particle Script */}
       <script dangerouslySetInnerHTML={{
         __html: `
           (function() {
