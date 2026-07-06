@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
-import { faL } from '@fortawesome/free-solid-svg-icons';
 
 interface NewsItem {
   id: number;
@@ -73,13 +72,11 @@ export default function NewsSection() {
     );
   }
 
-  // اولین خبر را به‌عنوان خبر اصلی در نظر می‌گیریم
   const mainNews = news[0];
   const restNews = news.slice(1, 5);
 
   return (
     <div className="space-y-8">
-      {/* خبر اصلی (بزرگ) */}
       <div className="glass rounded-2xl overflow-hidden border border-white/10 hover:border-amber-500/40 transition-all duration-300 group">
         <Link href={`/news/${mainNews.id}`} className="block">
           <div className="relative h-80 lg:h-[420px] overflow-hidden">
@@ -123,7 +120,6 @@ export default function NewsSection() {
         </Link>
       </div>
 
-      {/* بقیه اخبار (دو ستونی) */}
       <div className="grid md:grid-cols-2 gap-6">
         {restNews.map((item) => (
           <div key={item.id} className="glass rounded-2xl overflow-hidden border border-white/10 hover:border-amber-500/40 transition-all duration-300 group flex flex-col">
@@ -164,7 +160,6 @@ export default function NewsSection() {
         ))}
       </div>
 
-      {/* دکمه مشاهده همه اخبار */}
       <div className="text-center mt-8">
         <Link 
           href="/news" 
