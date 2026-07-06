@@ -1,6 +1,5 @@
 import mysql from 'mysql2/promise';
 
-// ایجاد connection pool برای اتصال به دیتابیس MySQL
 export const pool = mysql.createPool({
   host: process.env.MYSQL_HOST || 'localhost',
   port: Number(process.env.MYSQL_PORT) || 3306,
@@ -12,7 +11,6 @@ export const pool = mysql.createPool({
   queueLimit: 0,
 });
 
-// تابع کمکی برای اجرای کوئری‌ها
 export async function query<T = any>(sql: string, params?: any[]): Promise<T[]> {
   const [rows] = await pool.execute(sql, params);
   return rows as T[];
