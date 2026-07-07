@@ -3,7 +3,7 @@ import { pool } from '../../../lib/db';
 import Parser from 'rss-parser';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-import { translate } from 'node-google-translator';
+import { analyzeAndTranslateNews } from '../../../lib/translateWithGPT';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -20,18 +20,6 @@ const RSS_FEEDS = [
   'https://www.scientificamerican.com/feed/',
   'https://www.bbc.com/news/technology/rss.xml',
 ];
-
-async function translateToPersian(text: string): Promise<string> {
-  if (!text || text.length < 5) return text;
-  
-  try {
-    const result = await translate(text, { to: 'fa' });
-    return result.text || text;
-  } catch (error) {
-    console.error('Translation error:', error);
-    return text;
-  }
-}
 
 async function extractFullContent(url: string): Promise<{ content: string; image: string | null; video: string | null }> {
   try {
@@ -88,6 +76,7 @@ export async function GET() {
     const allItems = [];
     let newCount = 0;
     let skippedNoImage = 0;
+    let skippedGPT = 0;
 
     for (const feedUrl of RSS_FEEDS) {
       try {
@@ -101,19 +90,20 @@ export async function GET() {
               continue;
             }
             
-            const [persianTitle, persianContent] = await Promise.all([
-              translateToPersian(item.title || ''),
-              content ? translateToPersian(content) : Promise.resolve(''),
-            ]);
+            const translated = await analyzeAndTranslateNews(
+              item.title || '',
+              content || '',
+              feed.title || 'منبع ناشناس'
+            );
             
-            const finalTitle = persianTitle || item.title || 'بدون عنوان';
-            const finalContent = persianContent || content || '';
-            const summary = finalContent.slice(0, 200) + (finalContent.length > 200 ? '...' : '');
+            if (!translated.title || translated.title === item.title) {
+              skippedGPT++;
+            }
 
             allItems.push({
-              title: finalTitle,
-              summary: summary,
-              content: finalContent,
+              title: translated.title || item.title || 'بدون عنوان',
+              summary: translated.summary || content.slice(0, 200),
+              content: translated.content || content || '',
               image_url: image,
               video_url: video || null,
               source_name: feed.title || 'منبع ناشناس',
@@ -136,6 +126,7 @@ export async function GET() {
         success: true, 
         message: 'No items with images found',
         skippedNoImage,
+        skippedGPT,
       });
     }
 
@@ -176,6 +167,7 @@ export async function GET() {
       total: allItems.length, 
       new: newCount,
       skippedNoImage,
+      skippedGPT,
     });
   } catch (error: any) {
     return NextResponse.json({ 
