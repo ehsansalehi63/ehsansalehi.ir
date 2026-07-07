@@ -3,7 +3,6 @@ import { MetadataRoute } from 'next';
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://ehsansalehi.ir';
   
-  // صفحات ثابت
   const staticPages = [
     '',
     '/news',
@@ -20,10 +19,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: page === '' ? 1.0 : 0.8,
   }));
   
-  // در صورت نیاز می‌توانید پروژه‌ها و اخبار را هم به نقشه سایت اضافه کنید
-  // اینجا یک نمونه ساده برای اخبار اضافه شده است
+  // اضافه کردن اخبار به نقشه سایت (با مسیر صحیح)
   try {
-    const { pool } = await import('../lib/db');
+    // اصلاح مسیر: از '../lib/db' به './lib/db'
+    const { pool } = await import('./lib/db');
     const [newsRows] = await pool.execute(
       'SELECT id, published_at FROM news_posts WHERE is_published = TRUE ORDER BY published_at DESC LIMIT 100'
     );

@@ -15,34 +15,39 @@ export default function Home() {
   const fullText = "احسان صالحی رباطی";
   const formRef = useRef<HTMLFormElement>(null);
 
-  // تایپ‌رایتر جدید (سریع‌تر با افکت محو شدن)
+  // تایپ‌رایتر جدید با مدیریت صحیح timeout
   useEffect(() => {
     let index = 0;
     let isDeleting = false;
     let currentText = '';
+    let timeoutId: NodeJS.Timeout | null = null;
     
     const type = () => {
       if (!isDeleting && index <= fullText.length) {
         currentText = fullText.slice(0, index);
         setText(currentText);
         index++;
-        setTimeout(type, 60); // سرعت بالا (قبلاً ۱۲۰ms بود)
+        timeoutId = setTimeout(type, 60);
       } else if (!isDeleting && index > fullText.length) {
         isDeleting = true;
-        setTimeout(type, 1500); // مکث قبل از شروع مجدد
+        timeoutId = setTimeout(type, 1500);
       } else if (isDeleting && index > 0) {
         currentText = fullText.slice(0, index);
         setText(currentText);
         index--;
-        setTimeout(type, 30); // حذف سریع‌تر
+        timeoutId = setTimeout(type, 30);
       } else if (isDeleting && index === 0) {
         isDeleting = false;
-        setTimeout(type, 500);
+        timeoutId = setTimeout(type, 500);
       }
     };
     
     type();
-    return () => clearTimeout(type);
+    
+    // پاک کردن timeout در هنگام unmount
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, []);
 
   // دریافت پروژه‌ها
@@ -190,7 +195,6 @@ export default function Home() {
       <main className="min-h-screen bg-[#0a0a0a] text-white font-vazir" dir="rtl">
         <canvas id="particleCanvas" className="fixed inset-0 pointer-events-none z-0" />
 
-        {/* HEADER - فضای کمتر */}
         <header className="fixed top-0 left-0 right-0 z-50 glass px-4 py-2">
           <div className="max-w-7xl mx-auto flex justify-between items-center">
             <a href="#" className="text-xl font-black bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">
@@ -240,7 +244,6 @@ export default function Home() {
           )}
         </header>
 
-        {/* HERO - با فضای کمتر بالای صفحه */}
         <section className="relative min-h-screen flex items-center justify-center pt-16 px-4 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-purple-900/40 to-black animate-gradient" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%, rgba(245,158,11,0.08), transparent)]" />
@@ -275,7 +278,6 @@ export default function Home() {
           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-amber-400/60 animate-bounce text-3xl">↓</div>
         </section>
 
-        {/* ABOUT - سایر بخش‌ها بدون تغییر */}
         <section id="about" className="py-24 px-4 glass border-y border-white/5 section-hidden">
           <div className="max-w-7xl mx-auto">
             <h2 className="text-5xl font-bold text-center mb-4 bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">درباره من</h2>
@@ -305,7 +307,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* SERVICES */}
         <section id="services" className="py-24 px-4 section-hidden">
           <div className="max-w-7xl mx-auto">
             <h2 className="text-5xl font-bold text-center mb-4 bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">خدمات من</h2>
@@ -326,7 +327,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* SKILLS */}
         <section id="skills" className="py-24 px-4 glass border-y border-white/5 section-hidden">
           <div className="max-w-5xl mx-auto">
             <div className="flex items-center justify-center gap-3 mb-8">
@@ -357,7 +357,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* PROJECTS */}
         <section id="projects" className="py-24 px-4 section-hidden">
           <div className="max-w-7xl mx-auto">
             <h2 className="text-5xl font-bold text-center mb-4 bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">نمونه‌کارها</h2>
@@ -392,7 +391,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* NEWS SECTION */}
         <section id="news" className="py-24 px-4 glass border-y border-white/5 section-hidden">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-between mb-10">
@@ -408,7 +406,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* CONTACT */}
         <section id="contact" className="py-24 px-4 glass border-t border-white/5 section-hidden">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-5xl font-bold mb-4 bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">تماس با من</h2>
