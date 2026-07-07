@@ -3,7 +3,7 @@ import { pool } from '../../../lib/db';
 import Parser from 'rss-parser';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-import { translate } from 'node-google-translator';
+import { translate } from 'deeplx';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -21,80 +21,73 @@ const RSS_FEEDS = [
   'https://www.bbc.com/news/technology/rss.xml',
 ];
 
-// ترجمه با Google Translate (کاملاً رایگان)
+// ترجمه با DeepL (کیفیت عالی، رایگان)
 async function translateToPersian(text: string): Promise<string> {
-  if (!text || text.length < 3) return text;
+  if (!text || text.length < 5) return text;
   
   try {
-    const result = await translate(text, { to: 'fa' });
-    // اگر نتیجه با خطا شروع نشده باشد
-    if (result.text && !result.text.startsWith('INVALID')) {
-      return result.text;
-    }
-    return text;
+    const result = await translate({
+      text: text,
+      source: 'en',
+      target: 'fa',
+    });
+    return result || text;
   } catch (error) {
     console.error('Translation error:', error);
     return text;
   }
 }
 
-// دریافت محتوای کامل خبر
-async function fetchFullContent(url: string): Promise<string> {
+// استخراج محتوای کامل و عکس
+async function extractFullContent(url: string): Promise<{ content: string; image: string | null; video: string | null }> {
   try {
-    const { data } = await axios.get(url, { timeout: 10000 });
+    const { data } = await axios.get(url, { timeout: 15000 });
     const $ = cheerio.load(data);
     
-    // حذف المان‌های غیرضروری
-    $('script, style, nav, header, footer, aside, .ad, .advertisement').remove();
+    // حذف المان‌های اضافی
+    $('script, style, nav, header, footer, aside, .ad, .advertisement, .related, .social, .comments, .sidebar').remove();
     
-    // پیدا کردن محتوای اصلی
+    // عکس اصلی
+    const image = $('meta[property="og:image"]').attr('content') || 
+                  $('meta[name="twitter:image"]').attr('content') || 
+                  $('article img').first().attr('src') || null;
+    
+    const video = $('meta[property="og:video"]').attr('content') || 
+                  $('video source').first().attr('src') || null;
+    
+    // محتوای متن
+    let content = '';
     const selectors = [
-      'article .content',
-      'article .entry-content', 
+      'article .entry-content',
       'article .post-content',
-      'main article p',
+      'article .content',
+      'main article',
       '.article-content',
       '.post-content',
       '.entry-content',
-      'article p',
+      'article',
     ];
     
-    let content = '';
     for (const selector of selectors) {
       const elements = $(selector);
       if (elements.length > 0) {
-        elements.each((_, el) => {
+        elements.find('p').each((_, el) => {
           const text = $(el).text().trim();
-          if (text.length > 30) {
+          if (text.length > 30 && !text.startsWith('©') && !text.includes('Subscribe')) {
             content += text + '\n\n';
           }
         });
-        if (content.length > 200) break;
+        if (content.length > 500) break;
       }
     }
     
-    // اگر محتوایی پیدا نشد، از متا استفاده کن
     if (!content || content.length < 100) {
       content = $('meta[name="description"]').attr('content') || '';
     }
     
-    return content || '';
-  } catch {
-    return '';
-  }
-}
-
-async function extractImageAndVideo(url: string) {
-  try {
-    const { data } = await axios.get(url, { timeout: 10000 });
-    const $ = cheerio.load(data);
-    const image = $('meta[property="og:image"]').attr('content') || 
-                  $('meta[name="twitter:image"]').attr('content') || null;
-    const video = $('meta[property="og:video"]').attr('content') || 
-                  $('video source').first().attr('src') || null;
-    return { image, video };
-  } catch {
-    return { image: null, video: null };
+    return { content: content.trim(), image, video };
+  } catch (error) {
+    return { content: '', image: null, video: null };
   }
 }
 
@@ -103,37 +96,36 @@ export async function GET() {
     const parser = new Parser();
     const allItems = [];
     let newCount = 0;
-    let errorCount = 0;
+    let skippedNoImage = 0;
 
     for (const feedUrl of RSS_FEEDS) {
       try {
         const feed = await parser.parseURL(feedUrl);
         for (const item of feed.items.slice(0, 3)) {
           try {
-            let fullContent = item.content || item['content:encoded'] || '';
+            const { content, image, video } = await extractFullContent(item.link || '');
             
-            if (!fullContent || fullContent.length < 200) {
-              const fetched = await fetchFullContent(item.link || '');
-              if (fetched) fullContent = fetched;
+            // فقط خبرهایی با عکس ذخیره شوند
+            if (!image) {
+              skippedNoImage++;
+              continue;
             }
             
-            if (!fullContent || fullContent.length < 50) {
-              fullContent = item.contentSnippet || item.summary || '';
-            }
-
-            const { image, video } = await extractImageAndVideo(item.link || '');
+            // ترجمه عنوان و محتوا با DeepL
+            const [persianTitle, persianContent] = await Promise.all([
+              translateToPersian(item.title || ''),
+              content ? translateToPersian(content) : Promise.resolve(''),
+            ]);
             
-            // ترجمه با Google Translate
-            const persianTitle = await translateToPersian(item.title || '');
-            const persianSummary = await translateToPersian(
-              fullContent.slice(0, 300)
-            );
+            const finalTitle = persianTitle || item.title || 'بدون عنوان';
+            const finalContent = persianContent || content || '';
+            const summary = finalContent.slice(0, 200) + (finalContent.length > 200 ? '...' : '');
 
             allItems.push({
-              title: persianTitle || item.title || 'بدون عنوان',
-              summary: persianSummary || fullContent.slice(0, 200) || '',
-              content: fullContent || '',
-              image_url: image || null,
+              title: finalTitle,
+              summary: summary,
+              content: finalContent,
+              image_url: image,
               video_url: video || null,
               source_name: feed.title || 'منبع ناشناس',
               source_url: item.link || '',
@@ -142,7 +134,7 @@ export async function GET() {
               is_published: true,
             });
           } catch (itemError) {
-            errorCount++;
+            console.error('Error processing item:', itemError);
           }
         }
       } catch (feedError) {
@@ -152,12 +144,13 @@ export async function GET() {
 
     if (allItems.length === 0) {
       return NextResponse.json({ 
-        success: false, 
-        message: 'No items found',
-        errors: errorCount,
+        success: true, 
+        message: 'No items with images found',
+        skippedNoImage,
       });
     }
 
+    // ذخیره در دیتابیس
     for (const item of allItems) {
       try {
         const [existing] = await pool.execute(
@@ -194,7 +187,7 @@ export async function GET() {
       success: true, 
       total: allItems.length, 
       new: newCount,
-      errors: errorCount,
+      skippedNoImage,
     });
   } catch (error: any) {
     return NextResponse.json({ 

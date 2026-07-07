@@ -1,36 +1,33 @@
 import { NextResponse } from 'next/server';
 import { pool } from '../../../lib/db';
-import { translate } from 'node-google-translator';
+import { translate } from 'deeplx';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-async function translateToPersian(text: string): Promise<string> {
-  if (!text || text.length < 5) return text;
-  try {
-    const res = await translate(text, { to: 'fa' });
-    return res.text || text;
-  } catch {
-    return text;
-  }
-}
-
 export async function GET() {
   try {
+    // انتخاب ۵۰ خبر اول که هنوز فارسی نیستند
     const [rows] = await pool.execute(
-      "SELECT id, title, content FROM news_posts WHERE content NOT LIKE '%سلام%' AND content NOT LIKE '%در%' LIMIT 20"
+      'SELECT id, title, content FROM news_posts WHERE content NOT LIKE "%سلام%" AND content NOT LIKE "%در%" LIMIT 50'
     );
+    
     let updated = 0;
     for (const row of rows as any[]) {
-      const translatedContent = await translateToPersian(row.content);
-      if (translatedContent && translatedContent !== row.content) {
+      try {
+        const translatedTitle = await translate({ text: row.title, source: 'en', target: 'fa' });
+        const translatedContent = await translate({ text: row.content, source: 'en', target: 'fa' });
+        
         await pool.execute(
-          'UPDATE news_posts SET content = ? WHERE id = ?',
-          [translatedContent, row.id]
+          'UPDATE news_posts SET title = ?, content = ? WHERE id = ?',
+          [translatedTitle || row.title, translatedContent || row.content, row.id]
         );
         updated++;
+      } catch {
+        continue;
       }
     }
+    
     return NextResponse.json({ success: true, updated });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
