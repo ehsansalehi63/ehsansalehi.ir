@@ -12,6 +12,7 @@ const RSS_FEEDS = [
   'https://techcrunch.com/feed/',
   'https://www.theverge.com/rss/index.xml',
   'https://feeds.mit.edu/mit_technology_review',
+  'https://www.wired.com/feed/rss',
 ];
 
 async function translateToPersian(text: string): Promise<string> {
@@ -57,8 +58,8 @@ export async function GET() {
             image_url: image || null,
             video_url: video || null,
             source_name: feed.title || 'منبع ناشناس',
-            source_url: item.link,
-            original_url: item.link,
+            source_url: item.link || '',
+            original_url: item.link || '', // مقدار پیش‌فرض رشته خالی
             published_at: item.pubDate ? new Date(item.pubDate) : new Date(),
             is_published: true,
           });
@@ -73,10 +74,12 @@ export async function GET() {
     }
 
     for (const item of allItems) {
+      // بررسی تکراری با original_url
       const [existing] = await pool.execute(
         'SELECT id FROM news_posts WHERE original_url = ?',
-        [item.original_url]
+        [item.original_url || ''] // تضمین اینکه رشته است
       );
+
       if ((existing as any[]).length === 0) {
         await pool.execute(
           `INSERT INTO news_posts 
@@ -90,7 +93,7 @@ export async function GET() {
             item.video_url,
             item.source_name,
             item.source_url,
-            item.original_url,
+            item.original_url || '',
             item.published_at,
             item.is_published,
           ]
