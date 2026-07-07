@@ -3,11 +3,11 @@ import { pool } from '../../../lib/db';
 import Parser from 'rss-parser';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
+import { translate } from 'node-google-translator';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-// لیست گسترده منابع RSS
 const RSS_FEEDS = [
   'https://techcrunch.com/feed/',
   'https://www.theverge.com/rss/index.xml',
@@ -21,25 +21,15 @@ const RSS_FEEDS = [
   'https://www.bbc.com/news/technology/rss.xml',
 ];
 
-// تابع ترجمه با استفاده از MyMemory (رایگان و بدون نیاز به کلید)
+// ترجمه با Google Translate (کاملاً رایگان)
 async function translateToPersian(text: string): Promise<string> {
-  if (!text || text.length < 5) return text;
+  if (!text || text.length < 3) return text;
   
   try {
-    const response = await axios.get('https://api.mymemory.translated.net/get', {
-      params: {
-        q: text.slice(0, 1000), // محدودیت ۱۰۰۰ کاراکتر
-        langpair: 'en|fa',
-        de: 'ehsansalehi.ir', // شناسه برای استفاده رایگان
-      },
-      timeout: 15000,
-    });
-    
-    if (response.data && response.data.responseData) {
-      const translated = response.data.responseData.translatedText;
-      if (translated && translated !== text) {
-        return translated;
-      }
+    const result = await translate(text, { to: 'fa' });
+    // اگر نتیجه با خطا شروع نشده باشد
+    if (result.text && !result.text.startsWith('INVALID')) {
+      return result.text;
     }
     return text;
   } catch (error) {
@@ -48,19 +38,19 @@ async function translateToPersian(text: string): Promise<string> {
   }
 }
 
-// دریافت محتوای کامل خبر از لینک (اگر RSS خلاصه داده باشد)
+// دریافت محتوای کامل خبر
 async function fetchFullContent(url: string): Promise<string> {
   try {
     const { data } = await axios.get(url, { timeout: 10000 });
     const $ = cheerio.load(data);
     
-    // تلاش برای پیدا کردن محتوای اصلی
-    let content = '';
+    // حذف المان‌های غیرضروری
+    $('script, style, nav, header, footer, aside, .ad, .advertisement').remove();
     
-    // روش‌های مختلف برای استخراج محتوا
+    // پیدا کردن محتوای اصلی
     const selectors = [
       'article .content',
-      'article .entry-content',
+      'article .entry-content', 
       'article .post-content',
       'main article p',
       '.article-content',
@@ -69,23 +59,23 @@ async function fetchFullContent(url: string): Promise<string> {
       'article p',
     ];
     
+    let content = '';
     for (const selector of selectors) {
       const elements = $(selector);
       if (elements.length > 0) {
         elements.each((_, el) => {
           const text = $(el).text().trim();
-          if (text.length > 50) {
+          if (text.length > 30) {
             content += text + '\n\n';
           }
         });
-        break;
+        if (content.length > 200) break;
       }
     }
     
-    // اگر محتوایی پیدا نشد، از متای description استفاده کن
+    // اگر محتوایی پیدا نشد، از متا استفاده کن
     if (!content || content.length < 100) {
       content = $('meta[name="description"]').attr('content') || '';
-      if (content) content = content.trim();
     }
     
     return content || '';
@@ -94,7 +84,6 @@ async function fetchFullContent(url: string): Promise<string> {
   }
 }
 
-// استخراج عکس و ویدیو
 async function extractImageAndVideo(url: string) {
   try {
     const { data } = await axios.get(url, { timeout: 10000 });
@@ -118,44 +107,32 @@ export async function GET() {
 
     for (const feedUrl of RSS_FEEDS) {
       try {
-        console.log(`Fetching: ${feedUrl}`);
         const feed = await parser.parseURL(feedUrl);
-        
-        for (const item of feed.items.slice(0, 3)) { // هر منبع ۳ خبر
+        for (const item of feed.items.slice(0, 3)) {
           try {
-            // دریافت محتوای کامل
             let fullContent = item.content || item['content:encoded'] || '';
             
-            // اگر محتوا کوتاه است، از لینک خبر دریافت کن
             if (!fullContent || fullContent.length < 200) {
-              const fetchedContent = await fetchFullContent(item.link || '');
-              if (fetchedContent) {
-                fullContent = fetchedContent;
-              }
+              const fetched = await fetchFullContent(item.link || '');
+              if (fetched) fullContent = fetched;
             }
             
-            // اگر باز هم محتوا نداشت، از خلاصه استفاده کن
             if (!fullContent || fullContent.length < 50) {
               fullContent = item.contentSnippet || item.summary || '';
             }
 
-            // استخراج عکس و ویدیو
             const { image, video } = await extractImageAndVideo(item.link || '');
             
-            // ترجمه عنوان و خلاصه
+            // ترجمه با Google Translate
             const persianTitle = await translateToPersian(item.title || '');
             const persianSummary = await translateToPersian(
-              fullContent.slice(0, 300) // فقط ۳۰۰ کاراکتر اول برای خلاصه
+              fullContent.slice(0, 300)
             );
-            
-            // اگر ترجمه کار نکرد، متن اصلی را نگه دار
-            const finalTitle = persianTitle || item.title || 'بدون عنوان';
-            const finalSummary = persianSummary || fullContent.slice(0, 200) || '';
 
             allItems.push({
-              title: finalTitle,
-              summary: finalSummary,
-              content: fullContent || finalSummary,
+              title: persianTitle || item.title || 'بدون عنوان',
+              summary: persianSummary || fullContent.slice(0, 200) || '',
+              content: fullContent || '',
               image_url: image || null,
               video_url: video || null,
               source_name: feed.title || 'منبع ناشناس',
@@ -166,11 +143,10 @@ export async function GET() {
             });
           } catch (itemError) {
             errorCount++;
-            console.error('Error processing item:', itemError);
           }
         }
       } catch (feedError) {
-        console.error(`Error fetching feed ${feedUrl}:`, feedError);
+        console.error(`Feed error ${feedUrl}:`, feedError);
       }
     }
 
@@ -182,7 +158,6 @@ export async function GET() {
       });
     }
 
-    // ذخیره در دیتابیس
     for (const item of allItems) {
       try {
         const [existing] = await pool.execute(
@@ -211,7 +186,7 @@ export async function GET() {
           newCount++;
         }
       } catch (dbError) {
-        console.error('Database error:', dbError);
+        console.error('DB error:', dbError);
       }
     }
 
