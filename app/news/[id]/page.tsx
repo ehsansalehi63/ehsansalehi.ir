@@ -1,13 +1,13 @@
 import { notFound } from 'next/navigation';
-import { pool } from '../../../lib/db';
+import { pool } from '../../lib/db';
 import Link from 'next/link';
-
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
 
 interface NewsPageProps {
   params: Promise<{ id: string }>;
 }
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 async function getNews(id: string) {
   try {
@@ -16,8 +16,7 @@ async function getNews(id: string) {
       [id]
     );
     return (rows as any[])[0] || null;
-  } catch (error) {
-    console.error('DB Error:', error);
+  } catch {
     return null;
   }
 }
@@ -49,15 +48,8 @@ export default async function NewsPage({ params }: NewsPageProps) {
         </Link>
 
         {news.image_url && (
-          <div className="relative w-full h-96 rounded-2xl overflow-hidden mb-8 shadow-2xl bg-gray-800">
-            <img 
-              src={news.image_url} 
-              alt={news.title} 
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = 'none';
-              }}
-            />
+          <div className="relative w-full h-96 rounded-2xl overflow-hidden mb-8 shadow-2xl">
+            <img src={news.image_url} alt={news.title} className="w-full h-full object-cover" />
           </div>
         )}
 
@@ -77,12 +69,10 @@ export default async function NewsPage({ params }: NewsPageProps) {
           </div>
         )}
 
-        <div className="bg-gray-800/50 rounded-2xl p-6 md:p-8 border border-white/5">
-          <div className="prose prose-lg prose-invert max-w-none">
-            {news.content.split('\n').map((p: string, i: number) => (
-              <p key={i} className="mb-4 text-zinc-300 leading-relaxed">{p}</p>
-            ))}
-          </div>
+        <div className="prose prose-lg prose-invert max-w-none">
+          {news.content.split('\n').map((p: string, i: number) => (
+            <p key={i} className="mb-4 text-zinc-300 leading-relaxed">{p}</p>
+          ))}
         </div>
       </div>
     </main>
