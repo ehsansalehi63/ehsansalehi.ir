@@ -7,31 +7,62 @@ import { analyzeAndTranslateNews } from '../../../lib/translateWithGPT';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-export const maxDuration = 60; // افزایش زمان اجرا به ۶۰ ثانیه
+export const maxDuration = 60;
 
-// کاهش تعداد منابع RSS برای سرعت بیشتر
 const RSS_FEEDS = [
   'https://techcrunch.com/feed/',
   'https://www.theverge.com/rss/index.xml',
+  'https://feeds.mit.edu/mit_technology_review',
   'https://www.wired.com/feed/rss',
   'https://feeds.feedburner.com/zdnet/zdnet',
+  'https://www.engadget.com/rss.xml',
+  'https://arstechnica.com/feed/',
+  'https://www.cnet.com/rss/news/',
 ];
 
 async function extractFullContent(url: string): Promise<{ content: string; image: string | null; video: string | null }> {
   try {
-    const { data } = await axios.get(url, { timeout: 10000 });
+    const { data } = await axios.get(url, { timeout: 15000 });
     const $ = cheerio.load(data);
     
     $('script, style, nav, header, footer, aside, .ad, .advertisement, .related, .social, .comments, .sidebar').remove();
     
-    // استخراج عکس با اولویت‌بندی
-    const image = $('meta[property="og:image"]').attr('content') || 
-                  $('meta[name="twitter:image"]').attr('content') || 
-                  $('article img').first().attr('src') || null;
+    // استخراج عکس از OpenGraph (اولویت اول)
+    let image = $('meta[property="og:image"]').attr('content') || 
+                $('meta[name="twitter:image"]').attr('content') || 
+                $('article img').first().attr('src') || null;
     
+    // اگر عکس از OpenGraph نیامد، از تصویر اصلی مقاله استفاده کن
+    if (!image) {
+      $('article img, .featured-image img, .post-image img').each((_, el) => {
+        const src = $(el).attr('src') || $(el).attr('data-src');
+        if (src && src.startsWith('http')) {
+          image = src;
+          return false; // break
+        }
+      });
+    }
+    
+    // اگر عکس وجود داشت، بررسی کن که با http شروع شود
+    if (image && !image.startsWith('http')) {
+      if (image.startsWith('/')) {
+        const baseUrl = new URL(url).origin;
+        image = baseUrl + image;
+      } else {
+        image = null;
+      }
+    }
+    
+    // اگر عکس پیدا شد، از سرویس cdn استفاده کن تا همیشه قابل دسترس باشد
+    if (image) {
+      image = `https://images.weserv.nl/?url=${encodeURIComponent(image)}&w=600&h=400&fit=cover`;
+    }
+    
+    // استخراج ویدیو
     const video = $('meta[property="og:video"]').attr('content') || 
                   $('video source').first().attr('src') || null;
     
+    // استخراج محتوا
     let content = '';
     const selectors = [
       'article .entry-content',
@@ -78,7 +109,6 @@ export async function GET() {
     for (const feedUrl of RSS_FEEDS) {
       try {
         const feed = await parser.parseURL(feedUrl);
-        // کاهش تعداد اخبار هر منبع به ۲ عدد
         for (const item of feed.items.slice(0, 2)) {
           try {
             const { content, image, video } = await extractFullContent(item.link || '');
