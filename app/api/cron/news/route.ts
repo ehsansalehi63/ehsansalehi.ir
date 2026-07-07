@@ -21,16 +21,13 @@ const RSS_FEEDS = [
   'https://www.bbc.com/news/technology/rss.xml',
 ];
 
-// ترجمه با DeepL (کیفیت عالی، رایگان)
+// ترجمه با DeepL (کیفیت عالی)
 async function translateToPersian(text: string): Promise<string> {
   if (!text || text.length < 5) return text;
   
   try {
-    const result = await translate({
-      text: text,
-      source: 'en',
-      target: 'fa',
-    });
+    // استفاده صحیح از deeplx: translate(text, from, to)
+    const result = await translate(text, 'en', 'fa');
     return result || text;
   } catch (error) {
     console.error('Translation error:', error);
@@ -44,10 +41,8 @@ async function extractFullContent(url: string): Promise<{ content: string; image
     const { data } = await axios.get(url, { timeout: 15000 });
     const $ = cheerio.load(data);
     
-    // حذف المان‌های اضافی
     $('script, style, nav, header, footer, aside, .ad, .advertisement, .related, .social, .comments, .sidebar').remove();
     
-    // عکس اصلی
     const image = $('meta[property="og:image"]').attr('content') || 
                   $('meta[name="twitter:image"]').attr('content') || 
                   $('article img').first().attr('src') || null;
@@ -55,7 +50,6 @@ async function extractFullContent(url: string): Promise<{ content: string; image
     const video = $('meta[property="og:video"]').attr('content') || 
                   $('video source').first().attr('src') || null;
     
-    // محتوای متن
     let content = '';
     const selectors = [
       'article .entry-content',
@@ -105,7 +99,6 @@ export async function GET() {
           try {
             const { content, image, video } = await extractFullContent(item.link || '');
             
-            // فقط خبرهایی با عکس ذخیره شوند
             if (!image) {
               skippedNoImage++;
               continue;
@@ -150,7 +143,6 @@ export async function GET() {
       });
     }
 
-    // ذخیره در دیتابیس
     for (const item of allItems) {
       try {
         const [existing] = await pool.execute(

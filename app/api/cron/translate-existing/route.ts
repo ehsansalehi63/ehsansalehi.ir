@@ -7,7 +7,6 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    // انتخاب ۵۰ خبر اول که هنوز فارسی نیستند
     const [rows] = await pool.execute(
       'SELECT id, title, content FROM news_posts WHERE content NOT LIKE "%سلام%" AND content NOT LIKE "%در%" LIMIT 50'
     );
@@ -15,8 +14,8 @@ export async function GET() {
     let updated = 0;
     for (const row of rows as any[]) {
       try {
-        const translatedTitle = await translate({ text: row.title, source: 'en', target: 'fa' });
-        const translatedContent = await translate({ text: row.content, source: 'en', target: 'fa' });
+        const translatedTitle = await translate(row.title, 'en', 'fa');
+        const translatedContent = await translate(row.content, 'en', 'fa');
         
         await pool.execute(
           'UPDATE news_posts SET title = ?, content = ? WHERE id = ?',
