@@ -3,7 +3,7 @@ import OpenAI from 'openai';
 // تنظیمات سرویس ایرانی (مثلاً GapGPT)
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-  baseURL: process.env.OPENAI_BASE_URL || 'https://api.gapgpt.ir/v1', // آدرس سرویس خود را وارد کنید
+  baseURL: process.env.OPENAI_BASE_URL || 'https://api.gapgpt.ir/v1', // در صورت نیاز تغییر دهید
 });
 
 export async function analyzeAndTranslateNews(
@@ -36,7 +36,7 @@ export async function analyzeAndTranslateNews(
 
   try {
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini', // مدل انتخابی
+      model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: 'شما یک مترجم و تحلیل‌گر خبر هستید که به فارسی روان و شوخ می‌نویسید.' },
         { role: 'user', content: prompt },

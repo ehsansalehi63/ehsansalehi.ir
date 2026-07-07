@@ -7,95 +7,49 @@ import { analyzeAndTranslateNews } from '../../../lib/translateWithGPT';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60; // افزایش زمان اجرا به ۶۰ ثانیه
 
+// کاهش تعداد منابع RSS برای سرعت بیشتر
 const RSS_FEEDS = [
   'https://techcrunch.com/feed/',
   'https://www.theverge.com/rss/index.xml',
-  'https://feeds.mit.edu/mit_technology_review',
   'https://www.wired.com/feed/rss',
   'https://feeds.feedburner.com/zdnet/zdnet',
-  'https://www.engadget.com/rss.xml',
-  'https://arstechnica.com/feed/',
-  'https://www.cnet.com/rss/news/',
-  'https://www.scientificamerican.com/feed/',
-  'https://www.bbc.com/news/technology/rss.xml',
 ];
 
 async function extractFullContent(url: string): Promise<{ content: string; image: string | null; video: string | null }> {
   try {
-    const { data } = await axios.get(url, { timeout: 20000 });
+    const { data } = await axios.get(url, { timeout: 10000 });
     const $ = cheerio.load(data);
     
     $('script, style, nav, header, footer, aside, .ad, .advertisement, .related, .social, .comments, .sidebar').remove();
     
-    // استخراج عکس با اولویت‌های مختلف
-    let image = null;
-    const imageSelectors = [
-      'meta[property="og:image"]',
-      'meta[name="twitter:image"]',
-      'article img',
-      '.featured-image img',
-      '.post-image img',
-      '.entry-image img',
-      'img.wp-post-image',
-      'img.attachment-large',
-      'img.attachment-full',
-    ];
+    // استخراج عکس با اولویت‌بندی
+    const image = $('meta[property="og:image"]').attr('content') || 
+                  $('meta[name="twitter:image"]').attr('content') || 
+                  $('article img').first().attr('src') || null;
     
-    for (const selector of imageSelectors) {
-      const el = $(selector).first();
-      if (el.length > 0) {
-        let src = el.attr('content') || el.attr('src');
-        if (src && src.startsWith('http')) {
-          image = src;
-          break;
-        }
-      }
-    }
+    const video = $('meta[property="og:video"]').attr('content') || 
+                  $('video source').first().attr('src') || null;
     
-    // اگر عکس نسبی بود، کاملش کن
-    if (image && !image.startsWith('http')) {
-      const baseUrl = new URL(url).origin;
-      image = new URL(image, baseUrl).href;
-    }
-
-    // استخراج ویدیو
-    let video = null;
-    const videoSelectors = [
-      'meta[property="og:video"]',
-      'video source',
-      'video',
-    ];
-    for (const selector of videoSelectors) {
-      const el = $(selector).first();
-      if (el.length > 0) {
-        let src = el.attr('content') || el.attr('src');
-        if (src && src.startsWith('http')) {
-          video = src;
-          break;
-        }
-      }
-    }
-
-    // استخراج محتوا
     let content = '';
-    const contentSelectors = [
-      'article .entry-content p',
-      'article .post-content p',
-      'article .content p',
-      'main article p',
-      '.article-content p',
-      '.post-content p',
-      '.entry-content p',
-      'article p',
+    const selectors = [
+      'article .entry-content',
+      'article .post-content',
+      'article .content',
+      'main article',
+      '.article-content',
+      '.post-content',
+      '.entry-content',
+      'article',
     ];
     
-    for (const selector of contentSelectors) {
+    for (const selector of selectors) {
       const elements = $(selector);
       if (elements.length > 0) {
-        elements.each((_, el) => {
+        elements.find('p').each((_, el) => {
           const text = $(el).text().trim();
-          if (text.length > 30 && !text.startsWith('©') && !text.includes('Subscribe') && !text.includes('Newsletter')) {
+          if (text.length > 30 && !text.startsWith('©') && !text.includes('Subscribe')) {
             content += text + '\n\n';
           }
         });
@@ -109,7 +63,6 @@ async function extractFullContent(url: string): Promise<{ content: string; image
     
     return { content: content.trim(), image, video };
   } catch (error) {
-    console.error('Extraction error:', error);
     return { content: '', image: null, video: null };
   }
 }
@@ -120,15 +73,16 @@ export async function GET() {
     const allItems = [];
     let newCount = 0;
     let skippedNoImage = 0;
+    let skippedGPT = 0;
 
     for (const feedUrl of RSS_FEEDS) {
       try {
         const feed = await parser.parseURL(feedUrl);
-        for (const item of feed.items.slice(0, 3)) {
+        // کاهش تعداد اخبار هر منبع به ۲ عدد
+        for (const item of feed.items.slice(0, 2)) {
           try {
             const { content, image, video } = await extractFullContent(item.link || '');
             
-            // فقط خبرهایی که عکس دارند ذخیره کن
             if (!image) {
               skippedNoImage++;
               continue;
@@ -139,6 +93,10 @@ export async function GET() {
               content || '',
               feed.title || 'منبع ناشناس'
             );
+            
+            if (!translated.title || translated.title === item.title) {
+              skippedGPT++;
+            }
 
             allItems.push({
               title: translated.title || item.title || 'بدون عنوان',
@@ -153,7 +111,7 @@ export async function GET() {
               is_published: true,
             });
           } catch (itemError) {
-            console.error('Item error:', itemError);
+            console.error('Error processing item:', itemError);
           }
         }
       } catch (feedError) {
@@ -166,6 +124,7 @@ export async function GET() {
         success: true, 
         message: 'No items with images found',
         skippedNoImage,
+        skippedGPT,
       });
     }
 
@@ -206,6 +165,7 @@ export async function GET() {
       total: allItems.length, 
       new: newCount,
       skippedNoImage,
+      skippedGPT,
     });
   } catch (error: any) {
     return NextResponse.json({ 
