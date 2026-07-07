@@ -12,14 +12,15 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [featuredNews, setFeaturedNews] = useState<any[]>([]);
   const formRef = useRef<HTMLFormElement>(null);
 
-  // تایپ‌رایتر ساده و کاربردی
+  // تایپ‌رایتر حرفه‌ای
   useEffect(() => {
     const phrases = [
-      "راه‌حل‌های ساده برای مشکلات پیچیده",
-      "بیایید کارها رو درست انجام بدیم",
-      "با ۱۶ سال تجربه در خدمت شمایم",
+      "مشکلات فنی را ساده می‌کنم",
+      "راه‌حل‌های عملی برای کسب‌وکار شما",
+      "با ۱۶ سال تجربه در خدمت شما",
     ];
     let phraseIndex = 0;
     let charIndex = 0;
@@ -32,14 +33,14 @@ export default function Home() {
       if (!isDeleting && charIndex <= currentPhrase.length) {
         setDisplayText(currentPhrase.slice(0, charIndex));
         charIndex++;
-        timeoutId = setTimeout(type, 50);
+        timeoutId = setTimeout(type, 45);
       } else if (!isDeleting && charIndex > currentPhrase.length) {
         isDeleting = true;
         timeoutId = setTimeout(type, 2000);
       } else if (isDeleting && charIndex > 0) {
         setDisplayText(currentPhrase.slice(0, charIndex));
         charIndex--;
-        timeoutId = setTimeout(type, 25);
+        timeoutId = setTimeout(type, 20);
       } else if (isDeleting && charIndex === 0) {
         isDeleting = false;
         phraseIndex = (phraseIndex + 1) % phrases.length;
@@ -51,6 +52,16 @@ export default function Home() {
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
     };
+  }, []);
+
+  // دریافت اخبار برجسته برای بنر
+  useEffect(() => {
+    fetch('/api/news?limit=3')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) setFeaturedNews(data.news);
+      })
+      .catch(() => {});
   }, []);
 
   // دریافت پروژه‌ها
@@ -156,21 +167,26 @@ export default function Home() {
     <>
       <style>{`
         .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); }
-        .btn-primary { background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; border: none; padding: 12px 32px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.3s; }
-        .btn-primary:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(245,158,11,0.4); }
-        .btn-outline { background: transparent; border: 2px solid rgba(255,255,255,0.2); color: #fff; padding: 12px 32px; border-radius: 12px; font-weight: 500; cursor: pointer; transition: all 0.3s; }
-        .btn-outline:hover { border-color: #f59e0b; background: rgba(245,158,11,0.1); }
-        .skill-bar { height: 6px; border-radius: 3px; background: #27272a; overflow: hidden; }
-        .skill-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #f59e0b, #3b82f6); transition: width 1.5s ease; width: 0%; }
-        .section-hidden { opacity: 0; transform: translateY(50px); transition: all 0.8s ease; }
+        .glass-dark { background: rgba(0,0,0,0.5); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.06); }
+        .btn-primary { background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; border: none; padding: 14px 36px; border-radius: 50px; font-weight: 700; cursor: pointer; transition: all 0.3s; font-size: 0.95rem; }
+        .btn-primary:hover { transform: scale(1.04); box-shadow: 0 0 40px rgba(245,158,11,0.3); }
+        .btn-outline { background: transparent; border: 2px solid rgba(255,255,255,0.25); color: #fff; padding: 14px 36px; border-radius: 50px; font-weight: 500; cursor: pointer; transition: all 0.3s; font-size: 0.95rem; }
+        .btn-outline:hover { border-color: #f59e0b; background: rgba(245,158,11,0.08); }
+        .section-hidden { opacity: 0; transform: translateY(40px); transition: all 0.7s ease; }
         .section-visible { opacity: 1; transform: translateY(0); }
         .project-card { transition: all 0.4s ease; cursor: pointer; }
-        .project-card:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 20px 60px rgba(59,130,246,0.2); }
-        .project-image { height: 200px; overflow: hidden; background: #1a1a1a; }
+        .project-card:hover { transform: translateY(-6px) scale(1.01); box-shadow: 0 20px 60px rgba(59,130,246,0.15); }
+        .project-image { height: 200px; overflow: hidden; background: #1a1a2e; }
         .project-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
         .project-card:hover .project-image img { transform: scale(1.05); }
+        .news-banner { background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460); }
         @keyframes gradientFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        .animate-gradient { background-size: 300% 300%; animation: gradientFlow 8s ease infinite; }
+        .animate-gradient { background-size: 300% 300%; animation: gradientFlow 10s ease infinite; }
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+        }
+        .float-animation { animation: float 6s ease-in-out infinite; }
         .nav-link { transition: color 0.3s; position: relative; }
         .nav-link::after {
           content: '';
@@ -183,15 +199,27 @@ export default function Home() {
           transition: width 0.3s;
         }
         .nav-link:hover::after { width: 100%; }
+        .hero-gradient {
+          background: radial-gradient(ellipse at 70% 30%, rgba(245,158,11,0.06) 0%, transparent 60%),
+                      radial-gradient(ellipse at 30% 70%, rgba(59,130,246,0.04) 0%, transparent 50%);
+        }
+        .featured-news-item {
+          transition: all 0.3s ease;
+          cursor: pointer;
+        }
+        .featured-news-item:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
       `}</style>
 
       <main className="min-h-screen bg-[#0a0a0a] text-white font-vazir" dir="rtl">
         <canvas id="particleCanvas" className="fixed inset-0 pointer-events-none z-0" />
 
-        {/* HEADER - فشرده‌تر */}
-        <header className="fixed top-0 left-0 right-0 z-50 glass px-4 py-1.5">
+        {/* HEADER - فشرده و حرفه‌ای */}
+        <header className="fixed top-0 left-0 right-0 z-50 glass-dark px-4 py-2">
           <div className="max-w-7xl mx-auto flex justify-between items-center">
-            <a href="#" className="text-lg font-black bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">
+            <a href="#" className="text-lg font-bold bg-gradient-to-r from-amber-400 to-blue-400 bg-clip-text text-transparent">
               احسان صالحی
             </a>
             <nav className="hidden md:flex gap-0.5 text-zinc-300">
@@ -238,65 +266,121 @@ export default function Home() {
           )}
         </header>
 
-        {/* HERO - پیام حل‌کننده مشکل + بدون فضای خالی */}
-        <section className="relative min-h-screen flex items-center justify-center pt-14 px-4 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-purple-900/40 to-black animate-gradient" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%, rgba(245,158,11,0.06), transparent)]" />
+        {/* HERO - با عکس بزرگ‌تر و فضای پر */}
+        <section className="relative min-h-[90vh] flex items-center justify-center pt-14 px-4 overflow-hidden hero-gradient">
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-950/80 via-purple-900/40 to-black animate-gradient" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%, rgba(245,158,11,0.05), transparent)]" />
 
-          <div className="relative z-10 max-w-6xl mx-auto grid lg:grid-cols-2 gap-10 items-center w-full">
+          <div className="relative z-10 max-w-6xl mx-auto grid lg:grid-cols-2 gap-8 items-center w-full py-8">
+            {/* عکس - بزرگ‌تر و بدون فضای خالی */}
             <div className="flex justify-center lg:justify-end order-2 lg:order-1">
               <div className="relative group">
-                <div className="absolute -inset-3 bg-gradient-to-r from-amber-500 to-blue-600 rounded-full blur-2xl opacity-50 group-hover:opacity-80 transition duration-700"></div>
-                <div className="relative w-48 h-48 lg:w-72 lg:h-72 rounded-full overflow-hidden border-2 border-amber-500/30 shadow-2xl">
-                  <Image src="/images/profile.jpg" alt="احسان صالحی" width={300} height={300} className="w-full h-full object-cover hover:scale-105 transition duration-700" priority />
+                <div className="absolute -inset-6 bg-gradient-to-r from-amber-500/30 to-blue-600/30 rounded-full blur-3xl opacity-60 group-hover:opacity-100 transition duration-700" />
+                <div className="relative w-64 h-64 lg:w-[380px] lg:h-[380px] rounded-2xl overflow-hidden border border-amber-500/20 shadow-2xl float-animation">
+                  <Image 
+                    src="/images/profile.jpg" 
+                    alt="احسان صالحی" 
+                    width={380} 
+                    height={380} 
+                    className="w-full h-full object-cover hover:scale-105 transition duration-700" 
+                    priority 
+                  />
+                  {/* Badge تجربه */}
+                  <div className="absolute bottom-4 right-4 glass-dark rounded-full px-4 py-1.5 text-xs border border-amber-500/30">
+                    <span className="text-amber-400">✦</span> ۱۶ سال تجربه
+                  </div>
                 </div>
               </div>
             </div>
 
+            {/* متن - روان و جذاب */}
             <div className="text-center lg:text-right order-1 lg:order-2">
-              <div className="inline-flex items-center gap-2 mb-3 px-4 py-1.5 glass rounded-full text-xs tracking-wider">
+              <div className="inline-flex items-center gap-2 mb-4 px-4 py-1.5 glass-dark rounded-full text-xs tracking-wider border border-white/5">
                 <span className="text-amber-400">✦</span>
-                <span className="text-amber-300">۱۶ سال تجربه در خدمت شما</span>
+                <span className="text-zinc-300">مشاور و مجری پروژه‌های فناوری</span>
               </div>
-              <h1 className="text-3xl lg:text-5xl font-bold mb-3 leading-tight">
+              <h1 className="text-4xl lg:text-6xl font-bold mb-3 leading-tight">
                 <span className="bg-gradient-to-r from-amber-400 to-blue-400 bg-clip-text text-transparent">
                   احسان صالحی
                 </span>
-                <span className="block text-white/90 text-2xl lg:text-3xl mt-1 font-normal">
-                  {displayText || "راه‌حل‌های ساده برای مشکلات پیچیده"}
+                <span className="block text-white/90 text-xl lg:text-2xl mt-2 font-normal">
+                  {displayText || "مشکلات فنی را ساده می‌کنم"}
                 </span>
               </h1>
-              <p className="text-base lg:text-lg text-zinc-300 mb-4 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+              <p className="text-base lg:text-lg text-zinc-300 mb-3 max-w-xl mx-auto lg:mx-0 leading-relaxed">
                 از راه‌اندازی شبکه تا طراحی وب‌سایت، بدون دردسر و با کیفیت
               </p>
               <p className="text-sm text-zinc-400 mb-6 max-w-lg mx-auto lg:mx-0">
                 اگر به‌دنبال یک متخصص هستید که کار رو درست و به‌موقع تحویل بده، جای درستی آمدید.
               </p>
               <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
-                <a href="#services" className="btn-primary text-sm">چطور می‌تونم کمکت کنم؟</a>
-                <a href="#projects" className="btn-outline text-sm">نمونه کارها</a>
+                <a href="#services" className="btn-primary">چطور می‌تونم کمک کنم؟</a>
+                <a href="#projects" className="btn-outline">نمونه کارها</a>
               </div>
             </div>
           </div>
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-amber-400/50 animate-bounce text-2xl">↓</div>
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-amber-400/40 animate-bounce text-2xl">↓</div>
         </section>
 
-        {/* SERVICES - اولین بخش (حل‌کننده مشکل) */}
-        <section id="services" className="py-16 px-4 glass border-y border-white/5 section-hidden">
+        {/* بنر اخبار فناوری - بالای صفحه، جذاب و برجسته */}
+        {featuredNews.length > 0 && (
+          <section className="py-6 px-4 border-b border-white/5 bg-gradient-to-r from-amber-500/5 to-blue-500/5">
+            <div className="max-w-6xl mx-auto">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-amber-400 text-sm font-bold">🔥 آخرین اخبار فناوری</span>
+                <span className="text-zinc-600 text-xs">—</span>
+                <span className="text-zinc-500 text-xs">بروز شده: امروز</span>
+              </div>
+              <div className="grid md:grid-cols-3 gap-4">
+                {featuredNews.slice(0, 3).map((item: any) => (
+                  <Link 
+                    key={item.id} 
+                    href={`/news/${item.id}`}
+                    className="featured-news-item group flex items-start gap-3 p-2 rounded-xl hover:bg-white/5 transition-all"
+                  >
+                    {item.image_url && !item.image_url.includes('placehold') ? (
+                      <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-zinc-800">
+                        <img 
+                          src={item.image_url} 
+                          alt={item.title} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-16 h-16 rounded-lg flex-shrink-0 bg-gradient-to-br from-amber-500/20 to-blue-500/20 flex items-center justify-center text-2xl">
+                        📰
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-medium text-white group-hover:text-amber-400 transition-colors line-clamp-2">
+                        {item.title}
+                      </h4>
+                      <span className="text-zinc-500 text-xs">{item.source_name || 'منبع'}</span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* SERVICES - حل‌کننده مشکل */}
+        <section id="services" className="py-16 px-4 section-hidden">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-10">
-              <h2 className="text-3xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">چطور می‌تونم به شما کمک کنم؟</h2>
-              <p className="text-zinc-400 text-base">راه‌حل‌های ساده و عملی برای نیازهای شما</p>
+              <span className="text-amber-400 text-sm font-medium">خدمات من</span>
+              <h2 className="text-3xl md:text-4xl font-bold mt-1 bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">چطور می‌تونم به شما کمک کنم؟</h2>
+              <p className="text-zinc-400 text-sm mt-1">راه‌حل‌های ساده و عملی برای نیازهای شما</p>
             </div>
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-3 gap-5">
               {[
-                { icon: '🌐', title: "وب‌سایت و فروشگاه اینترنتی", desc: "سایت حرفه‌ای با وردپرس، بدون نیاز به برنامه‌نویسی" },
+                { icon: '🌐', title: "وب‌سایت و فروشگاه", desc: "سایت حرفه‌ای با وردپرس، بدون نیاز به برنامه‌نویسی" },
                 { icon: '🔒', title: "شبکه و امنیت", desc: "راه‌اندازی شبکه سازمانی، فایروال و پشتیبانی" },
                 { icon: '🤖', title: "اتوماسیون و هوش مصنوعی", desc: "ربات‌های مکالمه، تحلیل داده و سیستم‌های هوشمند" }
               ].map((s, i) => (
-                <div key={i} className="p-6 glass rounded-2xl border border-white/10 hover:border-amber-500/40 transition-all duration-300 text-center">
+                <div key={i} className="p-6 glass rounded-2xl border border-white/10 hover:border-amber-500/30 transition-all duration-300 text-center hover:scale-[1.02]">
                   <div className="text-4xl mb-3">{s.icon}</div>
-                  <h3 className="text-xl font-bold mb-2">{s.title}</h3>
+                  <h3 className="text-lg font-bold mb-1.5">{s.title}</h3>
                   <p className="text-zinc-400 text-sm">{s.desc}</p>
                 </div>
               ))}
@@ -305,22 +389,22 @@ export default function Home() {
         </section>
 
         {/* PROJECTS */}
-        <section id="projects" className="py-16 px-4 section-hidden">
+        <section id="projects" className="py-16 px-4 glass border-y border-white/5 section-hidden">
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">نمونه کارها</h2>
-                <p className="text-zinc-400 text-sm">چند نمونه از کارهایی که انجام دادم</p>
+                <span className="text-amber-400 text-sm font-medium">نمونه کارها</span>
+                <h2 className="text-3xl md:text-4xl font-bold mt-1 bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">پروژه‌های اخیر</h2>
               </div>
             </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
               {loading ? (
-                <p className="text-zinc-500 col-span-full text-center">در حال بارگذاری...</p>
+                <p className="text-zinc-500 col-span-full text-center py-12">در حال بارگذاری...</p>
               ) : projects.length === 0 ? (
-                <p className="text-zinc-500 col-span-full text-center">هیچ پروژه‌ای یافت نشد</p>
+                <p className="text-zinc-500 col-span-full text-center py-12">هیچ پروژه‌ای یافت نشد</p>
               ) : (
                 projects.slice(0, 3).map((project: any) => (
-                  <div key={project.id} className="project-card glass rounded-2xl overflow-hidden border border-white/10 hover:border-amber-500/40">
+                  <div key={project.id} className="project-card glass rounded-xl overflow-hidden border border-white/10 hover:border-amber-500/30">
                     <div className="project-image">
                       {project.image_url ? (
                         <img src={project.image_url} alt={project.title} />
@@ -330,7 +414,7 @@ export default function Home() {
                     </div>
                     <div className="p-4 text-right">
                       <h3 className="text-lg font-bold mb-1">{project.title}</h3>
-                      <p className="text-zinc-400 text-sm mb-3">{project.desc}</p>
+                      <p className="text-zinc-400 text-sm mb-3 line-clamp-2">{project.desc}</p>
                       <Link href={`/projects/${project.id}`} className="text-amber-400 hover:text-amber-300 transition-colors inline-flex items-center gap-1 text-sm">
                         جزئیات <span>→</span>
                       </Link>
@@ -343,22 +427,38 @@ export default function Home() {
         </section>
 
         {/* ABOUT */}
-        <section id="about" className="py-16 px-4 glass border-y border-white/5 section-hidden">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold text-center mb-3 bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">درباره من</h2>
-            <p className="text-center text-zinc-400 text-sm mb-6">۱۶ سال تجربه، کنار شما</p>
-            <div className="space-y-4 text-zinc-300 text-base leading-relaxed">
+        <section id="about" className="py-16 px-4 section-hidden">
+          <div className="max-w-4xl mx-auto text-center">
+            <span className="text-amber-400 text-sm font-medium">درباره من</span>
+            <h2 className="text-3xl md:text-4xl font-bold mt-1 bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">چرا من؟</h2>
+            <div className="mt-6 space-y-4 text-zinc-300 text-base leading-relaxed">
               <p>من احسان هستم. از سال ۱۳۸۸ در حوزه IT فعالیت می‌کنم و با سازمان‌های دولتی، هلدینگ‌های خصوصی و شرکت‌های دانش‌بنیان همکاری داشته‌ام.</p>
               <p>کار من این است که مشکلات فنی را به‌زبانی ساده حل کنم. نیازی نیست شما متخصص باشید، من هستم که کارها را برایتان ساده می‌کنم.</p>
+              <div className="grid grid-cols-3 gap-4 mt-6">
+                <div className="glass p-4 rounded-xl">
+                  <div className="text-2xl font-bold text-amber-400">۱۶+</div>
+                  <div className="text-xs text-zinc-400">سال تجربه</div>
+                </div>
+                <div className="glass p-4 rounded-xl">
+                  <div className="text-2xl font-bold text-amber-400">۵۰+</div>
+                  <div className="text-xs text-zinc-400">پروژه موفق</div>
+                </div>
+                <div className="glass p-4 rounded-xl">
+                  <div className="text-2xl font-bold text-amber-400">۱۰۰٪</div>
+                  <div className="text-xs text-zinc-400">رضایت مشتری</div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
         {/* SKILLS */}
-        <section id="skills" className="py-16 px-4 section-hidden">
+        <section id="skills" className="py-16 px-4 glass border-y border-white/5 section-hidden">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold text-center mb-3 bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">مهارت‌ها</h2>
-            <p className="text-center text-zinc-400 text-sm mb-8">ابزارهایی که باهاشون کار می‌کنم</p>
+            <div className="text-center mb-8">
+              <span className="text-amber-400 text-sm font-medium">مهارت‌ها</span>
+              <h2 className="text-3xl md:text-4xl font-bold mt-1 bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">تخصص‌های فنی</h2>
+            </div>
             <div className="space-y-4">
               {[
                 { name: "وردپرس و طراحی سایت", level: 95 },
@@ -372,8 +472,9 @@ export default function Home() {
                     <span className="text-zinc-300 text-sm">{skill.name}</span>
                     <span className="text-amber-400 text-sm font-bold">{skill.level}%</span>
                   </div>
-                  <div className="skill-bar">
-                    <div className="skill-fill" style={{ width: `${skill.level}%` }}></div>
+                  <div className="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+                    <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-blue-500 transition-all duration-1000" 
+                         style={{ width: `${skill.level}%` }}></div>
                   </div>
                 </div>
               ))}
@@ -382,12 +483,12 @@ export default function Home() {
         </section>
 
         {/* NEWS */}
-        <section id="news" className="py-16 px-4 glass border-y border-white/5 section-hidden">
+        <section id="news" className="py-16 px-4 section-hidden">
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">📰 اخبار تکنولوژی</h2>
-                <p className="text-zinc-400 text-sm">جدیدترین رویدادهای دنیای فناوری</p>
+                <span className="text-amber-400 text-sm font-medium">اخبار</span>
+                <h2 className="text-3xl md:text-4xl font-bold mt-1 bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">📰 آخرین اخبار تکنولوژی</h2>
               </div>
               <Link href="/news" className="text-amber-400 hover:text-amber-300 transition-colors text-sm inline-flex items-center gap-1">
                 همه اخبار <span>→</span>
@@ -400,13 +501,14 @@ export default function Home() {
         {/* CONTACT */}
         <section id="contact" className="py-16 px-4 glass border-t border-white/5 section-hidden">
           <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-3 bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">تماس با من</h2>
-            <p className="text-zinc-400 text-sm mb-8">سوالی دارید؟ خوشحال می‌شم کمک کنم</p>
+            <span className="text-amber-400 text-sm font-medium">تماس با من</span>
+            <h2 className="text-3xl md:text-4xl font-bold mt-1 bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">بیایید با هم کار کنیم</h2>
+            <p className="text-zinc-400 text-sm mt-2 mb-8">سوالی دارید؟ خوشحال می‌شم کمک کنم</p>
             <form ref={formRef} onSubmit={handleSubmit} className="max-w-lg mx-auto space-y-4 text-right">
               <input type="text" name="name" required className="w-full px-5 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-zinc-500 focus:border-amber-500/50 outline-none transition-colors text-sm" placeholder="نام و نام خانوادگی" />
               <input type="email" name="email" required className="w-full px-5 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-zinc-500 focus:border-amber-500/50 outline-none transition-colors text-sm" placeholder="آدرس ایمیل" />
               <textarea name="message" required rows={4} className="w-full px-5 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-zinc-500 focus:border-amber-500/50 outline-none transition-colors resize-none text-sm" placeholder="پیام خود را بنویسید..."></textarea>
-              <button type="submit" className="btn-primary w-full justify-center text-sm">ارسال پیام</button>
+              <button type="submit" className="btn-primary w-full">ارسال پیام</button>
             </form>
             <div className="grid sm:grid-cols-3 gap-4 mt-8">
               {[
@@ -414,7 +516,7 @@ export default function Home() {
                 { icon: '✉️', text: 'info@ehsansalehi.ir' },
                 { icon: '📍', text: 'اصفهان، ایران' }
               ].map((item, i) => (
-                <div key={i} className="flex flex-col items-center gap-1 p-4 glass rounded-2xl">
+                <div key={i} className="flex flex-col items-center gap-1 p-4 glass rounded-xl">
                   <span className="text-2xl">{item.icon}</span>
                   <p className="font-medium text-sm">{item.text}</p>
                   {item.sub && <p className="text-zinc-500 text-xs">{item.sub}</p>}
@@ -424,7 +526,7 @@ export default function Home() {
           </div>
         </section>
 
-        <footer className="py-8 text-center text-zinc-500 text-xs border-t border-white/5 px-4">
+        <footer className="py-6 text-center text-zinc-500 text-xs border-t border-white/5 px-4">
           <p>© ۱۴۰۴ احسان صالحی – تمامی حقوق محفوظ است</p>
         </footer>
 
@@ -476,7 +578,7 @@ export default function Home() {
               draw() {
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(59, 130, 246, 0.4)';
+                ctx.fillStyle = 'rgba(59, 130, 246, 0.3)';
                 ctx.fill();
               }
             }
@@ -495,7 +597,7 @@ export default function Home() {
                     ctx.beginPath();
                     ctx.moveTo(particles[i].x, particles[i].y);
                     ctx.lineTo(particles[j].x, particles[j].y);
-                    ctx.strokeStyle = \`rgba(59, 130, 246, \${0.08 * (1 - dist / 100)})\`;
+                    ctx.strokeStyle = \`rgba(59, 130, 246, \${0.06 * (1 - dist / 100)})\`;
                     ctx.lineWidth = 0.3;
                     ctx.stroke();
                   }
