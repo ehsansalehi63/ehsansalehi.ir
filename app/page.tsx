@@ -15,17 +15,37 @@ export default function Home() {
   const fullText = "احسان صالحی رباطی";
   const formRef = useRef<HTMLFormElement>(null);
 
+  // تایپ‌رایتر جدید (سریع‌تر با افکت محو شدن)
   useEffect(() => {
-    setText(fullText);
     let index = 0;
-    const interval = setInterval(() => {
-      setText(fullText.slice(0, index));
-      index++;
-      if (index > fullText.length) clearInterval(interval);
-    }, 120);
-    return () => clearInterval(interval);
+    let isDeleting = false;
+    let currentText = '';
+    
+    const type = () => {
+      if (!isDeleting && index <= fullText.length) {
+        currentText = fullText.slice(0, index);
+        setText(currentText);
+        index++;
+        setTimeout(type, 60); // سرعت بالا (قبلاً ۱۲۰ms بود)
+      } else if (!isDeleting && index > fullText.length) {
+        isDeleting = true;
+        setTimeout(type, 1500); // مکث قبل از شروع مجدد
+      } else if (isDeleting && index > 0) {
+        currentText = fullText.slice(0, index);
+        setText(currentText);
+        index--;
+        setTimeout(type, 30); // حذف سریع‌تر
+      } else if (isDeleting && index === 0) {
+        isDeleting = false;
+        setTimeout(type, 500);
+      }
+    };
+    
+    type();
+    return () => clearTimeout(type);
   }, []);
 
+  // دریافت پروژه‌ها
   useEffect(() => {
     fetch('/api/projects')
       .then(res => res.json())
@@ -36,6 +56,7 @@ export default function Home() {
       .catch(() => setLoading(false));
   }, []);
 
+  // بررسی لاگین
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -57,6 +78,7 @@ export default function Home() {
     }
   }, []);
 
+  // IntersectionObserver
   useEffect(() => {
     const sections = document.querySelectorAll('.section-hidden');
     const observer = new IntersectionObserver(
@@ -126,7 +148,6 @@ export default function Home() {
     <>
       <style>{`
         .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); }
-        .glass-hover:hover { background: rgba(255,255,255,0.1); border-color: rgba(59,130,246,0.3); }
         .btn-neon { background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; border: none; padding: 12px 32px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.3s; }
         .btn-neon:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(245,158,11,0.4); }
         .btn-outline { background: transparent; border: 2px solid rgba(255,255,255,0.2); color: #fff; padding: 12px 32px; border-radius: 12px; font-weight: 500; cursor: pointer; transition: all 0.3s; }
@@ -140,41 +161,56 @@ export default function Home() {
         .project-image { height: 200px; overflow: hidden; background: #1a1a1a; }
         .project-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
         .project-card:hover .project-image img { transform: scale(1.05); }
-        .news-card { transition: all 0.4s ease; cursor: pointer; }
-        .news-card:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 20px 60px rgba(59,130,246,0.2); }
-        .news-image { height: 200px; overflow: hidden; background: #1a1a1a; }
-        .news-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
-        .news-card:hover .news-image img { transform: scale(1.05); }
-        .news-source { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; color: #f59e0b; }
-        .news-date { position: absolute; bottom: 12px; right: 12px; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; color: #9ca3af; }
         @keyframes gradientFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
         .animate-gradient { background-size: 300% 300%; animation: gradientFlow 8s ease infinite; }
         @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+        .fade-in-char {
+          display: inline-block;
+          animation: fadeIn 0.08s ease forwards;
+          opacity: 0;
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(8px) scale(0.95); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .nav-link-custom { transition: color 0.3s; position: relative; }
+        .nav-link-custom::after {
+          content: '';
+          position: absolute;
+          bottom: -2px;
+          right: 0;
+          width: 0;
+          height: 2px;
+          background: #f59e0b;
+          transition: width 0.3s;
+        }
+        .nav-link-custom:hover::after { width: 100%; }
       `}</style>
 
       <main className="min-h-screen bg-[#0a0a0a] text-white font-vazir" dir="rtl">
         <canvas id="particleCanvas" className="fixed inset-0 pointer-events-none z-0" />
 
-        <header className="fixed top-0 left-0 right-0 z-50 glass px-4 py-3">
+        {/* HEADER - فضای کمتر */}
+        <header className="fixed top-0 left-0 right-0 z-50 glass px-4 py-2">
           <div className="max-w-7xl mx-auto flex justify-between items-center">
-            <a href="#" className="text-2xl font-black bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">
+            <a href="#" className="text-xl font-black bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">
               احسان صالحی
             </a>
             <nav className="hidden md:flex gap-1 text-zinc-300">
               {navItems.map((item) => (
-                <a key={item.name} href={item.href} className="nav-link-custom px-4 py-2 text-sm font-medium hover:text-white">
+                <a key={item.name} href={item.href} className="nav-link-custom px-3 py-2 text-sm font-medium hover:text-white">
                   {item.name}
                 </a>
               ))}
               {user ? (
                 <>
-                  <a href="/dashboard" className="px-4 py-2 text-sm font-medium text-blue-400">داشبورد</a>
-                  <button onClick={handleLogout} className="px-4 py-2 text-sm font-medium text-red-400 hover:text-red-300">خروج</button>
+                  <a href="/dashboard" className="px-3 py-2 text-sm font-medium text-blue-400">داشبورد</a>
+                  <button onClick={handleLogout} className="px-3 py-2 text-sm font-medium text-red-400 hover:text-red-300">خروج</button>
                 </>
               ) : (
                 <>
-                  <a href="/auth/login" className="px-4 py-2 text-sm font-medium text-blue-400">ورود</a>
-                  <a href="/auth/register" className="px-4 py-2 text-sm font-medium bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30">ثبت نام</a>
+                  <a href="/auth/login" className="px-3 py-2 text-sm font-medium text-blue-400">ورود</a>
+                  <a href="/auth/register" className="px-3 py-2 text-sm font-medium bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30">ثبت نام</a>
                 </>
               )}
             </nav>
@@ -204,30 +240,32 @@ export default function Home() {
           )}
         </header>
 
-        <section className="relative min-h-screen flex items-center justify-center pt-20 px-4 overflow-hidden">
+        {/* HERO - با فضای کمتر بالای صفحه */}
+        <section className="relative min-h-screen flex items-center justify-center pt-16 px-4 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-purple-900/40 to-black animate-gradient" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%, rgba(245,158,11,0.08), transparent)]" />
+
           <div className="relative z-10 max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center w-full">
             <div className="flex justify-center lg:justify-end order-2 lg:order-1">
               <div className="relative group">
                 <div className="absolute -inset-4 bg-gradient-to-r from-amber-500 to-blue-600 rounded-full blur-2xl opacity-60 group-hover:opacity-100 transition duration-700"></div>
-                <div className="relative w-64 h-64 lg:w-[420px] lg:h-[420px] rounded-full overflow-hidden border-4 border-amber-500/40 shadow-2xl">
-                  <Image src="/images/profile.jpg" alt="احسان صالحی رباطی" width={420} height={420} className="w-full h-full object-cover hover:scale-110 transition duration-1000" priority />
+                <div className="relative w-56 h-56 lg:w-[360px] lg:h-[360px] rounded-full overflow-hidden border-4 border-amber-500/40 shadow-2xl">
+                  <Image src="/images/profile.jpg" alt="احسان صالحی رباطی" width={360} height={360} className="w-full h-full object-cover hover:scale-110 transition duration-1000" priority />
                 </div>
               </div>
             </div>
 
             <div className="text-center lg:text-right order-1 lg:order-2 animate-fade-up">
-              <div className="inline-flex items-center gap-2 mb-6 px-5 py-2 glass rounded-full text-sm tracking-wider">
+              <div className="inline-flex items-center gap-2 mb-4 px-5 py-2 glass rounded-full text-sm tracking-wider">
                 <span className="text-amber-400">✦</span>
                 <span className="text-amber-300">۱۶ سال تجربه پیشرو در IT</span>
               </div>
-              <h1 className="text-5xl lg:text-7xl font-black mb-6 tracking-tighter bg-gradient-to-r from-white via-amber-200 to-blue-300 bg-clip-text text-transparent">
-                {text}
-                <span className="inline-block w-1 h-12 bg-amber-400 animate-pulse ml-1"></span>
+              <h1 className="text-4xl lg:text-6xl font-black mb-4 tracking-tighter bg-gradient-to-r from-white via-amber-200 to-blue-300 bg-clip-text text-transparent">
+                <span className="fade-in-char">{text}</span>
+                <span className="inline-block w-1 h-10 bg-amber-400 animate-pulse mr-1"></span>
               </h1>
-              <p className="text-2xl lg:text-3xl text-zinc-300 mb-4">معمار شبکه • توسعه‌دهنده فول استک</p>
-              <p className="text-xl text-zinc-400 mb-10 max-w-xl">ایجاد زیرساخت‌های امن و مدرن، طراحی وب‌سایت‌های هوشمند و اتوماسیون با هوش مصنوعی</p>
+              <p className="text-xl lg:text-2xl text-zinc-300 mb-3">معمار شبکه • توسعه‌دهنده فول استک</p>
+              <p className="text-lg text-zinc-400 mb-8 max-w-xl">ایجاد زیرساخت‌های امن و مدرن، طراحی وب‌سایت‌های هوشمند و اتوماسیون با هوش مصنوعی</p>
               <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
                 <a href="#projects" className="btn-neon">مشاهده پروژه‌ها <span>→</span></a>
                 <a href="#contact" className="btn-outline">ارتباط با من</a>
@@ -237,6 +275,7 @@ export default function Home() {
           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-amber-400/60 animate-bounce text-3xl">↓</div>
         </section>
 
+        {/* ABOUT - سایر بخش‌ها بدون تغییر */}
         <section id="about" className="py-24 px-4 glass border-y border-white/5 section-hidden">
           <div className="max-w-7xl mx-auto">
             <h2 className="text-5xl font-bold text-center mb-4 bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">درباره من</h2>
@@ -266,6 +305,7 @@ export default function Home() {
           </div>
         </section>
 
+        {/* SERVICES */}
         <section id="services" className="py-24 px-4 section-hidden">
           <div className="max-w-7xl mx-auto">
             <h2 className="text-5xl font-bold text-center mb-4 bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">خدمات من</h2>
@@ -286,6 +326,7 @@ export default function Home() {
           </div>
         </section>
 
+        {/* SKILLS */}
         <section id="skills" className="py-24 px-4 glass border-y border-white/5 section-hidden">
           <div className="max-w-5xl mx-auto">
             <div className="flex items-center justify-center gap-3 mb-8">
@@ -316,6 +357,7 @@ export default function Home() {
           </div>
         </section>
 
+        {/* PROJECTS */}
         <section id="projects" className="py-24 px-4 section-hidden">
           <div className="max-w-7xl mx-auto">
             <h2 className="text-5xl font-bold text-center mb-4 bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">نمونه‌کارها</h2>
@@ -350,6 +392,7 @@ export default function Home() {
           </div>
         </section>
 
+        {/* NEWS SECTION */}
         <section id="news" className="py-24 px-4 glass border-y border-white/5 section-hidden">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-between mb-10">
@@ -365,6 +408,7 @@ export default function Home() {
           </div>
         </section>
 
+        {/* CONTACT */}
         <section id="contact" className="py-24 px-4 glass border-t border-white/5 section-hidden">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-5xl font-bold mb-4 bg-gradient-to-r from-amber-400 to-blue-500 bg-clip-text text-transparent">تماس با من</h2>
