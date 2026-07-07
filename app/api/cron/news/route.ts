@@ -3,7 +3,7 @@ import { pool } from '../../../lib/db';
 import Parser from 'rss-parser';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-import { translate } from 'deeplx';
+import { translate } from 'node-google-translator';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -21,21 +21,18 @@ const RSS_FEEDS = [
   'https://www.bbc.com/news/technology/rss.xml',
 ];
 
-// ترجمه با DeepL (کیفیت عالی)
 async function translateToPersian(text: string): Promise<string> {
   if (!text || text.length < 5) return text;
   
   try {
-    // استفاده صحیح از deeplx: translate(text, from, to)
-    const result = await translate(text, 'en', 'fa');
-    return result || text;
+    const result = await translate(text, { to: 'fa' });
+    return result.text || text;
   } catch (error) {
     console.error('Translation error:', error);
     return text;
   }
 }
 
-// استخراج محتوای کامل و عکس
 async function extractFullContent(url: string): Promise<{ content: string; image: string | null; video: string | null }> {
   try {
     const { data } = await axios.get(url, { timeout: 15000 });
@@ -104,7 +101,6 @@ export async function GET() {
               continue;
             }
             
-            // ترجمه عنوان و محتوا با DeepL
             const [persianTitle, persianContent] = await Promise.all([
               translateToPersian(item.title || ''),
               content ? translateToPersian(content) : Promise.resolve(''),

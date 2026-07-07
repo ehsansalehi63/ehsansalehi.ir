@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { pool } from '../../../lib/db';
-import { translate } from 'deeplx';
+import { translate } from 'node-google-translator';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -14,12 +14,12 @@ export async function GET() {
     let updated = 0;
     for (const row of rows as any[]) {
       try {
-        const translatedTitle = await translate(row.title, 'en', 'fa');
-        const translatedContent = await translate(row.content, 'en', 'fa');
+        const translatedTitle = await translate(row.title, { to: 'fa' });
+        const translatedContent = await translate(row.content, { to: 'fa' });
         
         await pool.execute(
           'UPDATE news_posts SET title = ?, content = ? WHERE id = ?',
-          [translatedTitle || row.title, translatedContent || row.content, row.id]
+          [translatedTitle.text || row.title, translatedContent.text || row.content, row.id]
         );
         updated++;
       } catch {
