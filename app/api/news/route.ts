@@ -8,9 +8,17 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const search = searchParams.get('q') || '';
-    const limit = searchParams.get('limit') || '50';
+    // پیش‌فرض ۵ خبر برای صفحه اصلی، اما در /news می‌توان بیشتر گرفت
+    const limit = parseInt(searchParams.get('limit') || '5');
 
-    let query = 'SELECT * FROM news_posts WHERE is_published = TRUE';
+    // فقط خبرهایی که عکس دارند و placeholder نیستند
+    let query = `
+      SELECT * FROM news_posts 
+      WHERE is_published = TRUE 
+        AND image_url IS NOT NULL 
+        AND image_url != ''
+        AND image_url NOT LIKE '%placehold%'
+    `;
     const params: any[] = [];
 
     if (search) {
@@ -20,7 +28,7 @@ export async function GET(request: NextRequest) {
     }
 
     query += ' ORDER BY published_at DESC LIMIT ?';
-    params.push(parseInt(limit));
+    params.push(limit);
 
     const [rows] = await pool.execute(query, params);
 

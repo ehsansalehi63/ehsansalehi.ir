@@ -26,6 +26,7 @@ export default function NewsContent() {
   const [search, setSearch] = useState(initialSearch);
 
   useEffect(() => {
+    // در صفحه /news همه اخبار را نمایش می‌دهیم (بدون محدودیت)
     fetch('/api/news?limit=100')
       .then(res => res.json())
       .then(data => {
