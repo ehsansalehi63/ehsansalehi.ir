@@ -10,7 +10,6 @@ export async function analyzeAndTranslateNews(
   content: string,
   sourceName: string
 ): Promise<{ title: string; summary: string; content: string }> {
-  // اگر محتوا خیلی کوتاه است، از همان عنوان استفاده کن
   if (!content || content.length < 20) {
     return {
       title: title,
@@ -20,24 +19,26 @@ export async function analyzeAndTranslateNews(
   }
 
   const prompt = `
-  شما یک مترجم خبر هستید. یک خبر انگلیسی را به فارسی روان و خلاصه ترجمه کنید.
-  
-  عنوان اصلی: "${title}"
+  شما یک نویسنده و مترجم حرفه‌ای هستید که اخبار فناوری را به فارس روان و ج  
+  عنوان اصلی خبر: "${title}"
   منبع: "${sourceName}"
-  متن خبر: """
-  ${content.slice(0, 1500)}
+  متن اصلی خبر: """
+  ${content.slice(0, 2000)}
   """
   
-  خواسته‌ها:
-  ۱. یک عنوان جذاب فارسی (حداکثر ۱۰ کلمه)
-  ۲. خلاصه خبر به فارسی (حداکثر ۱۰۰ کلمه)
-  ۳. ترجمه کامل خبر (حداکثر ۳۰۰ کلمه)
+  وظایف شما با لحنی گرم، صمیمی و حرفه‌ای:
   
-  خروجی JSON:
+  ۱. **عنوان جذاب فارسی**: عنوانی کوتاه (حداکثر ۱۲ کلمه) که مخاطب را مجذوب کند و حس کنجکاوی ایجاد کند.
+  
+  ۲. **خلاصه خبر (لید)**: ۲-۳ خط اول که اصل ماجرا را به‌صورت جذاب و خواندنی بیان کند. طوری که مخاطب حس کند داستانی جذاب در انتظارش است.
+  
+  ۳. **مشروح خبر**: ترجمه کامل خبر به فارسی روان و شیوا. از جملات کوتاه و رسا استفاده کن. سعی کن خبر را مانند یک داستان کوتاه روایت کنی. از کلمات تخصصی به‌جا استفاده کن اما آنقدر پیچیده نباشد که کاربر عادی متوجه نشود.
+  
+  خروجی را فقط به صورت JSON با این ساختار برگردان:
   {
-    "title": "عنوان فارسی",
-    "summary": "خلاصه خبر",
-    "content": "متن کامل ترجمه شده"
+    "title": "عنوان فارسی جذاب",
+    "summary": "خلاصه خبر (۲-۳ خط)",
+    "content": "مشروح خبر به فارسی روان"
   }
   `;
 
@@ -45,11 +46,11 @@ export async function analyzeAndTranslateNews(
     const response = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
-        { role: 'system', content: 'شما یک مترجم حرفه‌ای انگلیسی به فارسی هستید. پاسخ را فقط به صورت JSON معتبر بدهید.' },
+        { role: 'system', content: 'شما یک نویسنده و مترجم حرفه‌ای هستید که با لحنی گرم و جذاب می‌نویسید. پاسخ را فقط به صورت JSON معتبر بدهید.' },
         { role: 'user', content: prompt },
       ],
-      temperature: 0.5,
-      max_tokens: 600, // کاهش برای سرعت بیشتر
+      temperature: 0.6,
+      max_tokens: 800,
     });
 
     const result = response.choices[0].message.content;

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { vazir } from './fonts';
 import './globals.css';
 import { Toaster } from 'sonner';
 
@@ -71,7 +72,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="fa" dir="rtl">
+    <html lang="fa" dir="rtl" className={vazir.variable}>
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
