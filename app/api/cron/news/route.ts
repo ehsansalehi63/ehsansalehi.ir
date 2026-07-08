@@ -8,7 +8,6 @@ import { analyzeAndTranslateNews } from '../../../lib/translateWithGPT';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-// ۱۵ منبع RSS (کامل)
 const RSS_FEEDS = [
   'https://techcrunch.com/feed/',
   'https://www.theverge.com/rss/index.xml',
@@ -27,7 +26,6 @@ const RSS_FEEDS = [
   'https://www.pcmag.com/feed',
 ];
 
-// استخراج محتوا و عکس (سریع‌تر با timeout کمتر)
 async function extractFullContent(url: string) {
   try {
     const { data } = await axios.get(url, { timeout: 5000 });
@@ -85,16 +83,14 @@ export async function GET() {
     let bestNews = null;
     let bestScore = -1;
 
-    // دریافت از ۱۵ منبع (هر کدام فقط ۱ خبر)
     for (const feedUrl of RSS_FEEDS) {
       try {
         const feed = await parser.parseURL(feedUrl);
-        const item = feed.items[0]; // فقط اولین خبر از هر منبع
+        const item = feed.items[0];
         if (!item) continue;
         
         const { content, image } = await extractFullContent(item.link || '');
         
-        // امتیازدهی
         let score = 0;
         if (image && !image.includes('og-image.jpg')) score += 20;
         if (content && content.length > 200) score += 10;
@@ -113,7 +109,9 @@ export async function GET() {
           };
         }
       } catch (err) {
-        console.error(`خطا در ${feedUrl}:`, err.message);
+        // اصلاح: استفاده از err به‌عنوان any برای دسترسی به message
+        const error = err as any;
+        console.error(`خطا در ${feedUrl}:`, error.message || error);
       }
     }
 
@@ -124,7 +122,6 @@ export async function GET() {
       });
     }
 
-    // بررسی تکراری
     const [existing] = await pool.execute(
       'SELECT id FROM news_posts WHERE original_url = ?',
       [bestNews.original_url]
@@ -136,14 +133,12 @@ export async function GET() {
       });
     }
 
-    // ترجمه کامل
     const translated = await analyzeAndTranslateNews(
       bestNews.title,
       bestNews.content,
       bestNews.source_name
     );
 
-    // ذخیره در دیتابیس
     await pool.execute(
       `INSERT INTO news_posts 
        (title, content, summary, image_url, source_name, source_url, original_url, published_at, is_published)
@@ -166,11 +161,11 @@ export async function GET() {
       message: 'یک خبر جدید ذخیره شد',
       title: translated.title,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('❌ خطا:', error);
     return NextResponse.json({
       success: false,
-      error: error.message,
+      error: (error as any).message || 'خطای ناشناخته',
     }, { status: 500 });
   }
 }
