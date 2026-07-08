@@ -7,27 +7,38 @@ import { analyzeAndTranslateNews } from '../../../lib/translateWithGPT';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-export const maxDuration = 60;
+export const maxDuration = 120;
 
-// فقط ۵ منبع اصلی (کاهش هزینه)
+// ۱۵ منبع RSS معتبر
 const RSS_FEEDS = [
   'https://techcrunch.com/feed/',
   'https://www.theverge.com/rss/index.xml',
   'https://www.wired.com/feed/rss',
   'https://feeds.feedburner.com/zdnet/zdnet',
   'https://arstechnica.com/feed/',
+  'https://www.engadget.com/rss.xml',
+  'https://www.cnet.com/rss/news/',
+  'https://www.scientificamerican.com/feed/',
+  'https://www.bbc.com/news/technology/rss.xml',
+  'https://www.theguardian.com/technology/rss',
+  'https://mashable.com/feeds/rss/tech',
+  'https://www.digitaltrends.com/feed/',
+  'https://www.techradar.com/rss',
+  'https://www.cnet.com/rss/tech/',
+  'https://www.pcmag.com/feed',
 ];
 
 async function extractFullContent(url: string): Promise<{ content: string; image: string | null; video: string | null }> {
   try {
-    const { data } = await axios.get(url, { timeout: 15000 });
+    const { data } = await axios.get(url, { timeout: 10000 });
     const $ = cheerio.load(data);
     
     $('script, style, nav, header, footer, aside, .ad, .advertisement, .related, .social, .comments, .sidebar').remove();
     
     let image = $('meta[property="og:image"]').attr('content') || 
                 $('meta[name="twitter:image"]').attr('content') || 
-                $('article img').first().attr('src') || null;
+                $('article img').first().attr('src') || 
+                $('.featured-image img').attr('src') || null;
     
     if (image && !image.startsWith('http')) {
       if (image.startsWith('/')) {
@@ -38,10 +49,8 @@ async function extractFullContent(url: string): Promise<{ content: string; image
       }
     }
     
-    // استفاده از CDN برای نمایش عکس (بدون هزینه اضافی)
-    if (image) {
-      image = `https://images.weserv.nl/?url=${encodeURIComponent(image)}&w=600&h=400&fit=cover`;
-    }
+    const defaultImage = 'https://ehsansalehi.ir/images/og-image.jpg';
+    const finalImage = image || defaultImage;
     
     const video = $('meta[property="og:video"]').attr('content') || 
                   $('video source').first().attr('src') || null;
@@ -75,9 +84,13 @@ async function extractFullContent(url: string): Promise<{ content: string; image
       content = $('meta[name="description"]').attr('content') || '';
     }
     
-    return { content: content.trim(), image, video };
+    return { content: content.trim(), image: finalImage, video };
   } catch (error) {
-    return { content: '', image: null, video: null };
+    return { 
+      content: '', 
+      image: 'https://ehsansalehi.ir/images/og-image.jpg', 
+      video: null 
+    };
   }
 }
 
@@ -85,91 +98,98 @@ export async function GET() {
   try {
     const parser = new Parser();
     const allItems = [];
-    let newCount = 0;
 
+    // دریافت همه اخبار از همه منابع
     for (const feedUrl of RSS_FEEDS) {
       try {
         const feed = await parser.parseURL(feedUrl);
-        // فقط ۲ خبر از هر منبع (کاهش هزینه)
-        for (const item of feed.items.slice(0, 2)) {
-          try {
-            const { content, image, video } = await extractFullContent(item.link || '');
-            
-            // فقط خبرهایی با عکس ذخیره شوند
-            if (!image) continue;
-            
-            const translated = await analyzeAndTranslateNews(
-              item.title || '',
-              content || '',
-              feed.title || 'منبع ناشناس'
-            );
-
-            allItems.push({
-              title: translated.title || item.title || 'بدون عنوان',
-              summary: translated.summary || content.slice(0, 200),
-              content: translated.content || content || '',
-              image_url: image,
-              video_url: video || null,
-              source_name: feed.title || 'منبع ناشناس',
-              source_url: item.link || '',
-              original_url: item.link || '',
-              published_at: item.pubDate ? new Date(item.pubDate) : new Date(),
-              is_published: true,
-            });
-          } catch (itemError) {
-            console.error('Error processing item:', itemError);
-          }
+        for (const item of feed.items.slice(0, 3)) {
+          const { content, image, video } = await extractFullContent(item.link || '');
+          allItems.push({
+            title: item.title || 'بدون عنوان',
+            content: content || '',
+            summary: item.contentSnippet || '',
+            image_url: image,
+            video_url: video || null,
+            source_name: feed.title || 'منبع ناشناس',
+            source_url: item.link || '',
+            original_url: item.link || '',
+            published_at: item.pubDate ? new Date(item.pubDate) : new Date(),
+            is_published: true,
+          });
         }
       } catch (feedError) {
-        console.error(`Feed error ${feedUrl}:`, feedError);
+        console.error(`❌ خطا در منبع ${feedUrl}:`, feedError);
       }
     }
 
     if (allItems.length === 0) {
-      return NextResponse.json({ success: true, message: 'No items found' });
+      return NextResponse.json({ 
+        success: false, 
+        message: 'هیچ خبری دریافت نشد',
+      });
     }
 
-    for (const item of allItems) {
-      try {
-        const [existing] = await pool.execute(
-          'SELECT id FROM news_posts WHERE original_url = ?',
-          [item.original_url || '']
-        );
+    // مرتب‌سازی بر اساس تاریخ (جدیدترین اول)
+    allItems.sort((a, b) => b.published_at.getTime() - a.published_at.getTime());
 
-        if ((existing as any[]).length === 0) {
-          await pool.execute(
-            `INSERT INTO news_posts 
-             (title, content, summary, image_url, video_url, source_name, source_url, original_url, published_at, is_published)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [
-              item.title,
-              item.content,
-              item.summary,
-              item.image_url,
-              item.video_url,
-              item.source_name,
-              item.source_url,
-              item.original_url || '',
-              item.published_at,
-              item.is_published,
-            ]
-          );
-          newCount++;
-        }
-      } catch (dbError) {
-        console.error('DB error:', dbError);
+    // پیدا کردن اولین خبری که در دیتابیس نیست
+    let selectedNews = null;
+    for (const item of allItems) {
+      const [existing] = await pool.execute(
+        'SELECT id FROM news_posts WHERE original_url = ?',
+        [item.original_url || '']
+      );
+      if ((existing as any[]).length === 0) {
+        selectedNews = item;
+        break;
       }
     }
 
+    if (!selectedNews) {
+      return NextResponse.json({ 
+        success: true, 
+        message: 'همه اخبار تکراری هستند، خبر جدیدی وجود ندارد',
+        total: allItems.length,
+      });
+    }
+
+    // ترجمه فقط برای یک خبر (با GPT)
+    const translated = await analyzeAndTranslateNews(
+      selectedNews.title,
+      selectedNews.content,
+      selectedNews.source_name
+    );
+
+    // ذخیره در دیتابیس
+    await pool.execute(
+      `INSERT INTO news_posts 
+       (title, content, summary, image_url, video_url, source_name, source_url, original_url, published_at, is_published)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        translated.title || selectedNews.title,
+        translated.content || selectedNews.content,
+        translated.summary || selectedNews.summary,
+        selectedNews.image_url,
+        selectedNews.video_url,
+        selectedNews.source_name,
+        selectedNews.source_url,
+        selectedNews.original_url || '',
+        selectedNews.published_at,
+        selectedNews.is_published,
+      ]
+    );
+
     return NextResponse.json({ 
       success: true, 
-      total: allItems.length, 
-      new: newCount,
+      total: allItems.length,
+      saved: 1,
+      message: `✅ یک خبر جدید ذخیره شد: ${translated.title || selectedNews.title}`,
     });
   } catch (error: any) {
     return NextResponse.json({ 
       success: false, 
-      error: error.message || 'Unknown error',
+      error: error.message || 'خطای ناشناخته',
     }, { status: 500 });
   }
 }

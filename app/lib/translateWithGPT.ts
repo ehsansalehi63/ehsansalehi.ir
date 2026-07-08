@@ -1,9 +1,8 @@
 import OpenAI from 'openai';
 
-// تنظیمات سرویس ایرانی (مثلاً GapGPT)
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-  baseURL: process.env.OPENAI_BASE_URL || 'https://api.gapgpt.ir/v1', // در صورت نیاز تغییر دهید
+  baseURL: process.env.OPENAI_BASE_URL || 'https://api.gapgpt.ir/v1',
 });
 
 export async function analyzeAndTranslateNews(
@@ -11,26 +10,34 @@ export async function analyzeAndTranslateNews(
   content: string,
   sourceName: string
 ): Promise<{ title: string; summary: string; content: string }> {
+  // اگر محتوا خیلی کوتاه است، از همان عنوان استفاده کن
+  if (!content || content.length < 20) {
+    return {
+      title: title,
+      summary: title,
+      content: title,
+    };
+  }
+
   const prompt = `
-  شما یک مترجم و تحلیل‌گر خبر هستید. یک خبر به زبان انگلیسی دریافت می‌کنید.
-  وظایف شما:
-  ۱. **تحلیل**: آیا این خبر برای کاربران ایرانی (علاقه‌مند به فناوری، کسب‌وکار، علم روز) مفید، جذاب یا مرتبط است؟ اگر خبر خیلی تخصصی یا بی‌ربط است، باز هم ترجمه کنید اما در خلاصه اشاره کنید که "این خبر بیشتر برای متخصصان حوزه ... مناسب است".
-  ۲. **خلاصه‌سازی**: خبر را به‌صورت خلاصه و روان به فارسی ترجمه کنید. خلاصه باید بین ۸۰ تا ۱۵۰ کلمه باشد.
-  ۳. **لحن**: ترجمه را با لحن خودمانی، روان و کمی شوخ (اما حرفه‌ای) بنویسید. طوری که کاربر ایرانی احساس کند یک دوست آگاه دارد خبر را برایش تعریف می‌کند.
-  ۴. **عنوان**: یک عنوان جذاب و سئوپسند به فارسی برای خبر بسازید (حداکثر ۱۰ کلمه).
-
-  اطلاعات خبر:
-  - عنوان اصلی: "${title}"
-  - منبع: "${sourceName}"
-  - متن کامل: """
-  ${content.slice(0, 3000)}
+  شما یک مترجم خبر هستید. یک خبر انگلیسی را به فارسی روان و خلاصه ترجمه کنید.
+  
+  عنوان اصلی: "${title}"
+  منبع: "${sourceName}"
+  متن خبر: """
+  ${content.slice(0, 1500)}
   """
-
-  خروجی را به‌صورت JSON با این ساختار برگردان:
+  
+  خواسته‌ها:
+  ۱. یک عنوان جذاب فارسی (حداکثر ۱۰ کلمه)
+  ۲. خلاصه خبر به فارسی (حداکثر ۱۰۰ کلمه)
+  ۳. ترجمه کامل خبر (حداکثر ۳۰۰ کلمه)
+  
+  خروجی JSON:
   {
-    "title": "عنوان فارسی جذاب",
-    "summary": "خلاصه خبر به فارسی (۸۰-۱۵۰ کلمه، روان و شوخ)",
-    "content": "ترجمه کامل‌تر خبر (در صورت نیاز، اما ترجیحاً همان خلاصه باشد)"
+    "title": "عنوان فارسی",
+    "summary": "خلاصه خبر",
+    "content": "متن کامل ترجمه شده"
   }
   `;
 
@@ -38,24 +45,24 @@ export async function analyzeAndTranslateNews(
     const response = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
-        { role: 'system', content: 'شما یک مترجم و تحلیل‌گر خبر هستید که به فارسی روان و شوخ می‌نویسید.' },
+        { role: 'system', content: 'شما یک مترجم حرفه‌ای انگلیسی به فارسی هستید. پاسخ را فقط به صورت JSON معتبر بدهید.' },
         { role: 'user', content: prompt },
       ],
-      temperature: 0.7,
-      max_tokens: 800,
+      temperature: 0.5,
+      max_tokens: 600, // کاهش برای سرعت بیشتر
     });
 
     const result = response.choices[0].message.content;
-    if (!result) throw new Error('پاسخی از GPT دریافت نشد');
+    if (!result) throw new Error('پاسخی دریافت نشد');
 
     const jsonMatch = result.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('خروجی JSON معتبر نیست');
+    if (!jsonMatch) throw new Error('JSON نامعتبر');
     return JSON.parse(jsonMatch[0]);
   } catch (error) {
-    console.error('GPT Error:', error);
+    console.error('❌ GPT error:', error);
     return {
       title: title,
-      summary: content.slice(0, 200) + '...',
+      summary: content.slice(0, 150) + '...',
       content: content,
     };
   }
