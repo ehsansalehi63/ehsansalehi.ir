@@ -19,7 +19,7 @@
     "deeplx": "^0.4.0",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.511.0",
-    "mysql2": "^3.22.5",
+    "mysql2": "^3.22.6",
     "next": "16.2.9",
     "node-google-translator": "^1.0.1",
     "nodemailer": "^6.10.1",
