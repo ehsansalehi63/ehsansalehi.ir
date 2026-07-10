@@ -13,8 +13,11 @@ const RUBIKA_CHANNEL_ID = process.env.RUBIKA_CHANNEL_ID || '';
 const EITAA_BOT_TOKEN = process.env.EITAA_BOT_TOKEN || '';
 const EITAA_CHANNEL_ID = process.env.EITAA_CHANNEL_ID || '';
 
+// ======================== کاور پیش‌فرض (برای بله و ایتا) ========================
+const STATIC_COVER = 'https://ehsansalehi.ir/images/smart-cover.png';
+
 // ============================================================
-// ۱. ارسال به تلگرام
+// ۱. تلگرام (با کاور هوشمند و ارسال فایل)
 // ============================================================
 export async function sendToTelegram(
   title: string,
@@ -39,7 +42,6 @@ export async function sendToTelegram(
     formData.append('parse_mode', 'Markdown');
     formData.append('disable_web_page_preview', 'false');
 
-    // تبدیل Buffer به Uint8Array برای سازگاری با Blob
     const blob = new Blob([new Uint8Array(coverBuffer)], { type: 'image/png' });
     formData.append('photo', blob, 'cover.png');
 
@@ -60,7 +62,7 @@ export async function sendToTelegram(
 }
 
 // ============================================================
-// ۲. ارسال به بله
+// ۲. بله (با URL به‌جای فایل)
 // ============================================================
 export async function sendToBale(
   title: string,
@@ -75,7 +77,6 @@ export async function sendToBale(
   }
 
   try {
-    const coverBuffer = await createSmartCover(imageUrl, title, sourceName);
     const caption = `📰 *${title}*\n\n${summary}\n\n🔗 [مشاهده کامل خبر](${link})`;
     const url = `https://api.bale.ai/bot${BALE_BOT_TOKEN}/sendPhoto`;
 
@@ -84,14 +85,14 @@ export async function sendToBale(
     formData.append('caption', caption);
     formData.append('parse_mode', 'Markdown');
 
-    const blob = new Blob([new Uint8Array(coverBuffer)], { type: 'image/png' });
-    formData.append('photo', blob, 'cover.png');
+    // ارسال تصویر با URL (به‌جای آپلود فایل)
+    formData.append('photo', STATIC_COVER);
 
     const response = await fetch(url, { method: 'POST', body: formData });
     const result = await response.json();
 
     if (result.ok) {
-      console.log('✅ بله: پست ارسال شد (کاور هوشمند)');
+      console.log('✅ بله: پست ارسال شد (کاور استاتیک)');
       return true;
     } else {
       console.error('❌ بله:', result.description);
@@ -104,7 +105,7 @@ export async function sendToBale(
 }
 
 // ============================================================
-// ۳. ارسال به روبیکا (فقط متن)
+// ۳. روبیکا (فقط متن – چون دامنه در دسترس نیست)
 // ============================================================
 export async function sendToRubika(
   title: string,
@@ -120,6 +121,8 @@ export async function sendToRubika(
 
   try {
     const text = `📰 ${title}\n\n${summary}\n\n🔗 مشاهده کامل خبر: ${link}`;
+    // توجه: دامنه api.rubika.ir ممکن است تغییر کرده باشد – فعلاً غیرفعال
+    // برای تست، می‌توانید از آدرس IP یا دامنه جایگزین استفاده کنید.
     const url = `https://api.rubika.ir/bot${RUBIKA_BOT_TOKEN}/sendMessage`;
 
     const response = await fetch(url, {
@@ -147,7 +150,7 @@ export async function sendToRubika(
 }
 
 // ============================================================
-// ۴. ارسال به ایتا
+// ۴. ایتا (با URL به‌جای فایل)
 // ============================================================
 export async function sendToEitaa(
   title: string,
@@ -162,7 +165,6 @@ export async function sendToEitaa(
   }
 
   try {
-    const coverBuffer = await createSmartCover(imageUrl, title, sourceName);
     const caption = `📰 *${title}*\n\n${summary}\n\n🔗 [مشاهده کامل خبر](${link})`;
     const url = `https://eitaayar.ir/api/${EITAA_BOT_TOKEN}/sendPhoto`;
 
@@ -171,14 +173,14 @@ export async function sendToEitaa(
     formData.append('caption', caption);
     formData.append('parse_mode', 'Markdown');
 
-    const blob = new Blob([new Uint8Array(coverBuffer)], { type: 'image/png' });
-    formData.append('photo', blob, 'cover.png');
+    // ارسال تصویر با URL (به‌جای آپلود فایل)
+    formData.append('photo', STATIC_COVER);
 
     const response = await fetch(url, { method: 'POST', body: formData });
     const result = await response.json();
 
     if (result.ok) {
-      console.log('✅ ایتا: پست ارسال شد (کاور هوشمند)');
+      console.log('✅ ایتا: پست ارسال شد (کاور استاتیک)');
       return true;
     } else {
       console.error('❌ ایتا:', result);
