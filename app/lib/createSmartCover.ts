@@ -29,11 +29,9 @@ export async function createSmartCover(
     }
   }
 
-  // Fallback: استفاده از Jimp
-  const Jimp = await import('jimp');
-  // در نسخه‌های جدید jimp، شیء اصلی مستقیماً در دسترس است
-  const jimpModule = Jimp.default || Jimp;
-  return await createFallbackCover(jimpModule, imageBuffer);
+  // Fallback: استفاده از Jimp (بدون نیاز به .default)
+  const jimp = await import('jimp');
+  return await createFallbackCover(jimp, imageBuffer);
 }
 
 // ============================================================
@@ -156,9 +154,9 @@ async function createSmartCoverWithCanvas(
 // ============================================================
 // Fallback: کاور ساده با Jimp
 // ============================================================
-async function createFallbackCover(Jimp: any, imageBuffer: Buffer): Promise<Buffer> {
-  // Jimp را با شیء دریافتی فراخوانی می‌کنیم
-  const image = await Jimp.read(imageBuffer);
+async function createFallbackCover(jimp: any, imageBuffer: Buffer): Promise<Buffer> {
+  // jimp همان ماژول اصلی است (بدون نیاز به .default)
+  const image = await jimp.read(imageBuffer);
   image.resize(COVER_WIDTH, COVER_HEIGHT);
-  return await image.getBufferAsync(Jimp.MIME_PNG);
+  return await image.getBufferAsync(jimp.MIME_PNG);
 }
