@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { sendToBale } from '../../../lib/socialPoster';
-import { pool } from '../../../lib/db';
+import { sendToBale } from '../../lib/socialPoster';
+import { pool } from '../../lib/db';
 
 export async function GET() {
   try {
