@@ -11,13 +11,6 @@ const RUBIKA_BOT_TOKEN = process.env.RUBIKA_BOT_TOKEN || '';
 const RUBIKA_CHANNEL_ID = process.env.RUBIKA_CHANNEL_ID || '';
 const EITAA_BOT_TOKEN = process.env.EITAA_BOT_TOKEN || '';
 const EITAA_CHANNEL_ID = process.env.EITAA_CHANNEL_ID || '';
-const INSTAGRAM_ACCESS_TOKEN = process.env.INSTAGRAM_ACCESS_TOKEN || '';
-const INSTAGRAM_BUSINESS_ID = process.env.INSTAGRAM_BUSINESS_ID || '';
-
-// ======================== جدید: واتساپ ========================
-const WHATSAPP_ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN || '';
-const WHATSAPP_PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID || '';
-const WHATSAPP_RECIPIENT_NUMBER = process.env.WHATSAPP_RECIPIENT_NUMBER || ''; // شماره گیرنده (اختیاری)
 
 // ============================================================
 // ۱. ارسال به تلگرام
@@ -147,66 +140,7 @@ export async function sendToRubika(
 }
 
 // ============================================================
-// ۴. ارسال به اینستاگرام
-// ============================================================
-export async function sendToInstagram(
-  title: string,
-  summary: string,
-  imageUrl: string | null,
-  link: string
-): Promise<boolean> {
-  if (!INSTAGRAM_ACCESS_TOKEN || !INSTAGRAM_BUSINESS_ID) {
-    console.log('⏭️ اینستاگرام: توکن یا Business ID تنظیم نشده');
-    return false;
-  }
-
-  try {
-    const caption = `${title}\n\n${summary}\n\nلینک خبر: ${link}\n\n#تکنولوژی #اخبار_فناوری`;
-    const image = imageUrl && !imageUrl.includes('placehold') ? imageUrl : 'https://ehsansalehi.ir/images/og-image.jpg';
-
-    const containerUrl = `https://graph.facebook.com/v20.0/${INSTAGRAM_BUSINESS_ID}/media`;
-    const containerRes = await fetch(containerUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        image_url: image,
-        caption: caption,
-        access_token: INSTAGRAM_ACCESS_TOKEN,
-      }),
-    });
-    const containerData = await containerRes.json();
-    
-    if (!containerData.id) {
-      console.error('❌ اینستاگرام: ایجاد container失敗', containerData);
-      return false;
-    }
-
-    const publishUrl = `https://graph.facebook.com/v20.0/${INSTAGRAM_BUSINESS_ID}/media_publish`;
-    const publishRes = await fetch(publishUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        creation_id: containerData.id,
-        access_token: INSTAGRAM_ACCESS_TOKEN,
-      }),
-    });
-    const publishData = await publishRes.json();
-
-    if (publishData.id) {
-      console.log('✅ اینستاگرام: پست ارسال شد');
-      return true;
-    } else {
-      console.error('❌ اینستاگرام:', publishData);
-      return false;
-    }
-  } catch (error) {
-    console.error('❌ اینستاگرام error:', error);
-    return false;
-  }
-}
-
-// ============================================================
-// ۵. ارسال به ایتا (Eitaa)
+// ۴. ارسال به ایتا (Eitaa)
 // ============================================================
 export async function sendToEitaa(
   title: string,
@@ -248,59 +182,7 @@ export async function sendToEitaa(
 }
 
 // ============================================================
-// ۶. ارسال به واتساپ (WhatsApp Cloud API)
-// ============================================================
-export async function sendToWhatsApp(
-  title: string,
-  summary: string,
-  imageUrl: string | null,
-  link: string
-): Promise<boolean> {
-  // اگر توکن یا شماره وجود نداشت، از لینک wa.me استفاده کن (روش جایگزین)
-  if (!WHATSAPP_ACCESS_TOKEN || !WHATSAPP_PHONE_NUMBER_ID) {
-    console.log('ℹ️ واتساپ: توکن یا شماره تنظیم نشده، از لینک wa.me استفاده می‌شود');
-    // لینک واتساپ برای اشتراک‌گذاری (می‌توانید این لینک را در کانال قرار دهید)
-    const waLink = `https://wa.me/?text=${encodeURIComponent(`📰 ${title}\n\n${summary}\n\nمشاهده کامل خبر: ${link}`)}`;
-    console.log(`🔗 لینک واتساپ: ${waLink}`);
-    return false; // چون ارسال خودکار انجام نشد
-  }
-
-  try {
-    // ارسال پیام به یک شماره خاص با استفاده از WhatsApp Cloud API
-    const url = `https://graph.facebook.com/v20.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`;
-    const text = `📰 ${title}\n\n${summary}\n\nمشاهده کامل خبر: ${link}`;
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${WHATSAPP_ACCESS_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        messaging_product: 'whatsapp',
-        recipient_type: 'individual',
-        to: WHATSAPP_RECIPIENT_NUMBER || '', // شماره گیرنده
-        type: 'text',
-        text: { body: text },
-      }),
-    });
-
-    const result = await response.json();
-    if (result.messages && result.messages[0].id) {
-      console.log('✅ واتساپ: پیام ارسال شد');
-      return true;
-    } else {
-      console.error('❌ واتساپ:', result);
-      return false;
-    }
-  } catch (error) {
-    console.error('❌ واتساپ error:', error);
-    return false;
-  }
-}
-
-// ============================================================
-// ۷. تابع اصلی: ارسال یک خبر به همه کانال‌ها
+// ۵. تابع اصلی: ارسال یک خبر به همه کانال‌ها
 // ============================================================
 export async function postNewsToAllChannels(
   newsId: number,
@@ -311,13 +193,10 @@ export async function postNewsToAllChannels(
 ): Promise<{ success: boolean; results: Record<string, boolean> }> {
   const results: Record<string, boolean> = {};
 
-  // ارسال به همه پلتفرم‌ها
   results.telegram = await sendToTelegram(title, summary, imageUrl, link);
   results.bale = await sendToBale(title, summary, imageUrl, link);
   results.rubika = await sendToRubika(title, summary, imageUrl, link);
   results.eitaa = await sendToEitaa(title, summary, imageUrl, link);
-  results.instagram = await sendToInstagram(title, summary, imageUrl, link);
-  results.whatsapp = await sendToWhatsApp(title, summary, imageUrl, link); // اضافه شد
 
   const success = Object.values(results).some(r => r === true);
   
