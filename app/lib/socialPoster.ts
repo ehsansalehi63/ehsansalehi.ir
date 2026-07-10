@@ -1,7 +1,8 @@
 import { pool } from './db';
+import { createSmartCover } from './createSmartCover';
 
 // ============================================================
-// تنظیمات توکن‌ها - در Vercel Environment Variables تنظیم کنید
+// تنظیمات توکن‌ها (از متغیرهای محیطی)
 // ============================================================
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
 const TELEGRAM_CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID || '';
@@ -19,7 +20,8 @@ export async function sendToTelegram(
   title: string,
   summary: string,
   imageUrl: string | null,
-  link: string
+  link: string,
+  sourceName: string
 ): Promise<boolean> {
   if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHANNEL_ID) {
     console.log('⏭️ تلگرام: توکن یا کانال تنظیم نشده');
@@ -27,6 +29,9 @@ export async function sendToTelegram(
   }
 
   try {
+    // تولید کاور هوشمند
+    const coverBuffer = await createSmartCover(imageUrl, title, sourceName);
+    
     const caption = `📰 *${title}*\n\n${summary}\n\n🔗 [مشاهده کامل خبر](${link})`;
     const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`;
 
@@ -35,15 +40,16 @@ export async function sendToTelegram(
     formData.append('caption', caption);
     formData.append('parse_mode', 'Markdown');
     formData.append('disable_web_page_preview', 'false');
-
-    const defaultImage = 'https://ehsansalehi.ir/images/og-image.jpg';
-    formData.append('photo', imageUrl && !imageUrl.includes('placehold') ? imageUrl : defaultImage);
+    
+    // ارسال تصویر به‌صورت فایل (Blob)
+    const blob = new Blob([coverBuffer], { type: 'image/png' });
+    formData.append('photo', blob, 'cover.png');
 
     const response = await fetch(url, { method: 'POST', body: formData });
     const result = await response.json();
     
     if (result.ok) {
-      console.log('✅ تلگرام: پست ارسال شد');
+      console.log('✅ تلگرام: پست ارسال شد (کاور هوشمند)');
       return true;
     } else {
       console.error('❌ تلگرام:', result.description);
@@ -56,13 +62,14 @@ export async function sendToTelegram(
 }
 
 // ============================================================
-// ۲. ارسال به بله
+// ۲. ارسال به بله (سازگار با تلگرام)
 // ============================================================
 export async function sendToBale(
   title: string,
   summary: string,
   imageUrl: string | null,
-  link: string
+  link: string,
+  sourceName: string
 ): Promise<boolean> {
   if (!BALE_BOT_TOKEN || !BALE_CHANNEL_ID) {
     console.log('⏭️ بله: توکن یا کانال تنظیم نشده');
@@ -70,6 +77,7 @@ export async function sendToBale(
   }
 
   try {
+    const coverBuffer = await createSmartCover(imageUrl, title, sourceName);
     const caption = `📰 *${title}*\n\n${summary}\n\n🔗 [مشاهده کامل خبر](${link})`;
     const url = `https://api.bale.ai/bot${BALE_BOT_TOKEN}/sendPhoto`;
 
@@ -78,14 +86,14 @@ export async function sendToBale(
     formData.append('caption', caption);
     formData.append('parse_mode', 'Markdown');
 
-    const defaultImage = 'https://ehsansalehi.ir/images/og-image.jpg';
-    formData.append('photo', imageUrl && !imageUrl.includes('placehold') ? imageUrl : defaultImage);
+    const blob = new Blob([coverBuffer], { type: 'image/png' });
+    formData.append('photo', blob, 'cover.png');
 
     const response = await fetch(url, { method: 'POST', body: formData });
     const result = await response.json();
     
     if (result.ok) {
-      console.log('✅ بله: پست ارسال شد');
+      console.log('✅ بله: پست ارسال شد (کاور هوشمند)');
       return true;
     } else {
       console.error('❌ بله:', result.description);
@@ -98,13 +106,14 @@ export async function sendToBale(
 }
 
 // ============================================================
-// ۳. ارسال به روبیکا
+// ۳. ارسال به روبیکا (فقط متن، عکس پشتیبانی نمی‌کند)
 // ============================================================
 export async function sendToRubika(
   title: string,
   summary: string,
   imageUrl: string | null,
-  link: string
+  link: string,
+  sourceName: string
 ): Promise<boolean> {
   if (!RUBIKA_BOT_TOKEN || !RUBIKA_CHANNEL_ID) {
     console.log('⏭️ روبیکا: توکن یا کانال تنظیم نشده');
@@ -140,13 +149,14 @@ export async function sendToRubika(
 }
 
 // ============================================================
-// ۴. ارسال به ایتا (Eitaa)
+// ۴. ارسال به ایتا
 // ============================================================
 export async function sendToEitaa(
   title: string,
   summary: string,
   imageUrl: string | null,
-  link: string
+  link: string,
+  sourceName: string
 ): Promise<boolean> {
   if (!EITAA_BOT_TOKEN || !EITAA_CHANNEL_ID) {
     console.log('⏭️ ایتا: توکن یا کانال تنظیم نشده');
@@ -154,6 +164,7 @@ export async function sendToEitaa(
   }
 
   try {
+    const coverBuffer = await createSmartCover(imageUrl, title, sourceName);
     const caption = `📰 *${title}*\n\n${summary}\n\n🔗 [مشاهده کامل خبر](${link})`;
     const url = `https://eitaayar.ir/api/${EITAA_BOT_TOKEN}/sendPhoto`;
 
@@ -162,14 +173,14 @@ export async function sendToEitaa(
     formData.append('caption', caption);
     formData.append('parse_mode', 'Markdown');
 
-    const defaultImage = 'https://ehsansalehi.ir/images/og-image.jpg';
-    formData.append('photo', imageUrl && !imageUrl.includes('placehold') ? imageUrl : defaultImage);
+    const blob = new Blob([coverBuffer], { type: 'image/png' });
+    formData.append('photo', blob, 'cover.png');
 
     const response = await fetch(url, { method: 'POST', body: formData });
     const result = await response.json();
     
     if (result.ok) {
-      console.log('✅ ایتا: پست ارسال شد');
+      console.log('✅ ایتا: پست ارسال شد (کاور هوشمند)');
       return true;
     } else {
       console.error('❌ ایتا:', result);
@@ -189,14 +200,15 @@ export async function postNewsToAllChannels(
   title: string,
   summary: string,
   imageUrl: string | null,
-  link: string
+  link: string,
+  sourceName: string = 'منبع ناشناس'
 ): Promise<{ success: boolean; results: Record<string, boolean> }> {
   const results: Record<string, boolean> = {};
 
-  results.telegram = await sendToTelegram(title, summary, imageUrl, link);
-  results.bale = await sendToBale(title, summary, imageUrl, link);
-  results.rubika = await sendToRubika(title, summary, imageUrl, link);
-  results.eitaa = await sendToEitaa(title, summary, imageUrl, link);
+  results.telegram = await sendToTelegram(title, summary, imageUrl, link, sourceName);
+  results.bale = await sendToBale(title, summary, imageUrl, link, sourceName);
+  results.rubika = await sendToRubika(title, summary, imageUrl, link, sourceName);
+  results.eitaa = await sendToEitaa(title, summary, imageUrl, link, sourceName);
 
   const success = Object.values(results).some(r => r === true);
   
