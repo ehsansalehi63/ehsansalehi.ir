@@ -1,13 +1,7 @@
-import { createCanvas, loadImage } from 'canvas';
-import Jimp from 'jimp';
-
 const COVER_WIDTH = 1280;
 const COVER_HEIGHT = 720;
 const IMAGE_PADDING = 30;
 const DEFAULT_IMAGE = 'https://ehsansalehi.ir/images/smart-cover.png';
-
-// تشخیص محیط: آیا در Vercel هستیم یا Termux؟
-const isVercel = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
 
 export async function createSmartCover(
   newsImageUrl: string | null,
@@ -22,28 +16,30 @@ export async function createSmartCover(
   const imageResponse = await fetch(imageUrl);
   const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
 
-  // --------------------------------------------
-  // اگر در Vercel هستیم: از canvas استفاده کن (کاور هوشمند واقعی)
-  // --------------------------------------------
+  // تشخیص محیط: آیا در Vercel هستیم؟
+  const isVercel = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
+
   if (isVercel) {
     try {
-      return await createSmartCoverWithCanvas(imageBuffer, title, sourceName);
+      // dynamic import canvas
+      const { createCanvas, loadImage } = await import('canvas');
+      return await createSmartCoverWithCanvas(createCanvas, loadImage, imageBuffer, title, sourceName);
     } catch (err) {
-      console.error('❌ خطا در canvas، استفاده از fallback:', err);
-      return await createFallbackCover(imageBuffer);
+      console.error('❌ Canvas failed, using Jimp fallback:', err);
     }
   }
 
-  // --------------------------------------------
-  // اگر در Termux هستیم: از Jimp استفاده کن (کاور ساده)
-  // --------------------------------------------
-  return await createFallbackCover(imageBuffer);
+  // Fallback: استفاده از Jimp
+  const Jimp = await import('jimp');
+  return await createFallbackCover(Jimp.default || Jimp, imageBuffer);
 }
 
 // ============================================================
-// کاور هوشمند با canvas (فقط در Vercel)
+// کاور هوشمند با canvas
 // ============================================================
 async function createSmartCoverWithCanvas(
+  createCanvas: any,
+  loadImage: any,
   imageBuffer: Buffer,
   title: string,
   sourceName: string
@@ -51,7 +47,7 @@ async function createSmartCoverWithCanvas(
   const canvas = createCanvas(COVER_WIDTH, COVER_HEIGHT);
   const ctx = canvas.getContext('2d');
 
-  // پس‌زمینه گرادیانت
+  // پس‌زمینه
   const grad = ctx.createLinearGradient(0, 0, COVER_WIDTH, COVER_HEIGHT);
   grad.addColorStop(0, '#0a0a2e');
   grad.addColorStop(0.5, '#1a1a2e');
@@ -59,7 +55,7 @@ async function createSmartCoverWithCanvas(
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, COVER_WIDTH, COVER_HEIGHT);
 
-  // بارگذاری و قرار دادن تصویر خبر
+  // تصویر خبر
   const newsImage = await loadImage(imageBuffer);
   const imgAspect = newsImage.width / newsImage.height;
   const coverAspect = (COVER_WIDTH - IMAGE_PADDING * 2) / (COVER_HEIGHT - IMAGE_PADDING * 2 - 120);
@@ -78,7 +74,7 @@ async function createSmartCoverWithCanvas(
   }
   ctx.drawImage(newsImage, drawX, drawY, drawW, drawH);
 
-  // قاب شیشه‌ای
+  // قاب
   ctx.save();
   ctx.shadowColor = 'rgba(245,158,11,0.15)';
   ctx.shadowBlur = 40;
@@ -156,15 +152,10 @@ async function createSmartCoverWithCanvas(
 }
 
 // ============================================================
-// Fallback: کاور ساده با Jimp (برای Termux و مواقع خطا)
+// Fallback: کاور ساده با Jimp
 // ============================================================
-async function createFallbackCover(imageBuffer: Buffer): Promise<Buffer> {
+async function createFallbackCover(Jimp: any, imageBuffer: Buffer): Promise<Buffer> {
   const image = await Jimp.read(imageBuffer);
-  
-  // تغییر اندازه به ۱۲۸۰×۷۲۰
   image.resize(COVER_WIDTH, COVER_HEIGHT);
-  
-  // اضافه کردن یک نوار تیره پایین (متن با Jimp امکان‌پذیر نیست)
-  // اما حداقل عکس را با اندازه مناسب برمی‌گردانیم
   return await image.getBufferAsync(Jimp.MIME_PNG);
 }
