@@ -81,7 +81,7 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
         
-        <!-- متا‌تگ تأیید دامنه فیسبوک برای واتساپ -->
+        {/* متا‌تگ تأیید دامنه فیسبوک برای واتساپ */}
         <meta name="facebook-domain-verification" content="7edxl1xqt2d8sc3zurcms3hbqfkfju" />
       </head>
       <body className="font-vazir antialiased bg-[#0a0a0a] text-white">
