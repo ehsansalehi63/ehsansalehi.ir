@@ -13,7 +13,6 @@
     "autoprefixer": "^10.5.0",
     "axios": "^1.6.8",
     "bcryptjs": "^2.4.3",
-    "canvas": "^3.2.3",
     "cheerio": "^1.0.0-rc.12",
     "date-fns": "^2.30.0",
     "jimp": "^1.6.0",
@@ -28,6 +27,12 @@
     "rss-parser": "^3.13.0",
     "sonner": "^1.4.41",
     "tailwindcss": "^3.4.3"
+  },
+  "optionalDependencies": {
+    "canvas": "^3.2.3",
+    "lucide-react": "^1.24.0",
+    "node-google-translator": "^1.0.1",
+    "uuid": "^14.0.1"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
