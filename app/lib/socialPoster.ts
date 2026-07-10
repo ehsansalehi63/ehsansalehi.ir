@@ -2,22 +2,13 @@ import { pool } from './db';
 import { createSmartCover } from './createSmartCover';
 
 // ============================================================
-// تنظیمات توکن‌ها
+// تنظیمات تلگرام
 // ============================================================
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
 const TELEGRAM_CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID || '';
-const BALE_BOT_TOKEN = process.env.BALE_BOT_TOKEN || '';
-const BALE_CHANNEL_ID = process.env.BALE_CHANNEL_ID || '';
-const RUBIKA_BOT_TOKEN = process.env.RUBIKA_BOT_TOKEN || '';
-const RUBIKA_CHANNEL_ID = process.env.RUBIKA_CHANNEL_ID || '';
-const EITAA_BOT_TOKEN = process.env.EITAA_BOT_TOKEN || '';
-const EITAA_CHANNEL_ID = process.env.EITAA_CHANNEL_ID || '';
-
-// ======================== کاور پیش‌فرض (برای بله و ایتا) ========================
-const STATIC_COVER = 'https://ehsansalehi.ir/images/smart-cover.png';
 
 // ============================================================
-// ۱. تلگرام (با کاور هوشمند و ارسال فایل)
+// ارسال به تلگرام (با کاور هوشمند)
 // ============================================================
 export async function sendToTelegram(
   title: string,
@@ -32,10 +23,14 @@ export async function sendToTelegram(
   }
 
   try {
+    // ساخت کاور هوشمند (با canvas یا fallback)
     const coverBuffer = await createSmartCover(imageUrl, title, sourceName);
+    
+    // کپشن پیام
     const caption = `📰 *${title}*\n\n${summary}\n\n🔗 [مشاهده کامل خبر](${link})`;
     const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`;
 
+    // ارسال تصویر به‌صورت فایل
     const formData = new FormData();
     formData.append('chat_id', TELEGRAM_CHANNEL_ID);
     formData.append('caption', caption);
@@ -62,138 +57,35 @@ export async function sendToTelegram(
 }
 
 // ============================================================
-// ۲. بله (با URL به‌جای فایل)
+// سایر پلتفرم‌ها (غیرفعال)
 // ============================================================
-export async function sendToBale(
-  title: string,
-  summary: string,
-  imageUrl: string | null,
-  link: string,
-  sourceName: string
-): Promise<boolean> {
-  if (!BALE_BOT_TOKEN || !BALE_CHANNEL_ID) {
-    console.log('⏭️ بله: توکن یا کانال تنظیم نشده');
-    return false;
-  }
+export async function sendToBale(...args: any[]): Promise<boolean> {
+  console.log('⏭️ بله: غیرفعال است');
+  return false;
+}
 
-  try {
-    const caption = `📰 *${title}*\n\n${summary}\n\n🔗 [مشاهده کامل خبر](${link})`;
-    const url = `https://api.bale.ai/bot${BALE_BOT_TOKEN}/sendPhoto`;
+export async function sendToRubika(...args: any[]): Promise<boolean> {
+  console.log('⏭️ روبیکا: غیرفعال است');
+  return false;
+}
 
-    const formData = new FormData();
-    formData.append('chat_id', BALE_CHANNEL_ID);
-    formData.append('caption', caption);
-    formData.append('parse_mode', 'Markdown');
+export async function sendToEitaa(...args: any[]): Promise<boolean> {
+  console.log('⏭️ ایتا: غیرفعال است');
+  return false;
+}
 
-    // ارسال تصویر با URL (به‌جای آپلود فایل)
-    formData.append('photo', STATIC_COVER);
+export async function sendToWhatsApp(...args: any[]): Promise<boolean> {
+  console.log('⏭️ واتساپ: غیرفعال است');
+  return false;
+}
 
-    const response = await fetch(url, { method: 'POST', body: formData });
-    const result = await response.json();
-
-    if (result.ok) {
-      console.log('✅ بله: پست ارسال شد (کاور استاتیک)');
-      return true;
-    } else {
-      console.error('❌ بله:', result.description);
-      return false;
-    }
-  } catch (error) {
-    console.error('❌ بله error:', error);
-    return false;
-  }
+export async function sendToInstagram(...args: any[]): Promise<boolean> {
+  console.log('⏭️ اینستاگرام: غیرفعال است');
+  return false;
 }
 
 // ============================================================
-// ۳. روبیکا (فقط متن – چون دامنه در دسترس نیست)
-// ============================================================
-export async function sendToRubika(
-  title: string,
-  summary: string,
-  imageUrl: string | null,
-  link: string,
-  sourceName: string
-): Promise<boolean> {
-  if (!RUBIKA_BOT_TOKEN || !RUBIKA_CHANNEL_ID) {
-    console.log('⏭️ روبیکا: توکن یا کانال تنظیم نشده');
-    return false;
-  }
-
-  try {
-    const text = `📰 ${title}\n\n${summary}\n\n🔗 مشاهده کامل خبر: ${link}`;
-    // توجه: دامنه api.rubika.ir ممکن است تغییر کرده باشد – فعلاً غیرفعال
-    // برای تست، می‌توانید از آدرس IP یا دامنه جایگزین استفاده کنید.
-    const url = `https://api.rubika.ir/bot${RUBIKA_BOT_TOKEN}/sendMessage`;
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: RUBIKA_CHANNEL_ID,
-        text: text,
-        parse_mode: 'HTML',
-      }),
-    });
-
-    const result = await response.json();
-    if (result.ok) {
-      console.log('✅ روبیکا: پست ارسال شد');
-      return true;
-    } else {
-      console.error('❌ روبیکا:', result.description);
-      return false;
-    }
-  } catch (error) {
-    console.error('❌ روبیکا error:', error);
-    return false;
-  }
-}
-
-// ============================================================
-// ۴. ایتا (با URL به‌جای فایل)
-// ============================================================
-export async function sendToEitaa(
-  title: string,
-  summary: string,
-  imageUrl: string | null,
-  link: string,
-  sourceName: string
-): Promise<boolean> {
-  if (!EITAA_BOT_TOKEN || !EITAA_CHANNEL_ID) {
-    console.log('⏭️ ایتا: توکن یا کانال تنظیم نشده');
-    return false;
-  }
-
-  try {
-    const caption = `📰 *${title}*\n\n${summary}\n\n🔗 [مشاهده کامل خبر](${link})`;
-    const url = `https://eitaayar.ir/api/${EITAA_BOT_TOKEN}/sendPhoto`;
-
-    const formData = new FormData();
-    formData.append('chat_id', EITAA_CHANNEL_ID);
-    formData.append('caption', caption);
-    formData.append('parse_mode', 'Markdown');
-
-    // ارسال تصویر با URL (به‌جای آپلود فایل)
-    formData.append('photo', STATIC_COVER);
-
-    const response = await fetch(url, { method: 'POST', body: formData });
-    const result = await response.json();
-
-    if (result.ok) {
-      console.log('✅ ایتا: پست ارسال شد (کاور استاتیک)');
-      return true;
-    } else {
-      console.error('❌ ایتا:', result);
-      return false;
-    }
-  } catch (error) {
-    console.error('❌ ایتا error:', error);
-    return false;
-  }
-}
-
-// ============================================================
-// ۵. تابع اصلی
+// تابع اصلی: ارسال فقط به تلگرام
 // ============================================================
 export async function postNewsToAllChannels(
   newsId: number,
@@ -203,14 +95,11 @@ export async function postNewsToAllChannels(
   link: string,
   sourceName: string = 'منبع ناشناس'
 ): Promise<{ success: boolean; results: Record<string, boolean> }> {
-  const results: Record<string, boolean> = {};
+  const results: Record<string, boolean> = {
+    telegram: await sendToTelegram(title, summary, imageUrl, link, sourceName),
+  };
 
-  results.telegram = await sendToTelegram(title, summary, imageUrl, link, sourceName);
-  results.bale = await sendToBale(title, summary, imageUrl, link, sourceName);
-  results.rubika = await sendToRubika(title, summary, imageUrl, link, sourceName);
-  results.eitaa = await sendToEitaa(title, summary, imageUrl, link, sourceName);
-
-  const success = Object.values(results).some(r => r === true);
+  const success = results.telegram;
 
   await pool.execute(
     `UPDATE news_posts 
