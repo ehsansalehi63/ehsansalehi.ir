@@ -2,7 +2,7 @@ import { pool } from './db';
 import { createSmartCover } from './createSmartCover';
 
 // ============================================================
-// تنظیمات توکن‌ها (از متغیرهای محیطی)
+// تنظیمات توکن‌ها
 // ============================================================
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
 const TELEGRAM_CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID || '';
@@ -29,9 +29,7 @@ export async function sendToTelegram(
   }
 
   try {
-    // تولید کاور هوشمند
     const coverBuffer = await createSmartCover(imageUrl, title, sourceName);
-    
     const caption = `📰 *${title}*\n\n${summary}\n\n🔗 [مشاهده کامل خبر](${link})`;
     const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`;
 
@@ -40,14 +38,14 @@ export async function sendToTelegram(
     formData.append('caption', caption);
     formData.append('parse_mode', 'Markdown');
     formData.append('disable_web_page_preview', 'false');
-    
-    // ارسال تصویر به‌صورت فایل (Blob)
-    const blob = new Blob([coverBuffer], { type: 'image/png' });
+
+    // تبدیل Buffer به Uint8Array برای سازگاری با Blob
+    const blob = new Blob([new Uint8Array(coverBuffer)], { type: 'image/png' });
     formData.append('photo', blob, 'cover.png');
 
     const response = await fetch(url, { method: 'POST', body: formData });
     const result = await response.json();
-    
+
     if (result.ok) {
       console.log('✅ تلگرام: پست ارسال شد (کاور هوشمند)');
       return true;
@@ -62,7 +60,7 @@ export async function sendToTelegram(
 }
 
 // ============================================================
-// ۲. ارسال به بله (سازگار با تلگرام)
+// ۲. ارسال به بله
 // ============================================================
 export async function sendToBale(
   title: string,
@@ -86,12 +84,12 @@ export async function sendToBale(
     formData.append('caption', caption);
     formData.append('parse_mode', 'Markdown');
 
-    const blob = new Blob([coverBuffer], { type: 'image/png' });
+    const blob = new Blob([new Uint8Array(coverBuffer)], { type: 'image/png' });
     formData.append('photo', blob, 'cover.png');
 
     const response = await fetch(url, { method: 'POST', body: formData });
     const result = await response.json();
-    
+
     if (result.ok) {
       console.log('✅ بله: پست ارسال شد (کاور هوشمند)');
       return true;
@@ -106,7 +104,7 @@ export async function sendToBale(
 }
 
 // ============================================================
-// ۳. ارسال به روبیکا (فقط متن، عکس پشتیبانی نمی‌کند)
+// ۳. ارسال به روبیکا (فقط متن)
 // ============================================================
 export async function sendToRubika(
   title: string,
@@ -133,7 +131,7 @@ export async function sendToRubika(
         parse_mode: 'HTML',
       }),
     });
-    
+
     const result = await response.json();
     if (result.ok) {
       console.log('✅ روبیکا: پست ارسال شد');
@@ -173,12 +171,12 @@ export async function sendToEitaa(
     formData.append('caption', caption);
     formData.append('parse_mode', 'Markdown');
 
-    const blob = new Blob([coverBuffer], { type: 'image/png' });
+    const blob = new Blob([new Uint8Array(coverBuffer)], { type: 'image/png' });
     formData.append('photo', blob, 'cover.png');
 
     const response = await fetch(url, { method: 'POST', body: formData });
     const result = await response.json();
-    
+
     if (result.ok) {
       console.log('✅ ایتا: پست ارسال شد (کاور هوشمند)');
       return true;
@@ -193,7 +191,7 @@ export async function sendToEitaa(
 }
 
 // ============================================================
-// ۵. تابع اصلی: ارسال یک خبر به همه کانال‌ها
+// ۵. تابع اصلی
 // ============================================================
 export async function postNewsToAllChannels(
   newsId: number,
@@ -211,7 +209,7 @@ export async function postNewsToAllChannels(
   results.eitaa = await sendToEitaa(title, summary, imageUrl, link, sourceName);
 
   const success = Object.values(results).some(r => r === true);
-  
+
   await pool.execute(
     `UPDATE news_posts 
      SET posted_to_social = ? 
