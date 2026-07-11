@@ -2,15 +2,9 @@ import { pool } from './db';
 import { createSmartCover } from './createSmartCover';
 import { sendToLinkedIn } from './linkedinPoster';
 
-// ============================================================
-// تنظیمات تلگرام
-// ============================================================
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
 const TELEGRAM_CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID || '';
 
-// ============================================================
-// ارسال به تلگرام (با کاور هوشمند)
-// ============================================================
 export async function sendToTelegram(
   title: string,
   summary: string,
@@ -41,7 +35,7 @@ export async function sendToTelegram(
     const result = await response.json();
 
     if (result.ok) {
-      console.log('✅ تلگرام: پست ارسال شد (کاور هوشمند)');
+      console.log('✅ تلگرام: پست ارسال شد (کاور استاتیک)');
       return true;
     } else {
       console.error('❌ تلگرام:', result.description);
@@ -53,9 +47,6 @@ export async function sendToTelegram(
   }
 }
 
-// ============================================================
-// سایر پلتفرم‌ها (غیرفعال)
-// ============================================================
 export async function sendToBale(...args: any[]): Promise<boolean> {
   console.log('⏭️ بله: غیرفعال است');
   return false;
@@ -77,9 +68,6 @@ export async function sendToInstagram(...args: any[]): Promise<boolean> {
   return false;
 }
 
-// ============================================================
-// تابع اصلی: ارسال به تلگرام و لینکدین
-// ============================================================
 export async function postNewsToAllChannels(
   newsId: number,
   title: string,
@@ -88,7 +76,6 @@ export async function postNewsToAllChannels(
   link: string,
   sourceName: string = 'منبع ناشناس'
 ): Promise<{ success: boolean; results: Record<string, boolean> }> {
-  // تولید کاور هوشمند (یک بار)
   const coverBuffer = await createSmartCover(imageUrl, title, sourceName);
 
   const results: Record<string, boolean> = {
