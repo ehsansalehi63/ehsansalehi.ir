@@ -1,4 +1,4 @@
-import * as Jimp from 'jimp';
+import { Jimp } from 'jimp';
 
 /**
  * اضافه کردن واترمارک (لوگو + متن) به تصویر خبر
