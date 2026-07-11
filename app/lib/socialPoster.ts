@@ -9,7 +9,8 @@ const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
 const TELEGRAM_CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID || '';
 
 // ============================================================
-// ارسال به تل// ============================================================
+// ارسال به تلگرام (با کاور هوشمند)
+// ============================================================
 export async function sendToTelegram(
   title: string,
   summary: string,
@@ -59,22 +60,18 @@ export async function sendToBale(...args: any[]): Promise<boolean> {
   console.log('⏭️ بله: غیرفعال است');
   return false;
 }
-
 export async function sendToRubika(...args: any[]): Promise<boolean> {
   console.log('⏭️ روبیکا: غیرفعال است');
   return false;
 }
-
 export async function sendToEitaa(...args: any[]): Promise<boolean> {
   console.log('⏭️ ایتا: غیرفعال است');
   return false;
 }
-
 export async function sendToWhatsApp(...args: any[]): Promise<boolean> {
   console.log('⏭️ واتساپ: غیرفعال است');
   return false;
 }
-
 export async function sendToInstagram(...args: any[]): Promise<boolean> {
   console.log('⏭️ اینستاگرام: غیرفعال است');
   return false;
@@ -91,9 +88,12 @@ export async function postNewsToAllChannels(
   link: string,
   sourceName: string = 'منبع ناشناس'
 ): Promise<{ success: boolean; results: Record<string, boolean> }> {
+  // تولید کاور هوشمند (یک بار)
+  const coverBuffer = await createSmartCover(imageUrl, title, sourceName);
+
   const results: Record<string, boolean> = {
     telegram: await sendToTelegram(title, summary, imageUrl, link, sourceName),
-    linkedin: await sendToLinkedIn(title, summary, link),
+    linkedin: await sendToLinkedIn(title, summary, coverBuffer, link),
   };
 
   const success = results.telegram || results.linkedin;
