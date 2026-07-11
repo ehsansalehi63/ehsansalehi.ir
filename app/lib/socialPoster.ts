@@ -1,9 +1,10 @@
 import { pool } from './db';
-import { createSmartCover } from './createSmartCover';
 import { sendToLinkedIn } from './linkedinPoster';
+import { addWatermarkToImage } from './watermark';
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
 const TELEGRAM_CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID || '';
+const DEFAULT_IMAGE = 'https://ehsansalehi.ir/images/og-image.jpg';
 
 export async function sendToTelegram(
   title: string,
@@ -18,7 +19,18 @@ export async function sendToTelegram(
   }
 
   try {
-    const coverBuffer = await createSmartCover(imageUrl, title, sourceName);
+    // ========== ۱. دریافت تصویر خبر ==========
+    const photoUrl = imageUrl && !imageUrl.includes('placehold') 
+      ? imageUrl 
+      : DEFAULT_IMAGE;
+
+    const imageRes = await fetch(photoUrl);
+    const imageBuffer = Buffer.from(await imageRes.arrayBuffer());
+
+    // ========== ۲. افزودن واترمارک ==========
+    const watermarkedBuffer = await addWatermarkToImage(imageBuffer, title);
+
+    // ========== ۳. ارسال به تلگرام ==========
     const caption = `📰 *${title}*\n\n${summary}\n\n🔗 [مشاهده کامل خبر](${link})`;
     const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`;
 
@@ -28,14 +40,14 @@ export async function sendToTelegram(
     formData.append('parse_mode', 'Markdown');
     formData.append('disable_web_page_preview', 'false');
 
-    const blob = new Blob([new Uint8Array(coverBuffer)], { type: 'image/png' });
+    const blob = new Blob([new Uint8Array(watermarkedBuffer)], { type: 'image/png' });
     formData.append('photo', blob, 'cover.png');
 
     const response = await fetch(url, { method: 'POST', body: formData });
     const result = await response.json();
 
     if (result.ok) {
-      console.log('✅ تلگرام: پست ارسال شد (کاور استاتیک)');
+      console.log('✅ تلگرام: پست با واترمارک ارسال شد');
       return true;
     } else {
       console.error('❌ تلگرام:', result.description);
@@ -47,6 +59,7 @@ export async function sendToTelegram(
   }
 }
 
+// ====== توابع غیرفعال ======
 export async function sendToBale(...args: any[]): Promise<boolean> {
   console.log('⏭️ بله: غیرفعال است');
   return false;
@@ -68,6 +81,7 @@ export async function sendToInstagram(...args: any[]): Promise<boolean> {
   return false;
 }
 
+// ====== تابع اصلی ======
 export async function postNewsToAllChannels(
   newsId: number,
   title: string,
@@ -76,11 +90,9 @@ export async function postNewsToAllChannels(
   link: string,
   sourceName: string = 'منبع ناشناس'
 ): Promise<{ success: boolean; results: Record<string, boolean> }> {
-  const coverBuffer = await createSmartCover(imageUrl, title, sourceName);
-
   const results: Record<string, boolean> = {
     telegram: await sendToTelegram(title, summary, imageUrl, link, sourceName),
-    linkedin: await sendToLinkedIn(title, summary, coverBuffer, link),
+    linkedin: await sendToLinkedIn(title, summary, imageUrl, link),
   };
 
   const success = results.telegram || results.linkedin;

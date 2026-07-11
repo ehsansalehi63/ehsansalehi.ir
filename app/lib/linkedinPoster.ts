@@ -1,14 +1,9 @@
-/**
- * ارسال خودکار پست با تصویر (کاور هوشمند) به لینکدین
- * نیاز به تنظیم متغیرهای محیطی:
- * - LINKEDIN_ACCESS_TOKEN
- * - LINKEDIN_AUTHOR_URN
- */
+import { addWatermarkToImage } from './watermark';
 
 export async function sendToLinkedIn(
   title: string,
   summary: string,
-  coverBuffer: Buffer,
+  imageUrl: string | null,
   link: string
 ): Promise<boolean> {
   const accessToken = process.env.LINKEDIN_ACCESS_TOKEN || '';
@@ -20,7 +15,19 @@ export async function sendToLinkedIn(
   }
 
   try {
-    // ========== مرحله ۱: دریافت آدرس آپلود ==========
+    // ========== ۱. دریافت تصویر خبر (یا تصویر پیش‌فرض) ==========
+    const defaultImage = 'https://ehsansalehi.ir/images/og-image.jpg';
+    const imageUrlFinal = imageUrl && !imageUrl.includes('placehold') 
+      ? imageUrl 
+      : defaultImage;
+
+    const imageRes = await fetch(imageUrlFinal);
+    const imageBuffer = Buffer.from(await imageRes.arrayBuffer());
+
+    // ========== ۲. افزودن واترمارک (لوگو + نام سایت) ==========
+    const watermarkedBuffer = await addWatermarkToImage(imageBuffer, title);
+
+    // ========== ۳. دریافت آدرس آپلود ==========
     const uploadUrl = 'https://api.linkedin.com/v2/images?action=upload';
     const uploadRes = await fetch(uploadUrl, {
       method: 'POST',
@@ -44,14 +51,14 @@ export async function sendToLinkedIn(
     const uploadUrl2 = uploadData.uploadUrl;
     const asset = uploadData.image;
 
-    // ========== مرحله ۲: آپلود تصویر (تبدیل Buffer به Uint8Array) ==========
+    // ========== ۴. آپلود تصویر واترمارک‌دار ==========
     const uploadImageRes = await fetch(uploadUrl2, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'image/png',
       },
-      body: new Uint8Array(coverBuffer), // ← تبدیل
+      body: new Uint8Array(watermarkedBuffer),
     });
 
     if (!uploadImageRes.ok) {
@@ -60,7 +67,7 @@ export async function sendToLinkedIn(
       return false;
     }
 
-    // ========== مرحله ۳: ایجاد پست ==========
+    // ========== ۵. ایجاد پست ==========
     const text = `${title}\n\n${summary}\n\n${link}`;
     const postUrl = 'https://api.linkedin.com/v2/ugcPosts';
     const postRes = await fetch(postUrl, {
@@ -95,7 +102,7 @@ export async function sendToLinkedIn(
 
     if (postRes.ok) {
       const result = await postRes.json();
-      console.log('✅ لینکدین: پست با کاور ارسال شد', result.id);
+      console.log('✅ لینکدین: پست با تصویر واترمارک‌دار ارسال شد', result.id);
       return true;
     } else {
       const error = await postRes.text();
