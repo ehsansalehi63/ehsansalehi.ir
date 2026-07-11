@@ -1,3 +1,10 @@
+/**
+ * ارسال خودکار پست با تصویر (کاور هوشمند) به لینکدین
+ * نیاز به تنظیم متغیرهای محیطی:
+ * - LINKEDIN_ACCESS_TOKEN
+ * - LINKEDIN_AUTHOR_URN
+ */
+
 export async function sendToLinkedIn(
   title: string,
   summary: string,
@@ -13,7 +20,8 @@ export async function sendToLinkedIn(
   }
 
   try {
-    // ========== مرحله ۱: دریافت آدرس آپلو    const uploadUrl = 'https://api.linkedin.com/v2/images?action=upload';
+    // ========== مرحله ۱: دریافت آدرس آپلود ==========
+    const uploadUrl = 'https://api.linkedin.com/v2/images?action=upload';
     const uploadRes = await fetch(uploadUrl, {
       method: 'POST',
       headers: {
@@ -43,7 +51,7 @@ export async function sendToLinkedIn(
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'image/png',
       },
-      body: coverBuffer, // مستقیماً Buffer
+      body: coverBuffer,
     });
 
     if (!uploadImageRes.ok) {
@@ -52,7 +60,7 @@ export async function sendToLinkedIn(
       return false;
     }
 
-    // ========== مرحله ۳: ایجاد پست با تصویر ==========
+    // ========== مرحله ۳: ایجاد پست ==========
     const text = `${title}\n\n${summary}\n\n${link}`;
     const postUrl = 'https://api.linkedin.com/v2/ugcPosts';
     const postRes = await fetch(postUrl, {
