@@ -1,7 +1,8 @@
-import Jimp from 'jimp';
+import * as Jimp from 'jimp';
 
 /**
- * ا * @param imageBuffer - بافر تصویر اصلی
+ * اضافه کردن واترمارک (لوگو + متن) به تصویر خبر
+ * @param imageBuffer - بافر تصویر اصلی
  * @param title - عنوان خبر (برای نمایش در صورت نیاز)
  * @returns بافر تصویر با واترمارک
  */
@@ -19,12 +20,11 @@ export async function addWatermarkToImage(
     image.resize(targetWidth, targetHeight);
 
     // ۳. بارگذاری لوگو (با پس‌زمینه شفاف)
-    let logo: Jimp | null = null;
+    let logo: any = null;
     try {
       const logoRes = await fetch('https://ehsansalehi.ir/images/logo-transparent.png');
       const logoBuffer = Buffer.from(await logoRes.arrayBuffer());
       logo = await Jimp.read(logoBuffer);
-      // تغییر اندازه لوگو (اختیاری)
       logo.resize(80, 80);
     } catch {
       console.warn('⚠️ لوگو پیدا نشد، فقط متن نمایش داده می‌شود');
