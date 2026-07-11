@@ -5,33 +5,39 @@ export async function addWatermarkToImage(
   title: string
 ): Promise<Buffer> {
   try {
-    // ۱. بارگذاری تصویر خبر
+    // اگر بافر خالی است، خطا بده
+    if (!imageBuffer || imageBuffer.length === 0) {
+      console.error('❌ آبفار تصویر خالی است');
+      return imageBuffer;
+    }
+
     const image = await Jimp.read(imageBuffer);
     
-    // ۲. تغییر اندازه تصویر
     const targetWidth = 1200;
     const targetHeight = 628;
     image.resize(targetWidth, targetHeight);
 
-    // ۳. بارگذاری لوگو
+    // لوگو
     let logo: any = null;
     try {
       const logoRes = await fetch('https://ehsansalehi.ir/images/logo-transparent.png');
-      const logoBuffer = Buffer.from(await logoRes.arrayBuffer());
-      logo = await Jimp.read(logoBuffer);
-      logo.resize(80, 80);
+      if (logoRes.ok) {
+        const logoBuffer = Buffer.from(await logoRes.arrayBuffer());
+        logo = await Jimp.read(logoBuffer);
+        logo.resize(80, 80);
+      }
     } catch {
       console.warn('⚠️ لوگو پیدا نشد');
     }
 
-    // ۴. افزودن لایه نیمه‌شفاف در پایین
+    // لایه نیمه‌شفاف
     const overlay = new Jimp(targetWidth, 100, 0x00000080);
     image.composite(overlay, 0, targetHeight - 100, {
       mode: Jimp.BLEND_SOURCE_OVER,
       opacitySource: 0.6,
     } as any);
 
-    // ۵. افزودن متن
+    // متن
     const font = await Jimp.loadFont(Jimp.FONT_SANS_16_BLACK);
     const text = 'ehsansalehi.ir';
     const textWidth = Jimp.measureText(font, text);
@@ -39,7 +45,7 @@ export async function addWatermarkToImage(
     const textY = targetHeight - 60;
     image.print(font, textX, textY, text);
 
-    // ۶. افزودن لوگو
+    // لوگو
     if (logo) {
       const logoX = targetWidth - 50 - textWidth - 40;
       const logoY = targetHeight - 75;
@@ -49,10 +55,9 @@ export async function addWatermarkToImage(
       } as any);
     }
 
-    // ۷. بازگشت بافر
     return await image.getBufferAsync(Jimp.MIME_PNG);
   } catch (error) {
     console.error('❌ خطا در واترمارک:', error);
-    return imageBuffer;
+    return imageBuffer; // در صورت خطا، تصویر اصلی برگردد
   }
 }

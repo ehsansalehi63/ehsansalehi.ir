@@ -6,6 +6,18 @@ const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
 const TELEGRAM_CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID || '';
 const DEFAULT_IMAGE = 'https://ehsansalehi.ir/images/og-image.jpg';
 
+// تابع تبدیل URL نسبی به کامل
+function resolveImageUrl(url: string | null): string {
+  if (!url) return DEFAULT_IMAGE;
+  if (url.startsWith('http')) return url;
+  if (url.startsWith('/api/image-proxy')) {
+    // تبدیل /api/image-proxy?url=... به آدرس کامل
+    const proxyUrl = new URL(url, 'https://ehsansalehi.ir');
+    return proxyUrl.toString();
+  }
+  return url;
+}
+
 export async function sendToTelegram(
   title: string,
   summary: string,
@@ -19,18 +31,18 @@ export async function sendToTelegram(
   }
 
   try {
-    // ========== ۱. دریافت تصویر خبر ==========
-    const photoUrl = imageUrl && !imageUrl.includes('placehold') 
-      ? imageUrl 
-      : DEFAULT_IMAGE;
-
-    const imageRes = await fetch(photoUrl);
+    // تبدیل URL به کامل
+    const fullImageUrl = resolveImageUrl(imageUrl);
+    const imageRes = await fetch(fullImageUrl);
+    if (!imageRes.ok) {
+      console.error(`❌ تلگرام: خطا در دریافت تصویر (${imageRes.status})`);
+      return false;
+    }
     const imageBuffer = Buffer.from(await imageRes.arrayBuffer());
 
-    // ========== ۲. افزودن واترمارک ==========
+    // افزودن واترمارک
     const watermarkedBuffer = await addWatermarkToImage(imageBuffer, title);
 
-    // ========== ۳. ارسال به تلگرام ==========
     const caption = `📰 *${title}*\n\n${summary}\n\n🔗 [مشاهده کامل خبر](${link})`;
     const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`;
 
