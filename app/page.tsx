@@ -23,6 +23,8 @@ import Testimonials from './components/Testimonials';
 import Certifications from './components/Certifications';
 import SocialLinks from './components/SocialLinks';
 import CustomCursor from './components/CustomCursor';
+import BreakingNews from './components/BreakingNews';
+import SocialCallout from './components/SocialCallout';
 
 export default function Home() {
   const [text, setText] = useState('');
@@ -320,7 +322,10 @@ export default function Home() {
       <main className="min-h-screen bg-[#05070b] text-white font-vazir" dir="rtl">
         <canvas id="particleCanvas" className="fixed inset-0 pointer-events-none z-0" />
 
-        {/* HEADER */}
+        {/* ====== خبر فوری (Breaking News) ====== */}
+        <BreakingNews />
+
+        {/* ====== HEADER ====== */}
         <header className="fixed top-0 left-0 right-0 z-50 glass px-4 py-3">
           <div className="max-w-7xl mx-auto flex justify-between items-center">
             <a href="#" className="flex items-center gap-2">
@@ -370,7 +375,7 @@ export default function Home() {
           )}
         </header>
 
-        {/* HERO */}
+        {/* ====== HERO ====== */}
         <section className="relative min-h-[92vh] flex items-center justify-center pt-16 px-4 overflow-hidden hero-gradient">
           <div className="absolute inset-0 bg-gradient-to-br from-indigo-950/40 via-purple-900/20 to-black" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%, rgba(255,107,0,0.04), transparent)]" />
@@ -445,7 +450,7 @@ export default function Home() {
           </motion.div>
         </section>
 
-        {/* SERVICES */}
+        {/* ====== SERVICES ====== */}
         <section id="services" className="py-24 px-4 section-hidden">
           <div className="max-w-6xl mx-auto">
             <motion.div 
@@ -482,7 +487,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* PROJECTS PREVIEW */}
+        {/* ====== PROJECTS PREVIEW ====== */}
         <section className="py-24 px-4 glass border-y border-white/5 section-hidden">
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center justify-between mb-12">
@@ -530,7 +535,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ABOUT */}
+        {/* ====== ABOUT ====== */}
         <section id="about" className="py-24 px-4 section-hidden">
           <div className="max-w-4xl mx-auto text-center">
             <span className="text-orange-400 text-sm font-medium tracking-wider">درباره من</span>
@@ -562,10 +567,13 @@ export default function Home() {
           </div>
         </section>
 
+        {/* ====== TESTIMONIALS ====== */}
         <Testimonials />
+
+        {/* ====== CERTIFICATIONS ====== */}
         <Certifications />
 
-        {/* SKILLS */}
+        {/* ====== SKILLS ====== */}
         <section id="skills" className="py-24 px-4 glass border-y border-white/5 section-hidden">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
@@ -600,7 +608,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* NEWS */}
+        {/* ====== NEWS ====== */}
         <section id="news" className="py-24 px-4 section-hidden">
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center justify-between mb-10">
@@ -616,7 +624,10 @@ export default function Home() {
           </div>
         </section>
 
-        {/* CONTACT */}
+        {/* ====== CALL TO SOCIAL MEDIA ====== */}
+        <SocialCallout />
+
+        {/* ====== CONTACT ====== */}
         <section id="contact" className="py-24 px-4 glass border-t border-white/5 section-hidden">
           <div className="max-w-3xl mx-auto text-center">
             <span className="text-orange-400 text-sm font-medium tracking-wider">تماس با من</span>
@@ -647,6 +658,7 @@ export default function Home() {
           </div>
         </section>
 
+        {/* ====== FOOTER ====== */}
         <footer className="py-10 text-center border-t border-white/5 px-4">
           <div className="max-w-4xl mx-auto">
             <p className="text-zinc-500 text-xs font-light">© ۱۴۰۴ احسان صالحی – تمامی حقوق محفوظ است</p>
