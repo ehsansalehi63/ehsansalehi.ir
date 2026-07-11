@@ -1,86 +1,129 @@
+import { createCanvas, loadImage } from 'canvas';
+
 const COVER_WIDTH = 1280;
 const COVER_HEIGHT = 720;
-const IMAGE_PADDING = 30;
+const LOGO_URL = 'https://ehsansalehi.ir/images/logo-transparent.png';
 const DEFAULT_IMAGE = 'https://ehsansalehi.ir/images/smart-cover.png';
+
+// تابع کمکی برای دانلود با تایم‌اوت و خطاگیری
+async function safeFetchImage(url: string, fallbackUrl?: string): Promise<Buffer> {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // ۸ ثانیه تایم‌اوت
+
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+      },
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    return Buffer.from(await response.arrayBuffer());
+  } catch (error) {
+    console.warn(`⚠️ خطا در دریافت تصویر: ${url}`, error.message);
+    
+    // اگر fallback وجود داشت، آن را امتحان کن
+    if (fallbackUrl) {
+      try {
+        const fallbackResponse = await fetch(fallbackUrl);
+        if (fallbackResponse.ok) {
+          return Buffer.from(await fallbackResponse.arrayBuffer());
+        }
+      } catch {}
+    }
+    
+    // در نهایت یک تصویر خالی (یا placeholder) برمی‌گردانیم
+    // یا همان DEFAULT_IMAGE را دوباره امتحان می‌کنیم
+    throw new Error('Failed to load image after fallback');
+  }
+}
 
 export async function createSmartCover(
   newsImageUrl: string | null,
   title: string,
   sourceName: string
 ): Promise<Buffer> {
-  const imageUrl = newsImageUrl && !newsImageUrl.includes('placehold') 
+  // ۱. تعیین آدرس تصویر خبر
+  let imageUrl = newsImageUrl && !newsImageUrl.includes('placehold') 
     ? newsImageUrl 
     : DEFAULT_IMAGE;
 
-  // دانلود تصویر
-  const imageResponse = await fetch(imageUrl);
-  const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
-
-  // تشخیص محیط: آیا در Vercel هستیم؟
-  const isVercel = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
-
-  if (isVercel) {
-    try {
-      // dynamic import canvas
-      const { createCanvas, loadImage } = await import('canvas');
-      return await createSmartCoverWithCanvas(createCanvas, loadImage, imageBuffer, title, sourceName);
-    } catch (err) {
-      console.error('❌ Canvas failed, using Jimp fallback:', err);
-    }
+  // ۲. دانلود تصویر خبر (با fallback)
+  let imageBuffer: Buffer;
+  try {
+    imageBuffer = await safeFetchImage(imageUrl, DEFAULT_IMAGE);
+  } catch {
+    // اگر همه چیز failed شد، یک تصویر placeholder ساده با canvas بساز
+    const canvas = createCanvas(COVER_WIDTH, COVER_HEIGHT);
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#0a0a2e';
+    ctx.fillRect(0, 0, COVER_WIDTH, COVER_HEIGHT);
+    ctx.fillStyle = '#f59e0b';
+    ctx.font = 'bold 40px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('📰', COVER_WIDTH/2, COVER_HEIGHT/2 - 20);
+    ctx.font = '20px Arial';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText('تصویر خبر در دسترس نیست', COVER_WIDTH/2, COVER_HEIGHT/2 + 40);
+    imageBuffer = canvas.toBuffer('image/png');
   }
 
-  // Fallback: استفاده از Jimp (بدون نیاز به .default)
-  const jimp = await import('jimp');
-  return await createFallbackCover(jimp, imageBuffer);
-}
+  // ۳. دانلود لوگو (اختیاری - اگر خطا داد، بی‌تأثیر است)
+  let logoBuffer: Buffer | null = null;
+  try {
+    logoBuffer = await safeFetchImage(LOGO_URL);
+  } catch {
+    console.warn('⚠️ لوگو دانلود نشد، ادامه بدون لوگو');
+  }
 
-// ============================================================
-// کاور هوشمند با canvas
-// ============================================================
-async function createSmartCoverWithCanvas(
-  createCanvas: any,
-  loadImage: any,
-  imageBuffer: Buffer,
-  title: string,
-  sourceName: string
-): Promise<Buffer> {
+  // ۴. ایجاد بوم اصلی
   const canvas = createCanvas(COVER_WIDTH, COVER_HEIGHT);
   const ctx = canvas.getContext('2d');
 
-  // پس‌زمینه
-  const grad = ctx.createLinearGradient(0, 0, COVER_WIDTH, COVER_HEIGHT);
-  grad.addColorStop(0, '#0a0a2e');
-  grad.addColorStop(0.5, '#1a1a2e');
-  grad.addColorStop(1, '#16213e');
-  ctx.fillStyle = grad;
+  // ۵. بارگذاری و کشیدن تصویر خبر (با برش مناسب)
+  try {
+    const newsImage = await loadImage(imageBuffer);
+    const imgAspect = newsImage.width / newsImage.height;
+    const coverAspect = COVER_WIDTH / COVER_HEIGHT;
+
+    let drawW, drawH, drawX, drawY;
+    if (imgAspect > coverAspect) {
+      drawH = COVER_HEIGHT;
+      drawW = drawH * imgAspect;
+      drawX = (COVER_WIDTH - drawW) / 2;
+      drawY = 0;
+    } else {
+      drawW = COVER_WIDTH;
+      drawH = drawW / imgAspect;
+      drawX = 0;
+      drawY = (COVER_HEIGHT - drawH) / 2;
+    }
+    ctx.drawImage(newsImage, drawX, drawY, drawW, drawH);
+  } catch {
+    // در صورت خطا، پس‌زمینه ساده بکش
+    ctx.fillStyle = '#0a0a2e';
+    ctx.fillRect(0, 0, COVER_WIDTH, COVER_HEIGHT);
+  }
+
+  // ۶. لایه شیشه‌ای
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
   ctx.fillRect(0, 0, COVER_WIDTH, COVER_HEIGHT);
 
-  // تصویر خبر
-  const newsImage = await loadImage(imageBuffer);
-  const imgAspect = newsImage.width / newsImage.height;
-  const coverAspect = (COVER_WIDTH - IMAGE_PADDING * 2) / (COVER_HEIGHT - IMAGE_PADDING * 2 - 120);
-
-  let drawW, drawH, drawX, drawY;
-  if (imgAspect > coverAspect) {
-    drawH = COVER_HEIGHT - IMAGE_PADDING * 2 - 120;
-    drawW = drawH * imgAspect;
-    drawX = IMAGE_PADDING + (COVER_WIDTH - IMAGE_PADDING * 2 - drawW) / 2;
-    drawY = IMAGE_PADDING + 40;
-  } else {
-    drawW = COVER_WIDTH - IMAGE_PADDING * 2;
-    drawH = drawW / imgAspect;
-    drawX = IMAGE_PADDING;
-    drawY = IMAGE_PADDING + 40 + (COVER_HEIGHT - IMAGE_PADDING * 2 - 120 - drawH) / 2;
-  }
-  ctx.drawImage(newsImage, drawX, drawY, drawW, drawH);
-
-  // قاب
+  // ۷. قاب حاشیه‌دار
   ctx.save();
-  ctx.shadowColor = 'rgba(245,158,11,0.15)';
-  ctx.shadowBlur = 40;
-  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-  ctx.lineWidth = 1;
-  const r = 16, fx = 40, fy = 40, fw = COVER_WIDTH - 80, fh = COVER_HEIGHT - 80;
+  ctx.shadowColor = 'rgba(245, 158, 11, 0.15)';
+  ctx.shadowBlur = 30;
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+  ctx.lineWidth = 2;
+  const r = 16;
+  const fx = 30, fy = 30, fw = COVER_WIDTH - 60, fh = COVER_HEIGHT - 60;
   ctx.beginPath();
   ctx.moveTo(fx + r, fy);
   ctx.lineTo(fx + fw - r, fy);
@@ -95,68 +138,33 @@ async function createSmartCoverWithCanvas(
   ctx.stroke();
   ctx.restore();
 
-  // نوار پایین
-  const barY = COVER_HEIGHT - 130;
-  ctx.fillStyle = 'rgba(0,0,0,0.4)';
-  ctx.beginPath();
-  ctx.roundRect(40, barY, COVER_WIDTH - 80, 90, 12);
-  ctx.fill();
-
-  ctx.strokeStyle = 'rgba(245,158,11,0.3)';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.moveTo(60, barY + 70);
-  ctx.lineTo(COVER_WIDTH - 60, barY + 70);
-  ctx.stroke();
-
-  // عنوان
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 28px "Vazirmatn", "Vazir", sans-serif';
-  ctx.textAlign = 'right';
-  ctx.textBaseline = 'middle';
-  const maxTitleWidth = COVER_WIDTH - 120;
-  let displayTitle = title;
-  if (ctx.measureText(displayTitle).width > maxTitleWidth) {
-    while (ctx.measureText(displayTitle + '...').width > maxTitleWidth) {
-      displayTitle = displayTitle.slice(0, -1);
-    }
-    displayTitle += '...';
+  // ۸. لوگو (اگر دانلود شده باشد)
+  if (logoBuffer) {
+    try {
+      const logoImage = await loadImage(logoBuffer);
+      const logoSize = 120;
+      const logoX = COVER_WIDTH - logoSize - 40;
+      const logoY = 40;
+      ctx.save();
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+      ctx.shadowBlur = 20;
+      ctx.drawImage(logoImage, logoX, logoY, logoSize, logoSize);
+      ctx.restore();
+    } catch {}
   }
-  ctx.fillText(displayTitle, COVER_WIDTH - 50, barY + 30);
 
-  ctx.fillStyle = 'rgba(255,255,255,0.5)';
-  ctx.font = '14px "Vazirmatn", "Vazir", sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillText(`منبع: ${sourceName || 'نامشخص'}`, 60, barY + 30);
-
-  ctx.fillStyle = 'rgba(245,158,11,0.6)';
-  ctx.font = '12px "Vazirmatn", "Vazir", sans-serif';
+  // ۹. نام سایت و منبع
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+  ctx.font = '18px Arial';
   ctx.textAlign = 'right';
-  ctx.fillText('ehsansalehi.ir', COVER_WIDTH - 50, barY + 80);
+  ctx.textBaseline = 'bottom';
+  ctx.fillText('ehsansalehi.ir', COVER_WIDTH - 40, COVER_HEIGHT - 30);
 
-  // لوگو
-  ctx.beginPath();
-  ctx.arc(50, 50, 30, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(245,158,11,0.15)';
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(245,158,11,0.4)';
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-  ctx.fillStyle = '#f59e0b';
-  ctx.font = 'bold 28px "Vazirmatn", "Vazir", sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('ا', 50, 52);
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+  ctx.font = '14px Arial';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'bottom';
+  ctx.fillText(`📰 ${sourceName || 'منبع'}`, 40, COVER_HEIGHT - 30);
 
   return canvas.toBuffer('image/png');
-}
-
-// ============================================================
-// Fallback: کاور ساده با Jimp
-// ============================================================
-async function createFallbackCover(jimp: any, imageBuffer: Buffer): Promise<Buffer> {
-  // jimp همان ماژول اصلی است (بدون نیاز به .default)
-  const image = await jimp.read(imageBuffer);
-  image.resize(COVER_WIDTH, COVER_HEIGHT);
-  return await image.getBufferAsync(jimp.MIME_PNG);
 }
