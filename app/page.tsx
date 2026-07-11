@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
+import { motion, useScroll, useSpring } from 'framer-motion';
 import { Toaster, toast } from 'sonner';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -9,30 +9,13 @@ import Lenis from 'lenis';
 import { 
   ChevronDown, 
   ArrowRight, 
-  Calendar, 
-  Download, 
   Mail, 
   Phone, 
   MapPin,
-  Users,
-  Award,
-  CheckCircle,
-  Clock,
-  Star,
-  TrendingUp,
   Shield,
-  Code,
   Cpu,
   Globe,
-  Zap,
-  Layers,
-  BarChart3,
-  MessageCircle,
-  Linkedin,
-  Github,
-  Instagram,
-  Send,
-  ExternalLink
+  Send
 } from 'lucide-react';
 import NewsSection from './components/NewsSection';
 import BackToTop from './components/BackToTop';
@@ -49,7 +32,6 @@ export default function Home() {
   const [user, setUser] = useState<any>(null);
   const fullText = 'احسان صالحی رباطی';
   const formRef = useRef<HTMLFormElement>(null);
-  const containerRef = useRef<null>(null);
   
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
@@ -65,7 +47,7 @@ export default function Home() {
     return () => lenis.destroy();
   }, []);
 
-  // تایپ‌رایتر پیشرفته
+  // تایپ‌رایتر
   useEffect(() => {
     let index = 0;
     let isDeleting = false;
@@ -198,7 +180,6 @@ export default function Home() {
     { name: 'تماس', href: '#contact' },
   ];
 
-  // variants for animation
   const fadeUp = {
     hidden: { opacity: 0, y: 60 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } },
@@ -212,7 +193,6 @@ export default function Home() {
   return (
     <>
       <style>{`
-        /* ====== Premium Dark Theme ====== */
         * { cursor: none; }
         @media (max-width: 768px) { * { cursor: auto; } }
         .glass {
@@ -325,17 +305,14 @@ export default function Home() {
         .progress-bar { position: fixed; top: 0; left: 0; right: 0; height: 3px; background: #ff6b00; transform-origin: 0%; z-index: 999; }
       `}</style>
 
-      {/* Progress Bar */}
       <motion.div className="progress-bar" style={{ scaleX }} />
 
-      {/* Custom Cursor */}
       <CustomCursor />
 
       <main className="min-h-screen bg-[#05070b] text-white font-vazir" dir="rtl">
-        {/* Particle Canvas */}
         <canvas id="particleCanvas" className="fixed inset-0 pointer-events-none z-0" />
 
-        {/* ====== HEADER ====== */}
+        {/* HEADER */}
         <header className="fixed top-0 left-0 right-0 z-50 glass px-4 py-3">
           <div className="max-w-7xl mx-auto flex justify-between items-center">
             <a href="#" className="flex items-center gap-2">
@@ -385,7 +362,7 @@ export default function Home() {
           )}
         </header>
 
-        {/* ====== HERO ====== */}
+        {/* HERO */}
         <section className="relative min-h-[92vh] flex items-center justify-center pt-16 px-4 overflow-hidden hero-gradient">
           <div className="absolute inset-0 bg-gradient-to-br from-indigo-950/40 via-purple-900/20 to-black" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%, rgba(255,107,0,0.04), transparent)]" />
@@ -446,7 +423,6 @@ export default function Home() {
                 </a>
                 <Link href="/projects" className="btn-outline hover-target">نمونه کارها</Link>
               </motion.div>
-              {/* Social Links */}
               <motion.div variants={fadeUp} className="mt-6">
                 <SocialLinks size="lg" />
               </motion.div>
@@ -461,7 +437,7 @@ export default function Home() {
           </motion.div>
         </section>
 
-        {/* ====== SERVICES ====== */}
+        {/* SERVICES */}
         <section id="services" className="py-24 px-4 section-hidden">
           <div className="max-w-6xl mx-auto">
             <motion.div 
@@ -498,7 +474,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ====== PROJECTS PREVIEW ====== */}
+        {/* PROJECTS PREVIEW */}
         <section className="py-24 px-4 glass border-y border-white/5 section-hidden">
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center justify-between mb-12">
@@ -546,7 +522,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ====== ABOUT + STATS ====== */}
+        {/* ABOUT */}
         <section id="about" className="py-24 px-4 section-hidden">
           <div className="max-w-4xl mx-auto text-center">
             <span className="text-orange-400 text-sm font-medium tracking-wider">درباره من</span>
@@ -578,13 +554,10 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ====== TESTIMONIALS ====== */}
         <Testimonials />
-
-        {/* ====== CERTIFICATIONS ====== */}
         <Certifications />
 
-        {/* ====== SKILLS ====== */}
+        {/* SKILLS */}
         <section id="skills" className="py-24 px-4 glass border-y border-white/5 section-hidden">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
@@ -619,7 +592,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ====== NEWS ====== */}
+        {/* NEWS */}
         <section id="news" className="py-24 px-4 section-hidden">
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center justify-between mb-10">
@@ -635,7 +608,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ====== CONTACT ====== */}
+        {/* CONTACT */}
         <section id="contact" className="py-24 px-4 glass border-t border-white/5 section-hidden">
           <div className="max-w-3xl mx-auto text-center">
             <span className="text-orange-400 text-sm font-medium tracking-wider">تماس با من</span>
@@ -666,7 +639,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ====== FOOTER ====== */}
         <footer className="py-10 text-center border-t border-white/5 px-4">
           <div className="max-w-4xl mx-auto">
             <p className="text-zinc-500 text-xs font-light">© ۱۴۰۴ احسان صالحی – تمامی حقوق محفوظ است</p>
@@ -678,7 +650,6 @@ export default function Home() {
         <Toaster position="top-center" richColors theme="dark" />
       </main>
 
-      {/* Particle Script */}
       <script dangerouslySetInnerHTML={{
         __html: `
           (function() {
