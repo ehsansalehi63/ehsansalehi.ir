@@ -40,7 +40,10 @@ async function safeFetchImage(url: string): Promise<Buffer> {
 
     return Buffer.from(await response.arrayBuffer());
   } catch (error) {
-    console.warn(`⚠️ خطا در دریافت تصویر: ${url}`, error.message);
+    // اصلاح: استفاده از instanceof یا تبدیل به string
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.warn(`⚠️ خطا در دریافت تصویر: ${url}`, errorMessage);
+    
     // ساخت placeholder
     const canvas = createCanvas(COVER_WIDTH, COVER_HEIGHT);
     const ctx = canvas.getContext('2d');
@@ -115,13 +118,11 @@ export async function createSmartCover(
   const fh = COVER_HEIGHT - framePadding * 2;
 
   ctx.save();
-  // سایه ملایم برای قاب
   ctx.shadowColor = 'rgba(255,107,0,0.1)';
   ctx.shadowBlur = 40;
   ctx.shadowOffsetX = 0;
   ctx.shadowOffsetY = 0;
 
-  // بدنه قاب (شفاف با افکت شیشه‌ای)
   ctx.beginPath();
   ctx.moveTo(fx + frameRadius, fy);
   ctx.lineTo(fx + fw - frameRadius, fy);
@@ -134,17 +135,15 @@ export async function createSmartCover(
   ctx.quadraticCurveTo(fx, fy, fx + frameRadius, fy);
   ctx.closePath();
 
-  // پر کردن با شیشه
   ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
   ctx.fill();
-  // حاشیه نارنجی نازک
   ctx.shadowColor = 'transparent';
   ctx.strokeStyle = 'rgba(255,107,0,0.2)';
   ctx.lineWidth = 1.5;
   ctx.stroke();
   ctx.restore();
 
-  // ====== لوگو در بالا-چپ (با سایه) ======
+  // ====== لوگو در بالا-چپ ======
   if (logoBuffer) {
     try {
       const logoImage = await loadImage(logoBuffer);
@@ -172,7 +171,6 @@ export async function createSmartCover(
   const barY = COVER_HEIGHT - 110;
   ctx.shadowColor = 'transparent';
   ctx.shadowBlur = 0;
-  // نوار شیشه‌ای برای عنوان
   ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
   ctx.shadowColor = 'rgba(0,0,0,0.2)';
   ctx.shadowBlur = 10;
@@ -180,7 +178,6 @@ export async function createSmartCover(
   ctx.roundRect(60, barY, COVER_WIDTH - 120, 60, 12);
   ctx.fill();
 
-  // متن عنوان
   ctx.shadowColor = 'transparent';
   ctx.fillStyle = '#ffffff';
   ctx.font = 'bold 24px Vazir, Arial';
@@ -202,6 +199,5 @@ export async function createSmartCover(
   ctx.textAlign = 'left';
   ctx.fillText(`منبع: ${sourceName || 'نامشخص'}`, 80, barY + 30);
 
-  // ====== بازگشت تصویر ======
   return canvas.toBuffer('image/png');
 }
