@@ -29,7 +29,7 @@ export async function addWatermarkToImage(
     image.composite(overlay, 0, targetHeight - 100, {
       mode: Jimp.BLEND_SOURCE_OVER,
       opacitySource: 0.6,
-    });
+    } as any);
 
     // ۵. افزودن متن
     const font = await Jimp.loadFont(Jimp.FONT_SANS_16_BLACK);
@@ -46,7 +46,7 @@ export async function addWatermarkToImage(
       image.composite(logo, logoX, logoY, {
         mode: Jimp.BLEND_SOURCE_OVER,
         opacitySource: 0.9,
-      });
+      } as any);
     }
 
     // ۷. بازگشت بافر
