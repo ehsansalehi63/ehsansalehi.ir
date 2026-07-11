@@ -1,4 +1,4 @@
-import * as Jimp from 'jimp';
+import Jimp from 'jimp';
 
 /**
  * اضافه کردن واترمارک (لوگو + متن) به تصویر خبر
@@ -14,7 +14,7 @@ export async function addWatermarkToImage(
     // ۱. بارگذاری تصویر خبر
     const image = await Jimp.read(imageBuffer);
     
-    // ۲. تغییر اندازه تصویر به ابعاد مناسب (اختیاری)
+    // ۲. تغییر اندازه تصویر به ابعاد مناسب
     const targetWidth = 1200;
     const targetHeight = 628;
     image.resize(targetWidth, targetHeight);
@@ -30,14 +30,14 @@ export async function addWatermarkToImage(
       console.warn('⚠️ لوگو پیدا نشد، فقط متن نمایش داده می‌شود');
     }
 
-    // ۴. افزودن لایه نیمه‌شفاف در پایین تصویر برای خوانایی بهتر متن
+    // ۴. افزودن لایه نیمه‌شفاف در پایین تصویر
     const overlay = new Jimp(targetWidth, 100, 0x00000080);
     image.composite(overlay, 0, targetHeight - 100, {
       mode: Jimp.BLEND_SOURCE_OVER,
       opacitySource: 0.6,
     });
 
-    // ۵. افزودن متن "ehsansalehi.ir" (با فونت پیش‌فرض Jimp که لاتین است)
+    // ۵. افزودن متن "ehsansalehi.ir"
     const font = await Jimp.loadFont(Jimp.FONT_SANS_16_BLACK);
     const text = 'ehsansalehi.ir';
     const textWidth = Jimp.measureText(font, text);
@@ -45,7 +45,7 @@ export async function addWatermarkToImage(
     const textY = targetHeight - 60;
     image.print(font, textX, textY, text);
 
-    // ۶. افزودن لوگو در کنار متن (اگر وجود داشته باشد)
+    // ۶. افزودن لوگو در کنار متن
     if (logo) {
       const logoSize = 50;
       const logoX = targetWidth - logoSize - textWidth - 40;
