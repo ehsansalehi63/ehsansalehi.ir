@@ -2,21 +2,24 @@ import { createCanvas, loadImage, registerFont } from 'canvas';
 import path from 'path';
 
 // ============================================================
-// ثبت فونت وزیر (فارسی)
+// ثبت فونت وزیر (برای نوشته‌های فارسی)
 // ============================================================
 try {
   const fontPath = path.join(process.cwd(), 'public', 'fonts', 'Vazir.ttf');
   registerFont(fontPath, { family: 'Vazir' });
   console.log('✅ فونت وزیر با موفقیت ثبت شد');
-} catch (err) {
+} catch {
   console.warn('⚠️ فونت وزیر یافت نشد، از فونت پیش‌فرض استفاده می‌شود');
 }
 
 const COVER_WIDTH = 1280;
 const COVER_HEIGHT = 720;
+const DEFAULT_IMAGE = 'https://ehsansalehi.ir/images/og-image.jpg';
 const LOGO_URL = 'https://ehsansalehi.ir/images/logo-transparent.png';
-const DEFAULT_IMAGE = 'https://ehsansalehi.ir/images/smart-cover.png';
 
+// ============================================================
+// دانلود امن تصویر
+// ============================================================
 async function safeFetchImage(url: string): Promise<Buffer> {
   try {
     const controller = new AbortController();
@@ -37,26 +40,24 @@ async function safeFetchImage(url: string): Promise<Buffer> {
 
     return Buffer.from(await response.arrayBuffer());
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.warn(`⚠️ خطا در دریافت تصویر: ${url}`, errorMessage);
-    
-    // ساخت تصویر placeholder
+    console.warn(`⚠️ خطا در دریافت تصویر: ${url}`, error.message);
+    // ساخت placeholder
     const canvas = createCanvas(COVER_WIDTH, COVER_HEIGHT);
     const ctx = canvas.getContext('2d');
     ctx.fillStyle = '#0a0a2e';
     ctx.fillRect(0, 0, COVER_WIDTH, COVER_HEIGHT);
-    ctx.fillStyle = '#f59e0b';
-    ctx.font = 'bold 60px Vazir, Arial';
+    ctx.fillStyle = '#ff6b00';
+    ctx.font = 'bold 60px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('📰', COVER_WIDTH / 2, COVER_HEIGHT / 2);
-    ctx.font = '24px Vazir, Arial';
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText('تصویر در دسترس نیست', COVER_WIDTH / 2, COVER_HEIGHT / 2 + 60);
     return canvas.toBuffer('image/png');
   }
 }
 
+// ============================================================
+// تابع اصلی: ساخت کاور با قاب شیشه‌ای
+// ============================================================
 export async function createSmartCover(
   newsImageUrl: string | null,
   title: string,
@@ -101,55 +102,91 @@ export async function createSmartCover(
     ctx.fillRect(0, 0, COVER_WIDTH, COVER_HEIGHT);
   }
 
-  // ۵. لایه شیشه‌ای برای خوانایی بهتر
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+  // ۵. لایه شیشه‌ای (Glass overlay) برای خوانایی بهتر
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
   ctx.fillRect(0, 0, COVER_WIDTH, COVER_HEIGHT);
 
-  // ۶. قاب حاشیه‌دار (Glass-morphism)
+  // ====== قاب شیشه‌ای (Glass Frame) ======
+  const framePadding = 30;
+  const frameRadius = 20;
+  const fx = framePadding;
+  const fy = framePadding;
+  const fw = COVER_WIDTH - framePadding * 2;
+  const fh = COVER_HEIGHT - framePadding * 2;
+
   ctx.save();
-  ctx.shadowColor = 'rgba(245, 158, 11, 0.1)';
-  ctx.shadowBlur = 20;
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
-  ctx.lineWidth = 2;
-  const r = 16;
-  const fx = 25, fy = 25, fw = COVER_WIDTH - 50, fh = COVER_HEIGHT - 50;
+  // سایه ملایم برای قاب
+  ctx.shadowColor = 'rgba(255,107,0,0.1)';
+  ctx.shadowBlur = 40;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 0;
+
+  // بدنه قاب (شفاف با افکت شیشه‌ای)
   ctx.beginPath();
-  ctx.moveTo(fx + r, fy);
-  ctx.lineTo(fx + fw - r, fy);
-  ctx.quadraticCurveTo(fx + fw, fy, fx + fw, fy + r);
-  ctx.lineTo(fx + fw, fy + fh - r);
-  ctx.quadraticCurveTo(fx + fw, fy + fh, fx + fw - r, fy + fh);
-  ctx.lineTo(fx + r, fy + fh);
-  ctx.quadraticCurveTo(fx, fy + fh, fx, fy + fh - r);
-  ctx.lineTo(fx, fy + r);
-  ctx.quadraticCurveTo(fx, fy, fx + r, fy);
+  ctx.moveTo(fx + frameRadius, fy);
+  ctx.lineTo(fx + fw - frameRadius, fy);
+  ctx.quadraticCurveTo(fx + fw, fy, fx + fw, fy + frameRadius);
+  ctx.lineTo(fx + fw, fy + fh - frameRadius);
+  ctx.quadraticCurveTo(fx + fw, fy + fh, fx + fw - frameRadius, fy + fh);
+  ctx.lineTo(fx + frameRadius, fy + fh);
+  ctx.quadraticCurveTo(fx, fy + fh, fx, fy + fh - frameRadius);
+  ctx.lineTo(fx, fy + frameRadius);
+  ctx.quadraticCurveTo(fx, fy, fx + frameRadius, fy);
   ctx.closePath();
+
+  // پر کردن با شیشه
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+  ctx.fill();
+  // حاشیه نارنجی نازک
+  ctx.shadowColor = 'transparent';
+  ctx.strokeStyle = 'rgba(255,107,0,0.2)';
+  ctx.lineWidth = 1.5;
   ctx.stroke();
   ctx.restore();
 
-  // ۷. نوار شیشه‌ای پایین برای نوشته‌ها
+  // ====== لوگو در بالا-چپ (با سایه) ======
+  if (logoBuffer) {
+    try {
+      const logoImage = await loadImage(logoBuffer);
+      const logoSize = 90;
+      const logoX = fx + 30;
+      const logoY = fy + 30;
+      ctx.save();
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+      ctx.shadowBlur = 20;
+      ctx.drawImage(logoImage, logoX, logoY, logoSize, logoSize);
+      ctx.restore();
+    } catch {}
+  }
+
+  // ====== نوشته پایین: ehsansalehi.ir ======
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+  ctx.font = 'bold 28px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+  ctx.shadowColor = 'rgba(0,0,0,0.5)';
+  ctx.shadowBlur = 15;
+  ctx.fillText('ehsansalehi.ir', COVER_WIDTH / 2, COVER_HEIGHT - 40);
+
+  // ====== عنوان خبر در پایین (با نوار شیشه‌ای) ======
   const barY = COVER_HEIGHT - 110;
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
   ctx.shadowColor = 'transparent';
   ctx.shadowBlur = 0;
+  // نوار شیشه‌ای برای عنوان
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+  ctx.shadowColor = 'rgba(0,0,0,0.2)';
+  ctx.shadowBlur = 10;
   ctx.beginPath();
-  ctx.roundRect(40, barY, COVER_WIDTH - 80, 80, 12);
+  ctx.roundRect(60, barY, COVER_WIDTH - 120, 60, 12);
   ctx.fill();
 
-  // ۸. خط جداکننده طلایی
-  ctx.strokeStyle = 'rgba(245, 158, 11, 0.2)';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.moveTo(60, barY + 40);
-  ctx.lineTo(COVER_WIDTH - 60, barY + 40);
-  ctx.stroke();
-
-  // ۹. عنوان خبر (به فارسی با فونت وزیر)
+  // متن عنوان
+  ctx.shadowColor = 'transparent';
   ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 24px Vazir, sans-serif';
+  ctx.font = 'bold 24px Vazir, Arial';
   ctx.textAlign = 'right';
   ctx.textBaseline = 'middle';
-  const maxTitleWidth = COVER_WIDTH - 200;
+  const maxTitleWidth = COVER_WIDTH - 180;
   let displayTitle = title;
   if (ctx.measureText(displayTitle).width > maxTitleWidth) {
     while (ctx.measureText(displayTitle + '...').width > maxTitleWidth) {
@@ -157,35 +194,14 @@ export async function createSmartCover(
     }
     displayTitle += '...';
   }
-  ctx.fillText(displayTitle, COVER_WIDTH - 50, barY + 22);
+  ctx.fillText(displayTitle, COVER_WIDTH - 80, barY + 30);
 
-  // ۱۰. منبع خبر (به فارسی با فونت وزیر)
+  // ====== منبع خبر در پایین-چپ ======
   ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-  ctx.font = '14px Vazir, sans-serif';
+  ctx.font = '14px Vazir, Arial';
   ctx.textAlign = 'left';
-  ctx.fillText(`منبع: ${sourceName || 'نامشخص'}`, 60, barY + 22);
+  ctx.fillText(`منبع: ${sourceName || 'نامشخص'}`, 80, barY + 30);
 
-  // ۱۱. نام سایت (به انگلیسی - بدون مشکل فونت)
-  ctx.fillStyle = 'rgba(245, 158, 11, 0.5)';
-  ctx.font = '14px Arial';
-  ctx.textAlign = 'right';
-  ctx.fillText('ehsansalehi.ir', COVER_WIDTH - 50, barY + 68);
-
-  // ۱۲. لوگو در بالا-چپ (اگر وجود داشته باشد)
-  if (logoBuffer) {
-    try {
-      const logoImage = await loadImage(logoBuffer);
-      const logoSize = 80;
-      const logoX = 40;
-      const logoY = 40;
-      ctx.save();
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
-      ctx.shadowBlur = 15;
-      ctx.drawImage(logoImage, logoX, logoY, logoSize, logoSize);
-      ctx.restore();
-    } catch {}
-  }
-
-  // ۱۳. بازگشت تصویر به‌صورت Buffer
+  // ====== بازگشت تصویر ======
   return canvas.toBuffer('image/png');
 }
