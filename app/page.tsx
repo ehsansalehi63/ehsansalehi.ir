@@ -7,61 +7,45 @@ import Link from "next/link";
 import NewsSection from "./components/NewsSection";
 
 export default function Home() {
-  const [displayText, setDisplayText] = useState("");
+  const [text, setText] = useState("");
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const [featuredNews, setFeaturedNews] = useState<any[]>([]);
+  const fullText = "احسان صالحی رباطی";
   const formRef = useRef<HTMLFormElement>(null);
 
-  // تایپ‌رایتر حرفه‌ای
+  // تایپ‌رایتر
   useEffect(() => {
-    const phrases = [
-      "مشکلات فنی را ساده می‌کنم",
-      "راه‌حل‌های عملی برای کسب‌وکار شما",
-      "با ۱۶ سال تجربه در خدمت شما",
-    ];
-    let phraseIndex = 0;
-    let charIndex = 0;
+    let index = 0;
     let isDeleting = false;
+    let currentText = '';
     let timeoutId: NodeJS.Timeout | null = null;
-
+    
     const type = () => {
-      const currentPhrase = phrases[phraseIndex];
-      
-      if (!isDeleting && charIndex <= currentPhrase.length) {
-        setDisplayText(currentPhrase.slice(0, charIndex));
-        charIndex++;
-        timeoutId = setTimeout(type, 45);
-      } else if (!isDeleting && charIndex > currentPhrase.length) {
+      if (!isDeleting && index <= fullText.length) {
+        currentText = fullText.slice(0, index);
+        setText(currentText);
+        index++;
+        timeoutId = setTimeout(type, 60);
+      } else if (!isDeleting && index > fullText.length) {
         isDeleting = true;
-        timeoutId = setTimeout(type, 2000);
-      } else if (isDeleting && charIndex > 0) {
-        setDisplayText(currentPhrase.slice(0, charIndex));
-        charIndex--;
-        timeoutId = setTimeout(type, 20);
-      } else if (isDeleting && charIndex === 0) {
+        timeoutId = setTimeout(type, 1500);
+      } else if (isDeleting && index > 0) {
+        currentText = fullText.slice(0, index);
+        setText(currentText);
+        index--;
+        timeoutId = setTimeout(type, 30);
+      } else if (isDeleting && index === 0) {
         isDeleting = false;
-        phraseIndex = (phraseIndex + 1) % phrases.length;
         timeoutId = setTimeout(type, 500);
       }
     };
-
+    
     type();
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, []);
-
-  // دریافت اخبار برجسته برای بنر
-  useEffect(() => {
-    fetch('/api/news?limit=3')
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) setFeaturedNews(data.news);
-      })
-      .catch(() => {});
   }, []);
 
   // دریافت پروژه‌ها
@@ -172,6 +156,8 @@ export default function Home() {
         .btn-primary:hover { transform: scale(1.04); box-shadow: 0 0 40px rgba(245,158,11,0.3); }
         .btn-outline { background: transparent; border: 2px solid rgba(255,255,255,0.25); color: #fff; padding: 14px 36px; border-radius: 50px; font-weight: 500; cursor: pointer; transition: all 0.3s; font-size: 0.95rem; }
         .btn-outline:hover { border-color: #f59e0b; background: rgba(245,158,11,0.08); }
+        .skill-bar { height: 6px; border-radius: 3px; background: #27272a; overflow: hidden; }
+        .skill-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #f59e0b, #3b82f6); transition: width 1.5s ease; width: 0%; }
         .section-hidden { opacity: 0; transform: translateY(40px); transition: all 0.7s ease; }
         .section-visible { opacity: 1; transform: translateY(0); }
         .project-card { transition: all 0.4s ease; cursor: pointer; }
@@ -179,64 +165,54 @@ export default function Home() {
         .project-image { height: 200px; overflow: hidden; background: #1a1a2e; }
         .project-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
         .project-card:hover .project-image img { transform: scale(1.05); }
-        .news-banner { background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460); }
+        .news-card { transition: all 0.4s ease; cursor: pointer; }
+        .news-card:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 20px 60px rgba(59,130,246,0.2); }
+        .news-image { height: 200px; overflow: hidden; background: #1a1a2e; }
+        .news-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
+        .news-card:hover .news-image img { transform: scale(1.05); }
+        .news-source { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; color: #f59e0b; }
+        .news-date { position: absolute; bottom: 12px; right: 12px; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; color: #9ca3af; }
         @keyframes gradientFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
         .animate-gradient { background-size: 300% 300%; animation: gradientFlow 10s ease infinite; }
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
-        }
+        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
         .float-animation { animation: float 6s ease-in-out infinite; }
         .nav-link { transition: color 0.3s; position: relative; }
-        .nav-link::after {
-          content: '';
-          position: absolute;
-          bottom: -2px;
-          right: 0;
-          width: 0;
-          height: 2px;
-          background: #f59e0b;
-          transition: width 0.3s;
-        }
+        .nav-link::after { content: ''; position: absolute; bottom: -2px; right: 0; width: 0; height: 2px; background: #f59e0b; transition: width 0.3s; }
         .nav-link:hover::after { width: 100%; }
-        .hero-gradient {
-          background: radial-gradient(ellipse at 70% 30%, rgba(245,158,11,0.06) 0%, transparent 60%),
-                      radial-gradient(ellipse at 30% 70%, rgba(59,130,246,0.04) 0%, transparent 50%);
-        }
-        .featured-news-item {
-          transition: all 0.3s ease;
-          cursor: pointer;
-        }
-        .featured-news-item:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-        }
+        .hero-gradient { background: radial-gradient(ellipse at 70% 30%, rgba(245,158,11,0.06) 0%, transparent 60%), radial-gradient(ellipse at 30% 70%, rgba(59,130,246,0.04) 0%, transparent 50%); }
+        .featured-news-item { transition: all 0.3s ease; cursor: pointer; }
+        .featured-news-item:hover { transform: translateY(-4px); box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
       `}</style>
 
       <main className="min-h-screen bg-[#0a0a0a] text-white font-vazir" dir="rtl">
         <canvas id="particleCanvas" className="fixed inset-0 pointer-events-none z-0" />
 
-        {/* HEADER - فشرده و حرفه‌ای */}
-        <header className="fixed top-0 left-0 right-0 z-50 glass-dark px-4 py-2">
+        {/* ==================== HEADER ==================== */}
+        <header className="fixed top-0 left-0 right-0 z-50 glass px-4 py-2">
           <div className="max-w-7xl mx-auto flex justify-between items-center">
-            <a href="#" className="text-lg font-bold bg-gradient-to-r from-amber-400 to-blue-400 bg-clip-text text-transparent">
-              احسان صالحی
+            {/* لوگو به‌جای نوشته */}
+            <a href="#" className="flex items-center gap-2">
+              <img 
+                src="/images/logo-transparent.png" 
+                alt="احسان صالحی" 
+                className="h-10 w-auto"
+              />
             </a>
-            <nav className="hidden md:flex gap-0.5 text-zinc-300">
+            <nav className="hidden md:flex gap-1 text-zinc-300">
               {navItems.map((item) => (
-                <a key={item.name} href={item.href} className="nav-link px-3 py-1.5 text-sm font-medium hover:text-white">
+                <a key={item.name} href={item.href} className="nav-link px-3 py-2 text-sm font-medium hover:text-white">
                   {item.name}
                 </a>
               ))}
               {user ? (
                 <>
-                  <a href="/dashboard" className="px-3 py-1.5 text-sm font-medium text-blue-400">داشبورد</a>
-                  <button onClick={handleLogout} className="px-3 py-1.5 text-sm font-medium text-red-400 hover:text-red-300">خروج</button>
+                  <a href="/dashboard" className="px-3 py-2 text-sm font-medium text-blue-400">داشبورد</a>
+                  <button onClick={handleLogout} className="px-3 py-2 text-sm font-medium text-red-400 hover:text-red-300">خروج</button>
                 </>
               ) : (
                 <>
-                  <a href="/auth/login" className="px-3 py-1.5 text-sm font-medium text-blue-400">ورود</a>
-                  <a href="/auth/register" className="px-3 py-1.5 text-sm font-medium bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30">ثبت نام</a>
+                  <a href="/auth/login" className="px-3 py-2 text-sm font-medium text-blue-400">ورود</a>
+                  <a href="/auth/register" className="px-3 py-2 text-sm font-medium bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30">ثبت نام</a>
                 </>
               )}
             </nav>
@@ -245,7 +221,7 @@ export default function Home() {
             </button>
           </div>
           {mobileMenuOpen && (
-            <div className="md:hidden mt-2 glass rounded-xl p-4 flex flex-col gap-1">
+            <div className="md:hidden mt-3 glass rounded-xl p-4 flex flex-col gap-2">
               {navItems.map((item) => (
                 <a key={item.name} href={item.href} className="px-4 py-2 hover:bg-white/5 rounded-lg" onClick={() => setMobileMenuOpen(false)}>
                   {item.name}
@@ -266,13 +242,12 @@ export default function Home() {
           )}
         </header>
 
-        {/* HERO - با عکس بزرگ‌تر و فضای پر */}
+        {/* ==================== HERO ==================== */}
         <section className="relative min-h-[90vh] flex items-center justify-center pt-14 px-4 overflow-hidden hero-gradient">
           <div className="absolute inset-0 bg-gradient-to-br from-indigo-950/80 via-purple-900/40 to-black animate-gradient" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%, rgba(245,158,11,0.05), transparent)]" />
 
           <div className="relative z-10 max-w-6xl mx-auto grid lg:grid-cols-2 gap-8 items-center w-full py-8">
-            {/* عکس - بزرگ‌تر و بدون فضای خالی */}
             <div className="flex justify-center lg:justify-end order-2 lg:order-1">
               <div className="relative group">
                 <div className="absolute -inset-6 bg-gradient-to-r from-amber-500/30 to-blue-600/30 rounded-full blur-3xl opacity-60 group-hover:opacity-100 transition duration-700" />
@@ -285,7 +260,6 @@ export default function Home() {
                     className="w-full h-full object-cover hover:scale-105 transition duration-700" 
                     priority 
                   />
-                  {/* Badge تجربه */}
                   <div className="absolute bottom-4 right-4 glass-dark rounded-full px-4 py-1.5 text-xs border border-amber-500/30">
                     <span className="text-amber-400">✦</span> ۱۶ سال تجربه
                   </div>
@@ -293,7 +267,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* متن - روان و جذاب */}
             <div className="text-center lg:text-right order-1 lg:order-2">
               <div className="inline-flex items-center gap-2 mb-4 px-4 py-1.5 glass-dark rounded-full text-xs tracking-wider border border-white/5">
                 <span className="text-amber-400">✦</span>
@@ -304,7 +277,7 @@ export default function Home() {
                   احسان صالحی
                 </span>
                 <span className="block text-white/90 text-xl lg:text-2xl mt-2 font-normal">
-                  {displayText || "مشکلات فنی را ساده می‌کنم"}
+                  {text || "مشکلات فنی را ساده می‌کنم"}
                 </span>
               </h1>
               <p className="text-base lg:text-lg text-zinc-300 mb-3 max-w-xl mx-auto lg:mx-0 leading-relaxed">
@@ -322,49 +295,7 @@ export default function Home() {
           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-amber-400/40 animate-bounce text-2xl">↓</div>
         </section>
 
-        {/* بنر اخبار فناوری - بالای صفحه، جذاب و برجسته */}
-        {featuredNews.length > 0 && (
-          <section className="py-6 px-4 border-b border-white/5 bg-gradient-to-r from-amber-500/5 to-blue-500/5">
-            <div className="max-w-6xl mx-auto">
-              <div className="flex items-center gap-3 mb-3">
-                <span className="text-amber-400 text-sm font-bold">🔥 آخرین اخبار فناوری</span>
-                <span className="text-zinc-600 text-xs">—</span>
-                <span className="text-zinc-500 text-xs">بروز شده: امروز</span>
-              </div>
-              <div className="grid md:grid-cols-3 gap-4">
-                {featuredNews.slice(0, 3).map((item: any) => (
-                  <Link 
-                    key={item.id} 
-                    href={`/news/${item.id}`}
-                    className="featured-news-item group flex items-start gap-3 p-2 rounded-xl hover:bg-white/5 transition-all"
-                  >
-                    {item.image_url && !item.image_url.includes('placehold') ? (
-                      <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-zinc-800">
-                        <img 
-                          src={item.image_url} 
-                          alt={item.title} 
-                          className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-16 h-16 rounded-lg flex-shrink-0 bg-gradient-to-br from-amber-500/20 to-blue-500/20 flex items-center justify-center text-2xl">
-                        📰
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-medium text-white group-hover:text-amber-400 transition-colors line-clamp-2">
-                        {item.title}
-                      </h4>
-                      <span className="text-zinc-500 text-xs">{item.source_name || 'منبع'}</span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* SERVICES - حل‌کننده مشکل */}
+        {/* ==================== SERVICES ==================== */}
         <section id="services" className="py-16 px-4 section-hidden">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-10">
@@ -388,7 +319,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* PROJECTS */}
+        {/* ==================== PROJECTS ==================== */}
         <section id="projects" className="py-16 px-4 glass border-y border-white/5 section-hidden">
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center justify-between mb-8">
@@ -426,7 +357,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ABOUT */}
+        {/* ==================== ABOUT ==================== */}
         <section id="about" className="py-16 px-4 section-hidden">
           <div className="max-w-4xl mx-auto text-center">
             <span className="text-amber-400 text-sm font-medium">درباره من</span>
@@ -452,7 +383,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* SKILLS */}
+        {/* ==================== SKILLS ==================== */}
         <section id="skills" className="py-16 px-4 glass border-y border-white/5 section-hidden">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-8">
@@ -482,7 +413,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* NEWS */}
+        {/* ==================== NEWS ==================== */}
         <section id="news" className="py-16 px-4 section-hidden">
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center justify-between mb-6">
@@ -498,7 +429,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* CONTACT */}
+        {/* ==================== CONTACT ==================== */}
         <section id="contact" className="py-16 px-4 glass border-t border-white/5 section-hidden">
           <div className="max-w-3xl mx-auto text-center">
             <span className="text-amber-400 text-sm font-medium">تماس با من</span>
