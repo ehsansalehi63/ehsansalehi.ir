@@ -180,9 +180,10 @@ export default function Home() {
     { name: 'تماس', href: '#contact' },
   ];
 
+  // ====== اصلاح: استفاده از string به‌جای آرایه برای ease ======
   const fadeUp = {
     hidden: { opacity: 0, y: 60 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: 'easeInOut' } },
   };
 
   const stagger = {
@@ -371,7 +372,7 @@ export default function Home() {
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 1, ease: 'easeInOut' }}
               className="flex justify-center lg:justify-end order-2 lg:order-1"
             >
               <div className="relative group">
@@ -444,7 +445,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
+              transition={{ duration: 0.8, ease: 'easeInOut' }}
               className="text-center mb-16"
             >
               <span className="text-orange-400 text-sm font-medium tracking-wider">خدمات من</span>
@@ -462,7 +463,7 @@ export default function Home() {
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: i * 0.15, duration: 0.8 }}
+                  transition={{ delay: i * 0.15, duration: 0.8, ease: 'easeInOut' }}
                   className="service-card p-10 text-center group"
                 >
                   <div className="mb-4">{s.icon}</div>
@@ -498,7 +499,7 @@ export default function Home() {
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ delay: idx * 0.1, duration: 0.8 }}
+                    transition={{ delay: idx * 0.1, duration: 0.8, ease: 'easeInOut' }}
                     className="project-card group"
                   >
                     <div className="project-image">
@@ -534,7 +535,7 @@ export default function Home() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.8 }}
+                transition={{ duration: 0.8, ease: 'easeInOut' }}
                 className="grid grid-cols-3 gap-6 mt-10"
               >
                 <div className="glass p-6 rounded-xl">
@@ -577,7 +578,7 @@ export default function Home() {
                   initial={{ opacity: 0, x: -20 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: idx * 0.1, duration: 0.6 }}
+                  transition={{ delay: idx * 0.1, duration: 0.6, ease: 'easeInOut' }}
                 >
                   <div className="flex justify-between mb-2">
                     <span className="text-zinc-300 text-sm font-light">{skill.name}</span>
