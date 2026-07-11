@@ -9,7 +9,7 @@ const DEFAULT_IMAGE = 'https://ehsansalehi.ir/images/smart-cover.png';
 async function safeFetchImage(url: string, fallbackUrl?: string): Promise<Buffer> {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000); // ۸ ثانیه تایم‌اوت
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
 
     const response = await fetch(url, {
       signal: controller.signal,
@@ -26,9 +26,9 @@ async function safeFetchImage(url: string, fallbackUrl?: string): Promise<Buffer
 
     return Buffer.from(await response.arrayBuffer());
   } catch (error) {
-    console.warn(`⚠️ خطا در دریافت تصویر: ${url}`, error.message);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.warn(`⚠️ خطا در دریافت تصویر: ${url}`, errorMessage);
     
-    // اگر fallback وجود داشت، آن را امتحان کن
     if (fallbackUrl) {
       try {
         const fallbackResponse = await fetch(fallbackUrl);
@@ -38,8 +38,6 @@ async function safeFetchImage(url: string, fallbackUrl?: string): Promise<Buffer
       } catch {}
     }
     
-    // در نهایت یک تصویر خالی (یا placeholder) برمی‌گردانیم
-    // یا همان DEFAULT_IMAGE را دوباره امتحان می‌کنیم
     throw new Error('Failed to load image after fallback');
   }
 }
@@ -49,17 +47,14 @@ export async function createSmartCover(
   title: string,
   sourceName: string
 ): Promise<Buffer> {
-  // ۱. تعیین آدرس تصویر خبر
   let imageUrl = newsImageUrl && !newsImageUrl.includes('placehold') 
     ? newsImageUrl 
     : DEFAULT_IMAGE;
 
-  // ۲. دانلود تصویر خبر (با fallback)
   let imageBuffer: Buffer;
   try {
     imageBuffer = await safeFetchImage(imageUrl, DEFAULT_IMAGE);
   } catch {
-    // اگر همه چیز failed شد، یک تصویر placeholder ساده با canvas بساز
     const canvas = createCanvas(COVER_WIDTH, COVER_HEIGHT);
     const ctx = canvas.getContext('2d');
     ctx.fillStyle = '#0a0a2e';
@@ -75,7 +70,6 @@ export async function createSmartCover(
     imageBuffer = canvas.toBuffer('image/png');
   }
 
-  // ۳. دانلود لوگو (اختیاری - اگر خطا داد، بی‌تأثیر است)
   let logoBuffer: Buffer | null = null;
   try {
     logoBuffer = await safeFetchImage(LOGO_URL);
@@ -83,11 +77,9 @@ export async function createSmartCover(
     console.warn('⚠️ لوگو دانلود نشد، ادامه بدون لوگو');
   }
 
-  // ۴. ایجاد بوم اصلی
   const canvas = createCanvas(COVER_WIDTH, COVER_HEIGHT);
   const ctx = canvas.getContext('2d');
 
-  // ۵. بارگذاری و کشیدن تصویر خبر (با برش مناسب)
   try {
     const newsImage = await loadImage(imageBuffer);
     const imgAspect = newsImage.width / newsImage.height;
@@ -107,16 +99,13 @@ export async function createSmartCover(
     }
     ctx.drawImage(newsImage, drawX, drawY, drawW, drawH);
   } catch {
-    // در صورت خطا، پس‌زمینه ساده بکش
     ctx.fillStyle = '#0a0a2e';
     ctx.fillRect(0, 0, COVER_WIDTH, COVER_HEIGHT);
   }
 
-  // ۶. لایه شیشه‌ای
   ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
   ctx.fillRect(0, 0, COVER_WIDTH, COVER_HEIGHT);
 
-  // ۷. قاب حاشیه‌دار
   ctx.save();
   ctx.shadowColor = 'rgba(245, 158, 11, 0.15)';
   ctx.shadowBlur = 30;
@@ -138,7 +127,6 @@ export async function createSmartCover(
   ctx.stroke();
   ctx.restore();
 
-  // ۸. لوگو (اگر دانلود شده باشد)
   if (logoBuffer) {
     try {
       const logoImage = await loadImage(logoBuffer);
@@ -153,7 +141,6 @@ export async function createSmartCover(
     } catch {}
   }
 
-  // ۹. نام سایت و منبع
   ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
   ctx.font = '18px Arial';
   ctx.textAlign = 'right';
