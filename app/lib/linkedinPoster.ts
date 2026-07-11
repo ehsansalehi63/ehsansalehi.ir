@@ -44,14 +44,14 @@ export async function sendToLinkedIn(
     const uploadUrl2 = uploadData.uploadUrl;
     const asset = uploadData.image;
 
-    // ========== مرحله ۲: آپلود تصویر ==========
+    // ========== مرحله ۲: آپلود تصویر (تبدیل Buffer به Uint8Array) ==========
     const uploadImageRes = await fetch(uploadUrl2, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'image/png',
       },
-      body: coverBuffer,
+      body: new Uint8Array(coverBuffer), // ← تبدیل
     });
 
     if (!uploadImageRes.ok) {
