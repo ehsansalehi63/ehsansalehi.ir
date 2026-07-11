@@ -1,6 +1,5 @@
 import { pool } from './db';
 import { createSmartCover } from './createSmartCover';
-import { sendToLinkedIn } from './linkedinPoster';
 
 // ============================================================
 // تنظیمات تلگرام
@@ -9,7 +8,8 @@ const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
 const TELEGRAM_CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID || '';
 
 // ============================================================
-// ارسال به تل// ============================================================
+// ارسال به تلگرام (با کاور هوشمند)
+// ============================================================
 export async function sendToTelegram(
   title: string,
   summary: string,
@@ -23,10 +23,14 @@ export async function sendToTelegram(
   }
 
   try {
+    // ساخت کاور هوشمند (با canvas یا fallback)
     const coverBuffer = await createSmartCover(imageUrl, title, sourceName);
+    
+    // کپشن پیام
     const caption = `📰 *${title}*\n\n${summary}\n\n🔗 [مشاهده کامل خبر](${link})`;
     const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`;
 
+    // ارسال تصویر به‌صورت فایل
     const formData = new FormData();
     formData.append('chat_id', TELEGRAM_CHANNEL_ID);
     formData.append('caption', caption);
@@ -81,7 +85,7 @@ export async function sendToInstagram(...args: any[]): Promise<boolean> {
 }
 
 // ============================================================
-// تابع اصلی: ارسال به تلگرام و لینکدین
+// تابع اصلی: ارسال فقط به تلگرام
 // ============================================================
 export async function postNewsToAllChannels(
   newsId: number,
@@ -93,10 +97,9 @@ export async function postNewsToAllChannels(
 ): Promise<{ success: boolean; results: Record<string, boolean> }> {
   const results: Record<string, boolean> = {
     telegram: await sendToTelegram(title, summary, imageUrl, link, sourceName),
-    linkedin: await sendToLinkedIn(title, summary, link),
   };
 
-  const success = results.telegram || results.linkedin;
+  const success = results.telegram;
 
   await pool.execute(
     `UPDATE news_posts 

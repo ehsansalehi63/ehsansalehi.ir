@@ -155,44 +155,176 @@ export default function Home() {
   return (
     <>
       <style>{`
-        .glass { background: rgba(255,255,255,0.03); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.06); }
-        .glass-dark { background: rgba(0,0,0,0.5); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.06); }
-        .btn-primary { background: linear-gradient(135deg, #ff6b00, #ff8c00); color: #fff; border: none; padding: 14px 36px; border-radius: 50px; font-weight: 600; cursor: pointer; transition: all 0.4s ease; font-size: 0.95rem; letter-spacing: 0.5px; box-shadow: 0 4px 20px rgba(255,107,0,0.2); }
-        .btn-primary:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 8px 40px rgba(255,107,0,0.35); }
-        .btn-outline { background: transparent; border: 1.5px solid rgba(255,255,255,0.2); color: #fff; padding: 14px 36px; border-radius: 50px; font-weight: 500; cursor: pointer; transition: all 0.4s ease; font-size: 0.95rem; }
-        .btn-outline:hover { border-color: #ff6b00; background: rgba(255,107,0,0.08); transform: translateY(-2px); }
-        .section-hidden { opacity: 0; transform: translateY(60px); transition: all 0.9s cubic-bezier(0.22,1,0.36,1); }
-        .section-visible { opacity: 1; transform: translateY(0); }
-        .project-card { transition: all 0.5s cubic-bezier(0.22,1,0.36,1); cursor: pointer; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; backdrop-filter: blur(12px); }
-        .project-card:hover { transform: translateY(-8px) scale(1.01); box-shadow: 0 20px 60px rgba(255,107,0,0.08); border-color: rgba(255,107,0,0.2); }
-        .project-image { height: 200px; overflow: hidden; background: #1a1a2e; position: relative; }
-        .project-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease; }
-        .project-card:hover .project-image img { transform: scale(1.05); }
-        .skill-bar { height: 4px; border-radius: 2px; background: rgba(255,255,255,0.06); overflow: hidden; }
-        .skill-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, #ff6b00, #ff8c00); transition: width 1.8s cubic-bezier(0.22,1,0.36,1); width: 0%; }
-        .nav-link { transition: color 0.3s ease; position: relative; font-weight: 400; letter-spacing: 0.3px; }
-        .nav-link::after { content: ''; position: absolute; bottom: -4px; right: 0; width: 0; height: 2px; background: #ff6b00; transition: width 0.4s cubic-bezier(0.22,1,0.36,1); }
-        .nav-link:hover::after { width: 100%; }
-        .animate-gradient { background-size: 300% 300%; animation: gradientFlow 12s ease infinite; }
-        @keyframes gradientFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        @keyframes float { 0%,100% { transform: translateY(0px); } 50% { transform: translateY(-12px); } }
-        .float-animation { animation: float 6s cubic-bezier(0.22,1,0.36,1) infinite; }
-        .hero-gradient { background: radial-gradient(ellipse at 70% 30%, rgba(255,107,0,0.06) 0%, transparent 60%), radial-gradient(ellipse at 30% 70%, rgba(59,130,246,0.04) 0%, transparent 50%); }
-        .service-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); backdrop-filter: blur(12px); transition: all 0.5s cubic-bezier(0.22,1,0.36,1); border-radius: 16px; }
-        .service-card:hover { transform: translateY(-6px); border-color: rgba(255,107,0,0.2); box-shadow: 0 20px 60px rgba(255,107,0,0.05); }
-        .input-glass { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); backdrop-filter: blur(12px); transition: all 0.3s ease; }
-        .input-glass:focus { border-color: #ff6b00; box-shadow: 0 0 0 3px rgba(255,107,0,0.08); outline: none; }
-        .hero-social { margin-top: 1.5rem; }
+        .glass {
+          background: rgba(255, 255, 255, 0.03);
+          backdrop-filter: blur(16px);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .glass-dark {
+          background: rgba(0, 0, 0, 0.5);
+          backdrop-filter: blur(16px);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .btn-primary {
+          background: linear-gradient(135deg, #ff6b00, #ff8c00);
+          color: #fff;
+          border: none;
+          padding: 14px 36px;
+          border-radius: 50px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.4s ease;
+          font-size: 0.95rem;
+          letter-spacing: 0.5px;
+          box-shadow: 0 4px 20px rgba(255, 107, 0, 0.2);
+        }
+        .btn-primary:hover {
+          transform: translateY(-2px) scale(1.03);
+          box-shadow: 0 8px 40px rgba(255, 107, 0, 0.35);
+        }
+        .btn-outline {
+          background: transparent;
+          border: 1.5px solid rgba(255, 255, 255, 0.2);
+          color: #fff;
+          padding: 14px 36px;
+          border-radius: 50px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.4s ease;
+          font-size: 0.95rem;
+        }
+        .btn-outline:hover {
+          border-color: #ff6b00;
+          background: rgba(255, 107, 0, 0.08);
+          transform: translateY(-2px);
+        }
+        .section-hidden {
+          opacity: 0;
+          transform: translateY(60px);
+          transition: all 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .section-visible {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        .project-card {
+          transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+          cursor: pointer;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          border-radius: 16px;
+          overflow: hidden;
+          backdrop-filter: blur(12px);
+        }
+        .project-card:hover {
+          transform: translateY(-8px) scale(1.01);
+          box-shadow: 0 20px 60px rgba(255, 107, 0, 0.08);
+          border-color: rgba(255, 107, 0, 0.2);
+        }
+        .project-image {
+          height: 200px;
+          overflow: hidden;
+          background: #1a1a2e;
+          position: relative;
+        }
+        .project-image img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 0.6s ease;
+        }
+        .project-card:hover .project-image img {
+          transform: scale(1.05);
+        }
+        .skill-bar {
+          height: 4px;
+          border-radius: 2px;
+          background: rgba(255, 255, 255, 0.06);
+          overflow: hidden;
+        }
+        .skill-fill {
+          height: 100%;
+          border-radius: 2px;
+          background: linear-gradient(90deg, #ff6b00, #ff8c00);
+          transition: width 1.8s cubic-bezier(0.22, 1, 0.36, 1);
+          width: 0%;
+        }
+        .nav-link {
+          transition: color 0.3s ease;
+          position: relative;
+          font-weight: 400;
+          letter-spacing: 0.3px;
+        }
+        .nav-link::after {
+          content: '';
+          position: absolute;
+          bottom: -4px;
+          right: 0;
+          width: 0;
+          height: 2px;
+          background: #ff6b00;
+          transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .nav-link:hover::after {
+          width: 100%;
+        }
+        @keyframes gradientFlow {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        .animate-gradient {
+          background-size: 300% 300%;
+          animation: gradientFlow 12s ease infinite;
+        }
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-12px); }
+        }
+        .float-animation {
+          animation: float 6s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+        }
+        .hero-gradient {
+          background: radial-gradient(ellipse at 70% 30%, rgba(255,107,0,0.06) 0%, transparent 60%),
+                      radial-gradient(ellipse at 30% 70%, rgba(59,130,246,0.04) 0%, transparent 50%);
+        }
+        .service-card {
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          backdrop-filter: blur(12px);
+          transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+          border-radius: 16px;
+        }
+        .service-card:hover {
+          transform: translateY(-6px);
+          border-color: rgba(255, 107, 0, 0.2);
+          box-shadow: 0 20px 60px rgba(255, 107, 0, 0.05);
+        }
+        .input-glass {
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          backdrop-filter: blur(12px);
+          transition: all 0.3s ease;
+        }
+        .input-glass:focus {
+          border-color: #ff6b00;
+          box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.08);
+          outline: none;
+        }
       `}</style>
 
       <main className="min-h-screen bg-[#0a0a0a] text-white font-vazir" dir="rtl">
         <canvas id="particleCanvas" className="fixed inset-0 pointer-events-none z-0" />
 
-        {/* HEADER */}
+        {/* ====== HEADER ====== */}
         <header className="fixed top-0 left-0 right-0 z-50 glass px-4 py-3">
           <div className="max-w-7xl mx-auto flex justify-between items-center">
             <a href="#" className="flex items-center gap-2">
-              <img src="/images/logo-transparent.png" alt="احسان صالحی" className="h-10 w-auto" />
+              <img 
+                src="/images/logo-transparent.png" 
+                alt="احسان صالحی" 
+                className="h-10 w-auto"
+              />
             </a>
             <nav className="hidden md:flex gap-1 text-zinc-300">
               {navItems.map((item) => (
@@ -238,22 +370,21 @@ export default function Home() {
           )}
         </header>
 
-        {/* ====== HERO - تمام صفحه با شبکه‌های اجتماعی ====== */}
-        <section className="relative min-h-[92vh] flex items-center justify-center pt-16 px-4 overflow-hidden hero-gradient">
+        {/* ====== HERO ====== */}
+        <section className="relative min-h-[90vh] flex items-center justify-center pt-16 px-4 overflow-hidden hero-gradient">
           <div className="absolute inset-0 bg-gradient-to-br from-indigo-950/60 via-purple-900/30 to-black animate-gradient" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%, rgba(255,107,0,0.04), transparent)]" />
 
-          <div className="relative z-10 max-w-6xl mx-auto grid lg:grid-cols-2 gap-8 items-center w-full py-8">
-            {/* عکس */}
+          <div className="relative z-10 max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 items-center w-full py-8">
             <div className="flex justify-center lg:justify-end order-2 lg:order-1">
               <div className="relative group">
                 <div className="absolute -inset-8 bg-gradient-to-r from-orange-500/20 to-blue-600/20 rounded-full blur-3xl opacity-60 group-hover:opacity-100 transition duration-700" />
-                <div className="relative w-64 h-64 lg:w-[420px] lg:h-[420px] rounded-2xl overflow-hidden border border-orange-500/20 shadow-2xl float-animation">
+                <div className="relative w-64 h-64 lg:w-[380px] lg:h-[380px] rounded-2xl overflow-hidden border border-orange-500/20 shadow-2xl float-animation">
                   <Image 
                     src="/images/profile.jpg" 
                     alt="احسان صالحی" 
-                    width={420} 
-                    height={420} 
+                    width={380} 
+                    height={380} 
                     className="w-full h-full object-cover hover:scale-105 transition duration-1000" 
                     priority 
                   />
@@ -264,7 +395,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* متن + شبکه‌های اجتماعی */}
             <div className="text-center lg:text-right order-1 lg:order-2">
               <div className="inline-flex items-center gap-2 mb-4 px-4 py-1.5 glass-dark rounded-full text-xs tracking-wider border border-white/5">
                 <span className="text-orange-400">✦</span>
@@ -278,19 +408,15 @@ export default function Home() {
                   {text || "مشکلات فنی را ساده می‌کنم"}
                 </span>
               </h1>
-              <p className="text-base lg:text-lg text-zinc-300 mb-3 max-w-xl mx-auto lg:mx-0 leading-relaxed font-light">
+              <p className="text-base lg:text-lg text-zinc-300 mb-4 max-w-xl mx-auto lg:mx-0 leading-relaxed font-light">
                 از راه‌اندازی شبکه تا طراحی وب‌سایت، بدون دردسر و با کیفیت
               </p>
-              <p className="text-sm text-zinc-400 mb-6 max-w-lg mx-auto lg:mx-0 font-light">
+              <p className="text-sm text-zinc-400 mb-8 max-w-lg mx-auto lg:mx-0 font-light">
                 اگر به‌دنبال یک متخصص هستید که کار رو درست و به‌موقع تحویل بده، جای درستی آمدید.
               </p>
               <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
                 <a href="#services" className="btn-primary">چطور می‌تونم کمک کنم؟</a>
                 <Link href="/projects" className="btn-outline">نمونه کارها</Link>
-              </div>
-              {/* شبکه‌های اجتماعی با آیکون‌های واقعی */}
-              <div className="hero-social">
-                <SocialLinks size="lg" />
               </div>
             </div>
           </div>
@@ -342,7 +468,11 @@ export default function Home() {
                 projects.slice(0, 3).map((project: any) => (
                   <div key={project.id} className="project-card group">
                     <div className="project-image">
-                      {project.image_url ? <img src={project.image_url} alt={project.title} /> : <div className="w-full h-full flex items-center justify-center text-5xl opacity-30">💼</div>}
+                      {project.image_url ? (
+                        <img src={project.image_url} alt={project.title} />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-5xl opacity-30">💼</div>
+                      )}
                     </div>
                     <div className="p-6 text-right">
                       <h3 className="text-lg font-bold mb-1 group-hover:text-orange-400 transition-colors">{project.title}</h3>
@@ -367,9 +497,18 @@ export default function Home() {
               <p>من احسان هستم. از سال ۱۳۸۸ در حوزه IT فعالیت می‌کنم و با سازمان‌های دولتی، هلدینگ‌های خصوصی و شرکت‌های دانش‌بنیان همکاری داشته‌ام.</p>
               <p>کار من این است که مشکلات فنی را به‌زبانی ساده حل کنم. نیازی نیست شما متخصص باشید، من هستم که کارها را برایتان ساده می‌کنم.</p>
               <div className="grid grid-cols-3 gap-6 mt-8">
-                <div className="glass p-6 rounded-xl"><div className="text-3xl font-bold text-orange-400">۱۶+</div><div className="text-xs text-zinc-400 mt-1 font-light">سال تجربه</div></div>
-                <div className="glass p-6 rounded-xl"><div className="text-3xl font-bold text-orange-400">۵۰+</div><div className="text-xs text-zinc-400 mt-1 font-light">پروژه موفق</div></div>
-                <div className="glass p-6 rounded-xl"><div className="text-3xl font-bold text-orange-400">۱۰۰٪</div><div className="text-xs text-zinc-400 mt-1 font-light">رضایت مشتری</div></div>
+                <div className="glass p-6 rounded-xl">
+                  <div className="text-3xl font-bold text-orange-400">۱۶+</div>
+                  <div className="text-xs text-zinc-400 mt-1 font-light">سال تجربه</div>
+                </div>
+                <div className="glass p-6 rounded-xl">
+                  <div className="text-3xl font-bold text-orange-400">۵۰+</div>
+                  <div className="text-xs text-zinc-400 mt-1 font-light">پروژه موفق</div>
+                </div>
+                <div className="glass p-6 rounded-xl">
+                  <div className="text-3xl font-bold text-orange-400">۱۰۰٪</div>
+                  <div className="text-xs text-zinc-400 mt-1 font-light">رضایت مشتری</div>
+                </div>
               </div>
             </div>
           </div>
@@ -401,7 +540,9 @@ export default function Home() {
                     <span className="text-zinc-300 text-sm font-light">{skill.name}</span>
                     <span className="text-orange-400 text-sm font-bold">{skill.level}%</span>
                   </div>
-                  <div className="skill-bar"><div className="skill-fill" style={{ width: `${skill.level}%` }}></div></div>
+                  <div className="skill-bar">
+                    <div className="skill-fill" style={{ width: `${skill.level}%` }}></div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -452,7 +593,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ====== FOOTER ====== */}
         <footer className="py-8 text-center border-t border-white/5 px-4">
           <div className="max-w-4xl mx-auto">
             <p className="text-zinc-500 text-xs font-light">© ۱۴۰۴ احسان صالحی – تمامی حقوق محفوظ است</p>
@@ -473,33 +613,82 @@ export default function Home() {
             let particles = [];
             let mouse = { x: null, y: null };
             let w, h;
-            function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
-            window.addEventListener('resize', resize); resize();
+
+            function resize() {
+              w = canvas.width = window.innerWidth;
+              h = canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
             class Particle {
-              constructor() { this.x = Math.random() * w; this.y = Math.random() * h; this.size = Math.random() * 1.2 + 0.3; this.speedX = (Math.random() - 0.5) * 0.2; this.speedY = (Math.random() - 0.5) * 0.2; }
+              constructor() {
+                this.x = Math.random() * w;
+                this.y = Math.random() * h;
+                this.size = Math.random() * 1.2 + 0.3;
+                this.speedX = (Math.random() - 0.5) * 0.2;
+                this.speedY = (Math.random() - 0.5) * 0.2;
+              }
               update() {
-                this.x += this.speedX; this.y += this.speedY;
+                this.x += this.speedX;
+                this.y += this.speedY;
                 if (this.x > w || this.x < 0) this.speedX *= -1;
                 if (this.y > h || this.y < 0) this.speedY *= -1;
                 if (mouse.x && mouse.y) {
-                  const dx = this.x - mouse.x, dy = this.y - mouse.y, dist = Math.sqrt(dx*dx + dy*dy);
-                  if (dist < 100) { const angle = Math.atan2(dy, dx); const force = (100 - dist) / 1500; this.speedX += Math.cos(angle) * force; this.speedY += Math.sin(angle) * force; }
+                  const dx = this.x - mouse.x;
+                  const dy = this.y - mouse.y;
+                  const dist = Math.sqrt(dx * dx + dy * dy);
+                  if (dist < 100) {
+                    const angle = Math.atan2(dy, dx);
+                    const force = (100 - dist) / 1500;
+                    this.speedX += Math.cos(angle) * force;
+                    this.speedY += Math.sin(angle) * force;
+                  }
                 }
               }
-              draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,107,0,0.2)'; ctx.fill(); }
+              draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 107, 0, 0.2)';
+                ctx.fill();
+              }
             }
-            for (let i = 0; i < 45; i++) particles.push(new Particle());
+
+            for (let i = 0; i < 45; i++) {
+              particles.push(new Particle());
+            }
+
             function drawLines() {
               for (let i = 0; i < particles.length; i++) {
                 for (let j = i + 1; j < particles.length; j++) {
-                  const dx = particles[i].x - particles[j].x, dy = particles[i].y - particles[j].y, dist = Math.sqrt(dx*dx + dy*dy);
-                  if (dist < 100) { ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(particles[j].x, particles[j].y); ctx.strokeStyle = \`rgba(255,107,0,\${0.04 * (1 - dist / 100)})\`; ctx.lineWidth = 0.3; ctx.stroke(); }
+                  const dx = particles[i].x - particles[j].x;
+                  const dy = particles[i].y - particles[j].y;
+                  const dist = Math.sqrt(dx * dx + dy * dy);
+                  if (dist < 100) {
+                    ctx.beginPath();
+                    ctx.moveTo(particles[i].x, particles[i].y);
+                    ctx.lineTo(particles[j].x, particles[j].y);
+                    ctx.strokeStyle = \`rgba(255, 107, 0, \${0.04 * (1 - dist / 100)})\`;
+                    ctx.lineWidth = 0.3;
+                    ctx.stroke();
+                  }
                 }
               }
             }
-            function animate() { ctx.clearRect(0, 0, w, h); particles.forEach(p => { p.update(); p.draw(); }); drawLines(); requestAnimationFrame(animate); }
+
+            function animate() {
+              ctx.clearRect(0, 0, w, h);
+              particles.forEach(p => { p.update(); p.draw(); });
+              drawLines();
+              requestAnimationFrame(animate);
+            }
+
             animate();
-            window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; });
+
+            window.addEventListener('mousemove', (e) => {
+              mouse.x = e.clientX;
+              mouse.y = e.clientY;
+            });
             window.addEventListener('mouseleave', () => { mouse.x = null; mouse.y = null; });
           })();
         `

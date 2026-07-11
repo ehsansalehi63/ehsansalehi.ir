@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { vazir } from './fonts';
 import './globals.css';
 import { Toaster } from 'sonner';
-import Script from 'next/script';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://ehsansalehi.ir'),
@@ -10,8 +9,7 @@ export const metadata: Metadata = {
     default: 'احسان صالحی رباطی | متخصص IT با ۱۶ سال تجربه',
     template: '%s | احسان صالحی رباطی',
   },
-  description:
-    'احسان صالحی رباطی، متخصص IT با ۱۶ سال تجربه در زمینه شبکه، امنیت، توسعه وب و هوش مصنوعی. ارائه خدمات مشاوره، طراحی سایت و اتوماسیون.',
+  description: 'احسان صالحی رباطی، متخصص IT با ۱۶ سال تجربه در زمینه شبکه، امنیت، توسعه وب و هوش مصنوعی. ارائه خدمات مشاوره، طراحی سایت و اتوماسیون.',
   keywords: [
     'احسان صالحی رباطی',
     'متخصص IT',
@@ -82,20 +80,9 @@ export default function RootLayout({
         <meta name="theme-color" content="#0a0a0a" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
-
-        {/* متا تگ تأیید فیسبوک */}
+        
+        {/* متا‌تگ تأیید دامنه فیسبوک برای واتساپ */}
         <meta name="facebook-domain-verification" content="7edxl1xqt2d8sc3zurcms3hbqfkfju" />
-
-        {/* ====== Statsfa Website Analytics ====== */}
-        <Script
-          data-host="https://statsfa.com"
-          data-dnt="false"
-          src="https://statsfa.com/js/script.js"
-          id="ZwSg9rf6GA"
-          async
-          strategy="afterInteractive"
-        />
-        {/* ====== پایان Statsfa ====== */}
       </head>
       <body className="font-vazir antialiased bg-[#0a0a0a] text-white">
         {children}
