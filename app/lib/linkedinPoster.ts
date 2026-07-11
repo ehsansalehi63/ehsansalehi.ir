@@ -8,7 +8,7 @@
 export async function sendToLinkedIn(
   title: string,
   summary: string,
-  coverBuffer: Buffer, // کاور هوشمند
+  coverBuffer: Buffer,
   link: string
 ): Promise<boolean> {
   const accessToken = process.env.LINKEDIN_ACCESS_TOKEN || '';
@@ -20,7 +20,7 @@ export async function sendToLinkedIn(
   }
 
   try {
-    // ========== مرحله ۱: آپلود تصویر ==========
+    // ========== مرحله ۱: دریافت آدرس آپلود ==========
     const uploadUrl = 'https://api.linkedin.com/v2/images?action=upload';
     const uploadRes = await fetch(uploadUrl, {
       method: 'POST',
@@ -44,14 +44,14 @@ export async function sendToLinkedIn(
     const uploadUrl2 = uploadData.uploadUrl;
     const asset = uploadData.image;
 
-    // آپلود واقعی تصویر
+    // ========== مرحله ۲: آپلود تصویر (با تبدیل Buffer به Uint8Array) ==========
     const uploadImageRes = await fetch(uploadUrl2, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'image/png',
       },
-      body: coverBuffer,
+      body: new Uint8Array(coverBuffer), // ← تبدیل Buffer به Uint8Array
     });
 
     if (!uploadImageRes.ok) {
@@ -59,7 +59,7 @@ export async function sendToLinkedIn(
       return false;
     }
 
-    // ========== مرحله ۲: ایجاد پست ==========
+    // ========== مرحله ۳: ایجاد پست ==========
     const text = `${title}\n\n${summary}\n\n${link}`;
     const postUrl = 'https://api.linkedin.com/v2/ugcPosts';
     const postRes = await fetch(postUrl, {
