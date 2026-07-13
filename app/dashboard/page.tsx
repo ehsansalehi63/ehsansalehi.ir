@@ -71,8 +71,12 @@ export default function DashboardPage() {
   }, [router]);
 
   const handleLogout = () => {
+    localStorage.removeItem('admin_token');
     localStorage.removeItem('token');
+    localStorage.removeItem('admin_user');
     localStorage.removeItem('user');
+    document.cookie = 'admin_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     toast.success('خروج موفق');
     router.push('/');
   };

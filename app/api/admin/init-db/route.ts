@@ -1,10 +1,25 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { query } from '../../../lib/mysql';
+import { verifyAdmin } from '../../../lib/auth';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    // Check security: either Admin is logged in OR secret matches INIT_DB_SECRET
+    const secret = request.nextUrl?.searchParams?.get('secret');
+    const isSecretValid = process.env.INIT_DB_SECRET && secret === process.env.INIT_DB_SECRET;
+
+    if (!isSecretValid) {
+      const authError = await verifyAdmin(request);
+      if (authError) {
+        return NextResponse.json({
+          success: false,
+          error: '⛔ دسترسی غیرمجاز. برای دسترسی به مدیریت ساختار دیتابیس باید ابتدا به عنوان مدیر (Admin) وارد شوید یا کلید امنیتی ارسال کنید.'
+        }, { status: 401 });
+      }
+    }
+
     const queries = [
       `CREATE TABLE IF NOT EXISTS users (
         id INT AUTO_INCREMENT PRIMARY KEY,

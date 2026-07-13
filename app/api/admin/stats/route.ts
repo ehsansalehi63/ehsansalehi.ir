@@ -1,10 +1,14 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/mysql';
+import { verifyAdmin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const authError = await verifyAdmin(request);
+    if (authError) return authError;
+
     const [usersRes] = await query<{ count: number }>('SELECT COUNT(*) as count FROM users');
     const [projectsRes] = await query<{ count: number }>('SELECT COUNT(*) as count FROM projects');
     const [postsRes] = await query<{ count: number }>('SELECT COUNT(*) as count FROM blog_posts');

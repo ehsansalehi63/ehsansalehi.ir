@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { UserModel } from '@/lib/models/User';
+import { verifyAdmin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,6 +9,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authError = await verifyAdmin(request);
+    if (authError) return authError;
+
     const { id } = await params;
     const data = await UserModel.getById(Number(id));
 
@@ -29,6 +33,9 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authError = await verifyAdmin(request);
+    if (authError) return authError;
+
     const { id } = await params;
     const body = await request.json();
 
@@ -49,6 +56,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authError = await verifyAdmin(request);
+    if (authError) return authError;
+
     const { id } = await params;
     await UserModel.delete(Number(id));
 

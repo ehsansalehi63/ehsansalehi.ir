@@ -40,11 +40,18 @@ const AdminLogin = ({ onLogin }: { onLogin: () => void }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
-      if (res.ok) {
+      const data = await res.json();
+      if (res.ok && data.success) {
+        if (data.token) {
+          localStorage.setItem('admin_token', data.token);
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('user', JSON.stringify(data.user || { isAdmin: true, name: 'مدیر' }));
+          localStorage.setItem('admin_user', JSON.stringify(data.user || { isAdmin: true, name: 'مدیر' }));
+        }
         toast.success('ورود موفق ✅');
         onLogin();
       } else {
-        toast.error('نام کاربری یا رمز عبور اشتباه است');
+        toast.error(data.error || 'نام کاربری یا رمز عبور اشتباه است');
       }
     } catch (error) {
       toast.error('خطا در ورود');
@@ -116,8 +123,8 @@ export default function AdminPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userStr = localStorage.getItem('user');
+    const token = localStorage.getItem('admin_token') || localStorage.getItem('token');
+    const userStr = localStorage.getItem('admin_user') || localStorage.getItem('user');
     if (token && userStr) {
       try {
         const user = JSON.parse(userStr);
@@ -133,11 +140,13 @@ export default function AdminPage() {
 
   const fetchData = async () => {
     setLoading(true);
+    const token = localStorage.getItem('admin_token') || localStorage.getItem('token');
+    const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {};
     try {
       const [projectsRes, usersRes, statsRes] = await Promise.all([
-        fetch('/api/projects'),
-        fetch('/api/admin/users'),
-        fetch('/api/admin/stats'),
+        fetch('/api/projects', { headers }),
+        fetch('/api/admin/users', { headers }),
+        fetch('/api/admin/stats', { headers }),
       ]);
       const projectsData = await projectsRes.json();
       const usersData = await usersRes.json();
@@ -161,7 +170,7 @@ export default function AdminPage() {
     setUploading(true);
     const formData = new FormData();
     formData.append('file', file);
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('admin_token') || localStorage.getItem('token');
 
     try {
       const res = await fetch('/api/upload', {
@@ -192,7 +201,7 @@ export default function AdminPage() {
 
   const handleSubmitProject = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('admin_token') || localStorage.getItem('token');
     const url = editingProject ? `/api/projects/${editingProject.id}` : '/api/projects';
     const method = editingProject ? 'PUT' : 'POST';
 
@@ -221,7 +230,7 @@ export default function AdminPage() {
 
   const handleDeleteProject = async (id: number) => {
     if (!confirm('آیا از حذف این پروژه مطمئن هستید؟')) return;
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('admin_token') || localStorage.getItem('token');
     try {
       const res = await fetch(`/api/projects/${id}`, {
         method: 'DELETE',
@@ -239,7 +248,7 @@ export default function AdminPage() {
   };
 
   const handleToggleAdmin = async (userId: number, currentIsAdmin: boolean) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('admin_token') || localStorage.getItem('token');
     try {
       const res = await fetch(`/api/admin/users/${userId}`, {
         method: 'PUT',
@@ -262,7 +271,7 @@ export default function AdminPage() {
 
   const handleDeleteUser = async (userId: number) => {
     if (!confirm('آیا از حذف این کاربر مطمئن هستید؟')) return;
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('admin_token') || localStorage.getItem('token');
     try {
       const res = await fetch(`/api/admin/users/${userId}`, {
         method: 'DELETE',
@@ -300,8 +309,12 @@ export default function AdminPage() {
           </h1>
           <button
             onClick={() => {
+              localStorage.removeItem('admin_token');
               localStorage.removeItem('token');
+              localStorage.removeItem('admin_user');
               localStorage.removeItem('user');
+              document.cookie = 'admin_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+              document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
               setIsAuthenticated(false);
             }}
             className="px-4 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-xl transition text-sm"
