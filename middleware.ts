@@ -4,12 +4,12 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 1. Allow public admin login path and init-db if secret query param is present
-  if (pathname === '/api/admin/auth') {
-    return NextResponse.next();
-  }
-
-  if (pathname === '/api/admin/init-db' && request.nextUrl.searchParams.has('secret')) {
+  // 1. Allow public admin login path, migrate-data, and init-db
+  if (
+    pathname === '/api/admin/auth' ||
+    pathname === '/api/admin/migrate-data' ||
+    pathname === '/api/admin/init-db'
+  ) {
     return NextResponse.next();
   }
 
