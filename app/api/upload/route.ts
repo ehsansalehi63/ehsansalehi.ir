@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
 import { v4 as uuidv4 } from 'uuid';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request) {
   try {
     console.log('🚀 شروع آپلود...');
@@ -25,7 +27,7 @@ export async function POST(request: Request) {
     const fileName = `${uuidv4()}.${fileExt}`;
     const filePath = `projects/${fileName}`;
 
-    console.log('📤 آپلود به Supabase:', filePath);
+    console.log('📤 آپلود به Supabase Storage:', filePath);
 
     const { data, error } = await supabase.storage
       .from('projects')

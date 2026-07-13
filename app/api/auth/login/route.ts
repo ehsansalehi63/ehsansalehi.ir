@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { supabase } from '@/lib/supabaseClient';
+import { UserModel } from '@/lib/models/User';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 
@@ -16,27 +16,14 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data: users, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', email);
+    const user = await UserModel.getByEmail(email);
 
-    if (error) {
-      console.error('❌ Supabase error (login):', error);
-      return NextResponse.json(
-        { error: `Supabase error: ${error.message}` },
-        { status: 500 }
-      );
-    }
-
-    if (!users || users.length === 0) {
+    if (!user) {
       return NextResponse.json(
         { error: 'ایمیل یا رمز عبور اشتباه است' },
         { status: 401 }
       );
     }
-
-    const user = users[0];
 
     const isValid = bcrypt.compareSync(password, user.password);
     if (!isValid) {

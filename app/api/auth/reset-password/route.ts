@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { supabase } from '@/lib/supabaseClient';
+import { UserModel } from '@/lib/models/User';
+import { query } from '@/lib/mysql';
 
 export async function POST(request: Request) {
   try {
@@ -20,41 +21,29 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data: resetData, error: findError } = await supabase
-      .from('password_resets')
-      .select('*')
-      .eq('email', email)
-      .eq('token', token)
-      .gt('expiresAt', new Date().toISOString())
-      .maybeSingle();
+    const rows = await query(
+      'SELECT * FROM password_resets WHERE email = ? AND token = ? AND expiresAt > NOW() ORDER BY createdAt DESC LIMIT 1',
+      [email, token]
+    );
 
-    if (findError || !resetData) {
+    if (!rows || rows.length === 0) {
       return NextResponse.json(
         { error: 'لینک نامعتبر یا منقضی شده است' },
         { status: 400 }
       );
     }
 
-    const hashedPassword = bcrypt.hashSync(newPassword, 10);
-
-    const { error: updateError } = await supabase
-      .from('users')
-      .update({ password: hashedPassword })
-      .eq('email', email);
-
-    if (updateError) {
-      console.error('❌ Supabase error (reset password):', updateError);
+    const user = await UserModel.getByEmail(email);
+    if (!user) {
       return NextResponse.json(
-        { error: 'خطا در بازنشانی رمز' },
-        { status: 500 }
+        { error: 'کاربر یافت نشد' },
+        { status: 404 }
       );
     }
 
-    await supabase
-      .from('password_resets')
-      .delete()
-      .eq('email', email)
-      .eq('token', token);
+    const hashedPassword = bcrypt.hashSync(newPassword, 10);
+    await UserModel.update(user.id, { password: hashedPassword });
+    await query('DELETE FROM password_resets WHERE email = ? AND token = ?', [email, token]);
 
     return NextResponse.json(
       {

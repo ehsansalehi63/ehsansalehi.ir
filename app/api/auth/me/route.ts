@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
-import { supabase } from '@/lib/supabaseClient';
+import { UserModel } from '@/lib/models/User';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 
@@ -17,21 +17,19 @@ export async function GET(request: Request) {
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, JWT_SECRET) as { id: number };
 
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('id, name, email, isVerified, isAdmin, createdAt')
-      .eq('id', decoded.id)
-      .maybeSingle();
+    const user = await UserModel.getById(decoded.id);
 
-    if (error || !user) {
+    if (!user) {
       return NextResponse.json(
         { error: 'کاربر یافت نشد' },
         { status: 404 }
       );
     }
 
+    const { password, ...safeUser } = user;
+
     return NextResponse.json(
-      { success: true, user },
+      { success: true, user: safeUser },
       {
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
-import { supabase } from '@/lib/supabaseClient';
+import { UserModel } from '@/lib/models/User';
+import { VerificationCodeModel } from '@/lib/models/VerificationCode';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 
@@ -15,62 +16,36 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data: codes, error: findError } = await supabase
-      .from('verification_codes')
-      .select('*')
-      .eq('email', email)
-      .eq('code', code)
-      .gte('expiresAt', new Date().toISOString());
+    const verification = await VerificationCodeModel.getByEmailAndCode(email, code);
 
-    if (findError) {
-      console.error('❌ Supabase error (verify):', findError);
-      return NextResponse.json(
-        { error: `Supabase error: ${findError.message}` },
-        { status: 500 }
-      );
-    }
-
-    if (!codes || codes.length === 0) {
+    if (!verification) {
       return NextResponse.json(
         { error: 'کد نامعتبر یا منقضی شده است' },
         { status: 400 }
       );
     }
 
-    const { error: updateError } = await supabase
-      .from('users')
-      .update({ isVerified: true })
-      .eq('email', email);
-
-    if (updateError) {
-      console.error('❌ Supabase error (verify update):', updateError);
-      return NextResponse.json(
-        { error: `Supabase error: ${updateError.message}` },
-        { status: 500 }
-      );
-    }
-
-    await supabase
-      .from('verification_codes')
-      .delete()
-      .eq('email', email);
-
-    const { data: users, error: userError } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', email);
-
-    if (userError || !users || users.length === 0) {
+    const user = await UserModel.getByEmail(email);
+    if (!user) {
       return NextResponse.json(
         { error: 'کاربر یافت نشد' },
         { status: 404 }
       );
     }
 
-    const user = users[0];
+    await UserModel.update(user.id, { isVerified: true });
+    await VerificationCodeModel.deleteByEmail(email);
+
+    const updatedUser = await UserModel.getByEmail(email);
+    if (!updatedUser) {
+      return NextResponse.json(
+        { error: 'کاربر یافت نشد' },
+        { status: 404 }
+      );
+    }
 
     const token = jwt.sign(
-      { id: user.id, email: user.email, name: user.name },
+      { id: updatedUser.id, email: updatedUser.email, name: updatedUser.name, isAdmin: updatedUser.isAdmin || false },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -81,10 +56,11 @@ export async function POST(request: Request) {
         message: 'حساب شما با موفقیت تأیید شد',
         token,
         user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          isVerified: user.isVerified,
+          id: updatedUser.id,
+          name: updatedUser.name,
+          email: updatedUser.email,
+          isVerified: updatedUser.isVerified,
+          isAdmin: updatedUser.isAdmin || false,
         },
       },
       {

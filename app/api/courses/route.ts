@@ -1,18 +1,11 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabaseClient';
+import { query } from '@/lib/mysql';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const { data, error } = await supabase
-      .from('courses')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('❌ Supabase error (courses GET):', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
+    const data = await query('SELECT * FROM courses ORDER BY createdAt DESC');
     return NextResponse.json({ success: true, data });
   } catch (error: any) {
     console.error('❌ General error (courses GET):', error);

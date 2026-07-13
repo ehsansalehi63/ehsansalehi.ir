@@ -1,31 +1,40 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabaseClient';
+import { query } from '@/lib/mysql';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const { count: totalUsers } = await supabase.from('users').select('*', { count: 'exact', head: true });
-    const { count: totalProjects } = await supabase.from('projects').select('*', { count: 'exact', head: true });
-    const { count: totalPosts } = await supabase.from('blog_posts').select('*', { count: 'exact', head: true });
+    const [usersRes] = await query<{ count: number }>('SELECT COUNT(*) as count FROM users');
+    const [projectsRes] = await query<{ count: number }>('SELECT COUNT(*) as count FROM projects');
+    const [postsRes] = await query<{ count: number }>('SELECT COUNT(*) as count FROM blog_posts');
 
     let totalSales = 0;
     let revenue = 0;
 
-    const { data: salesData } = await supabase.from('user_courses').select('course_id');
-    if (salesData && salesData.length > 0) {
-      totalSales = salesData.length;
-      const courseIds = salesData.map(s => s.course_id);
-      const { data: coursesData } = await supabase.from('courses').select('price').in('id', courseIds);
-      if (coursesData) {
-        revenue = coursesData.reduce((sum, c) => sum + (c.price || 0), 0);
+    try {
+      const salesData = await query<{ course_id: number }>('SELECT course_id FROM user_courses');
+      if (salesData && salesData.length > 0) {
+        totalSales = salesData.length;
+        const courseIds = salesData.map(s => s.course_id);
+        if (courseIds.length > 0) {
+          const placeholders = courseIds.map(() => '?').join(',');
+          const coursesData = await query<{ price: number }>(`SELECT price FROM courses WHERE id IN (${placeholders})`, courseIds);
+          if (coursesData) {
+            revenue = coursesData.reduce((sum, c) => sum + (c.price || 0), 0);
+          }
+        }
       }
+    } catch (e) {
+      console.warn('⚠️ جداول دوره‌ها هنوز ساخته نشده‌اند یا خالی هستند');
     }
 
     return NextResponse.json({
       success: true,
       data: {
-        totalUsers: totalUsers || 0,
-        totalProjects: totalProjects || 0,
-        totalPosts: totalPosts || 0,
+        totalUsers: usersRes?.count || 0,
+        totalProjects: projectsRes?.count || 0,
+        totalPosts: postsRes?.count || 0,
         totalSales,
         revenue,
       }

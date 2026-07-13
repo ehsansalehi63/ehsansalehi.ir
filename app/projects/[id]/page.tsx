@@ -1,27 +1,21 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabaseClient';
+import { ProjectModel } from '@/lib/models/Project';
 
-// دریافت اطلاعات یک پروژه از دیتابیس
+export const dynamic = 'force-dynamic';
+
 async function getProject(id: string) {
-  const { data, error } = await supabase
-    .from('projects')
-    .select('*')
-    .eq('id', parseInt(id))
-    .maybeSingle();
-
-  if (error || !data) {
+  try {
+    const data = await ProjectModel.getById(parseInt(id, 10));
+    return data || null;
+  } catch (error) {
+    console.error('❌ Error fetching project:', error);
     return null;
   }
-
-  return data;
 }
 
-// صفحه جزئیات پروژه با دریافت صحیح params
 export default async function ProjectPage({ params }: { params: Promise<{ id: string }> }) {
-  // await کردن params برای دریافت id
   const { id } = await params;
-
   const project = await getProject(id);
 
   if (!project) {
@@ -93,9 +87,11 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
           )}
 
           {/* تاریخ ایجاد */}
-          <div className="mt-8 text-sm text-zinc-500 border-t border-white/5 pt-4">
-            تاریخ انتشار: {new Date(project.createdAt).toLocaleDateString('fa-IR')}
-          </div>
+          {project.createdAt && (
+            <div className="mt-8 text-sm text-zinc-500 border-t border-white/5 pt-4">
+              تاریخ انتشار: {new Date(project.createdAt).toLocaleDateString('fa-IR')}
+            </div>
+          )}
 
           {/* دکمه بازگشت */}
           <Link
