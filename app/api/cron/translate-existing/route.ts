@@ -1,12 +1,16 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { pool } from '../../../lib/db';
 import { translate } from 'node-google-translator';
+import { verifyCron } from '../../../lib/auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const cronError = verifyCron(request);
+    if (cronError) return cronError;
+
     const [rows] = await pool.execute(
       'SELECT id, title, content FROM news_posts WHERE content NOT LIKE "%سلام%" AND content NOT LIKE "%در%" LIMIT 50'
     );

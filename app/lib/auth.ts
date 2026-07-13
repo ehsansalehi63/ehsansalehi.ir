@@ -75,3 +75,25 @@ export async function verifyAdmin(request: Request | NextRequest): Promise<NextR
     { status: 401 }
   );
 }
+
+export function verifyCron(request: NextRequest): NextResponse | null {
+  const cronHeader = request.headers.get('x-vercel-cron');
+  if (cronHeader === '1') return null; // Vercel Cron automated execution
+
+  const authHeader = request.headers.get('authorization');
+  const secretParam = request.nextUrl?.searchParams?.get('secret') || request.nextUrl?.searchParams?.get('cron_secret');
+  const cronSecret = process.env.CRON_SECRET;
+
+  if (cronSecret && (secretParam === cronSecret || authHeader === `Bearer ${cronSecret}`)) {
+    return null; // Authorized via secret
+  }
+
+  if (cronSecret) {
+    return NextResponse.json(
+      { success: false, error: '⛔ اجرای کرون‌جاب بدون کلید امنیتی (CRON_SECRET) مجاز نیست.' },
+      { status: 401 }
+    );
+  }
+
+  return null;
+}

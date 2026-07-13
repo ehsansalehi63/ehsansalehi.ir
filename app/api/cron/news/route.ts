@@ -1,9 +1,10 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { pool } from '../../../lib/db';
 import Parser from 'rss-parser';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { analyzeAndTranslateNews } from '../../../lib/translateWithGPT';
+import { verifyCron } from '../../../lib/auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -77,8 +78,11 @@ async function extractFullContent(url: string) {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const cronError = verifyCron(request);
+    if (cronError) return cronError;
+
     const parser = new Parser();
     let bestNews = null;
     let bestScore = -1;

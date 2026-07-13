@@ -20,14 +20,14 @@ export async function addWatermarkToImage(
     // لوگو
     let logo: any = null;
     try {
-      const logoRes = await fetch('https://ehsansalehi.ir/images/logo-transparent.png');
+      const logoRes = await fetch('https://ehsansalehi.ir/images/logo-transparent.png', { signal: AbortSignal.timeout(3000) });
       if (logoRes.ok) {
         const logoBuffer = Buffer.from(await logoRes.arrayBuffer());
         logo = await Jimp.read(logoBuffer);
         logo.resize(80, 80);
       }
     } catch {
-      console.warn('⚠️ لوگو پیدا نشد');
+      console.warn('⚠️ لوگو در زمان تعیین‌شده دریافت نشد یا پیدا نشد');
     }
 
     // لایه نیمه‌شفاف

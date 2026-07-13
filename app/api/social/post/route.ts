@@ -1,12 +1,17 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { pool } from '../../../lib/db';
 import { postNewsToAllChannels } from '../../../lib/socialPoster';
+import { verifyCron } from '../../../lib/auth';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const cronError = verifyCron(request);
+    if (cronError) return cronError;
+
     // دریافت اخباری که هنوز ارسال نشده‌اند
     const [rows] = await pool.execute(
       `SELECT id, title, summary, image_url 
