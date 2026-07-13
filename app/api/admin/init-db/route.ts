@@ -20,7 +20,7 @@ export async function GET() {
       `CREATE TABLE IF NOT EXISTS projects (
         id INT AUTO_INCREMENT PRIMARY KEY,
         title VARCHAR(255) NOT NULL,
-        desc TEXT NOT NULL,
+        \`desc\` TEXT NOT NULL,
         tech VARCHAR(255) NOT NULL,
         link VARCHAR(255) NOT NULL,
         image_url TEXT NOT NULL,

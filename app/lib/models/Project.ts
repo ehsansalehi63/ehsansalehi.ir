@@ -22,13 +22,13 @@ export const ProjectModel = {
 
   async create(data: Omit<Project, 'id' | 'createdAt'>): Promise<any> {
     return query(
-      'INSERT INTO projects (title, desc, tech, link, image_url) VALUES (?, ?, ?, ?, ?)',
+      'INSERT INTO projects (title, `desc`, tech, link, image_url) VALUES (?, ?, ?, ?, ?)',
       [data.title, data.desc, data.tech, data.link, data.image_url]
     );
   },
 
   async update(id: number, data: Partial<Project>): Promise<void> {
-    const fields = Object.keys(data).map(key => `${key} = ?`).join(', ');
+    const fields = Object.keys(data).map(key => `\`${key}\` = ?`).join(', ');
     const values = Object.values(data);
     await query(`UPDATE projects SET ${fields} WHERE id = ?`, [...values, id]);
   },

@@ -28,13 +28,13 @@ export const UserModel = {
 
   async create(data: Omit<User, 'id' | 'createdAt'>): Promise<any> {
     return query(
-      'INSERT INTO users (name, email, password, isVerified, isAdmin, auth_id) VALUES (?, ?, ?, ?, ?, ?)',
+      'INSERT INTO users (`name`, `email`, `password`, `isVerified`, `isAdmin`, `auth_id`) VALUES (?, ?, ?, ?, ?, ?)',
       [data.name, data.email, data.password, data.isVerified || false, data.isAdmin || false, data.auth_id || null]
     );
   },
 
   async update(id: number, data: Partial<User>): Promise<void> {
-    const fields = Object.keys(data).map(key => `${key} = ?`).join(', ');
+    const fields = Object.keys(data).map(key => `\`${key}\` = ?`).join(', ');
     const values = Object.values(data);
     await query(`UPDATE users SET ${fields} WHERE id = ?`, [...values, id]);
   },

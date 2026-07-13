@@ -21,13 +21,13 @@ export const MessageModel = {
 
   async create(data: Omit<Message, 'id' | 'createdAt' | 'read'>): Promise<any> {
     return query(
-      'INSERT INTO messages (name, email, message) VALUES (?, ?, ?)',
+      'INSERT INTO messages (`name`, `email`, `message`) VALUES (?, ?, ?)',
       [data.name, data.email, data.message]
     );
   },
 
   async markAsRead(id: number): Promise<void> {
-    await query('UPDATE messages SET read = true WHERE id = ?', [id]);
+    await query('UPDATE messages SET `read` = true WHERE id = ?', [id]);
   },
 
   async delete(id: number): Promise<void> {
