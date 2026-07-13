@@ -3,6 +3,7 @@ import { vazir } from './fonts';
 import './globals.css';
 import { Toaster } from 'sonner';
 import Script from 'next/script';
+import AiChatbot from './components/AiChatbot';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://ehsansalehi.ir'),
@@ -99,6 +100,7 @@ export default function RootLayout({
       </head>
       <body className="font-vazir antialiased bg-[#0a0a0a] text-white">
         {children}
+        <AiChatbot />
         <Toaster position="top-center" richColors theme="dark" />
       </body>
     </html>

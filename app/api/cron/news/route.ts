@@ -10,6 +10,13 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const RSS_FEEDS = [
+  // رمزارز و بلاکچین (Crypto & Blockchain)
+  'https://www.coindesk.com/arc/outboundfeeds/rss/',
+  'https://cointelegraph.com/rss',
+  'https://decrypt.co/feed',
+  'https://news.bitcoin.com/feed/',
+  'https://cryptoslate.com/feed/',
+  // هوش مصنوعی و فناوری (AI & Tech)
   'https://techcrunch.com/feed/',
   'https://www.theverge.com/rss/index.xml',
   'https://www.wired.com/feed/rss',
@@ -17,15 +24,26 @@ const RSS_FEEDS = [
   'https://arstechnica.com/feed/',
   'https://www.engadget.com/rss.xml',
   'https://www.cnet.com/rss/news/',
-  'https://www.scientificamerican.com/feed/',
-  'https://www.bbc.com/news/technology/rss.xml',
-  'https://www.theguardian.com/technology/rss',
-  'https://mashable.com/feeds/rss/tech',
   'https://www.digitaltrends.com/feed/',
   'https://www.techradar.com/rss',
-  'https://www.cnet.com/rss/tech/',
-  'https://www.pcmag.com/feed',
 ];
+
+function detectCategory(title: string, content: string, feedUrl: string): string {
+  const text = (title + ' ' + content + ' ' + feedUrl).toLowerCase();
+  if (text.includes('crypto') || text.includes('bitcoin') || text.includes('ethereum') || text.includes('blockchain') || text.includes('coin') || text.includes('token') || text.includes('solana') || text.includes('binance') || text.includes('بیت کوین') || text.includes('رمز ارز') || text.includes('ارز دیجیتال') || text.includes('بلاکچین') || feedUrl.includes('coindesk') || feedUrl.includes('cointelegraph') || feedUrl.includes('decrypt') || feedUrl.includes('bitcoin')) {
+    return 'رمزارز و بلاکچین';
+  }
+  if (text.includes('ai ') || text.includes('artificial intelligence') || text.includes('chatgpt') || text.includes('openai') || text.includes('llm') || text.includes('gemini') || text.includes('claude') || text.includes('machine learning') || text.includes('هوش مصنوعی') || text.includes('یادگیری ماشین')) {
+    return 'هوش مصنوعی';
+  }
+  if (text.includes('security') || text.includes('cyber') || text.includes('hack') || text.includes('vulnerability') || text.includes('malware') || text.includes('امنیت') || text.includes('هک') || text.includes('باگ') || text.includes('سایبری')) {
+    return 'امنیت سایبری';
+  }
+  if (text.includes('apple') || text.includes('samsung') || text.includes('phone') || text.includes('android') || text.includes('gpu') || text.includes('cpu') || text.includes('intel') || text.includes('nvidia') || text.includes('اپل') || text.includes('سامسونگ') || text.includes('موبایل') || text.includes('سخت افزار')) {
+    return 'سخت‌افزار و گجت';
+  }
+  return 'فناوری و نرم‌افزار';
+}
 
 async function extractFullContent(url: string) {
   try {
@@ -54,25 +72,23 @@ async function extractFullContent(url: string) {
       'main article',
       '.article-content',
       '.post-content',
-      '.entry-content',
       'article',
     ];
+    
     for (const selector of selectors) {
-      const elements = $(selector);
-      if (elements.length > 0) {
-        elements.find('p').each((_, el) => {
-          const text = $(el).text().trim();
-          if (text.length > 30 && !text.startsWith('©') && !text.includes('Subscribe')) {
-            content += text + '\n\n';
-          }
-        });
-        if (content.length > 400) break;
+      const el = $(selector);
+      if (el.length > 0) {
+        content = el.text().trim();
+        break;
       }
     }
-    if (!content || content.length < 50) {
-      content = $('meta[name="description"]').attr('content') || '';
+    
+    if (!content) {
+      content = $('body').text().trim();
     }
-    return { content: content.trim(), image };
+    
+    content = content.replace(/\s+/g, ' ').slice(0, 3000);
+    return { content, image };
   } catch {
     return { content: '', image: 'https://ehsansalehi.ir/images/og-image.jpg' };
   }
@@ -86,6 +102,7 @@ export async function GET(request: NextRequest) {
     const parser = new Parser();
     let bestNews = null;
     let bestScore = -1;
+    let chosenFeed = '';
 
     for (const feedUrl of RSS_FEEDS) {
       try {
@@ -97,25 +114,27 @@ export async function GET(request: NextRequest) {
         
         let score = 0;
         if (image && !image.includes('og-image.jpg')) score += 20;
-        if (content && content.length > 200) score += 10;
-        if (feed.title && ['TechCrunch', 'The Verge', 'Wired', 'ZDNet', 'Ars Technica'].includes(feed.title)) score += 15;
+        if (content.length > 500) score += 30;
+        if (item.pubDate) {
+          const hoursAgo = (Date.now() - new Date(item.pubDate).getTime()) / (1000 * 60 * 60);
+          if (hoursAgo < 12) score += 50 - Math.min(hoursAgo * 4, 40);
+        }
         
         if (score > bestScore) {
           bestScore = score;
+          chosenFeed = feedUrl;
           bestNews = {
             title: item.title || '',
-            content: content || '',
-            image: image,
-            source_name: feed.title || 'منبع ناشناس',
-            source_url: item.link || '',
+            content,
+            image,
+            source_name: feed.title || new URL(feedUrl).hostname,
+            source_url: feed.link || feedUrl,
             original_url: item.link || '',
-            published_at: item.pubDate ? new Date(item.pubDate) : new Date(),
+            published_at: item.pubDate ? new Date(item.pubDate).toISOString().slice(0, 19).replace('T', ' ') : new Date().toISOString().slice(0, 19).replace('T', ' '),
           };
         }
-      } catch (err) {
-        // اصلاح: استفاده از err به‌عنوان any برای دسترسی به message
-        const error = err as any;
-        console.error(`خطا در ${feedUrl}:`, error.message || error);
+      } catch (err: any) {
+        console.error(`خطا در ${feedUrl}:`, err.message || err);
       }
     }
 
@@ -137,6 +156,8 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    const category = detectCategory(bestNews.title, bestNews.content, chosenFeed);
+
     const translated = await analyzeAndTranslateNews(
       bestNews.title,
       bestNews.content,
@@ -145,8 +166,8 @@ export async function GET(request: NextRequest) {
 
     await pool.execute(
       `INSERT INTO news_posts 
-       (title, content, summary, image_url, source_name, source_url, original_url, published_at, is_published)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (title, content, summary, image_url, source_name, source_url, original_url, published_at, is_published, category)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         translated.title || bestNews.title,
         translated.content || bestNews.content,
@@ -157,6 +178,7 @@ export async function GET(request: NextRequest) {
         bestNews.original_url,
         bestNews.published_at,
         true,
+        category,
       ]
     );
 
@@ -164,12 +186,13 @@ export async function GET(request: NextRequest) {
       success: true,
       message: 'یک خبر جدید ذخیره شد',
       title: translated.title,
+      category,
     });
-  } catch (error) {
-    console.error('❌ خطا:', error);
-    return NextResponse.json({
-      success: false,
-      error: (error as any).message || 'خطای ناشناخته',
+  } catch (error: any) {
+    console.error('❌ خطا در کرون‌جاب:', error);
+    return NextResponse.json({ 
+      success: false, 
+      error: error.message || 'خطای ناشناخته در کرون' 
     }, { status: 500 });
   }
 }

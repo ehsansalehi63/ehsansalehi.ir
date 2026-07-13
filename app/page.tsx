@@ -173,12 +173,11 @@ export default function Home() {
 
   const navItems = [
     { name: 'خانه', href: '#' },
-    { name: 'خدمات', href: '#services' },
+    { name: 'اخبار فناوری و رمزارز 🔥', href: '/news' },
     { name: 'پروژه‌ها', href: '/projects' },
-    { name: 'درباره', href: '#about' },
+    { name: 'خدمات', href: '#services' },
     { name: 'مهارت‌ها', href: '#skills' },
-    { name: 'نظرات', href: '#testimonials' },
-    { name: 'اخبار', href: '#news' },
+    { name: 'درباره', href: '#about' },
     { name: 'تماس', href: '#contact' },
   ];
 
@@ -376,7 +375,7 @@ export default function Home() {
         </header>
 
         {/* ====== HERO ====== */}
-        <section className="relative min-h-[92vh] flex items-center justify-center pt-16 px-4 overflow-hidden hero-gradient">
+        <section className="relative min-h-[92vh] flex items-center justify-center pt-32 px-4 overflow-hidden hero-gradient">
           <div className="absolute inset-0 bg-gradient-to-br from-indigo-950/40 via-purple-900/20 to-black" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%, rgba(255,107,0,0.04), transparent)]" />
 
@@ -411,9 +410,15 @@ export default function Home() {
               variants={stagger}
               className="text-center lg:text-right order-1 lg:order-2"
             >
-              <motion.div variants={fadeUp} className="inline-flex items-center gap-2 mb-4 px-4 py-1.5 glass-dark rounded-full text-xs tracking-wider border border-white/5">
-                <span className="text-orange-400">✦</span>
-                <span className="text-zinc-300">مشاور و مجری پروژه‌های فناوری</span>
+              <motion.div variants={fadeUp} className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5 mb-5">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 glass-dark rounded-full text-xs tracking-wider border border-white/10">
+                  <span className="text-orange-400">✦</span>
+                  <span className="text-zinc-200 font-bold">مشاور و مجری پروژه‌های IT</span>
+                </div>
+                <Link href="/news" className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-gradient-to-r from-orange-500/15 to-amber-500/15 border border-orange-500/40 text-orange-300 hover:text-white transition text-xs font-bold shadow-lg shadow-orange-500/10">
+                  <span>📰 پایگاه اخبار فوری فناوری، هوش مصنوعی و رمزارز</span>
+                  <span className="text-amber-400 font-extrabold">←</span>
+                </Link>
               </motion.div>
               <motion.h1 variants={fadeUp} className="text-4xl lg:text-6xl font-bold mb-4 leading-tight">
                 <span className="bg-gradient-to-r from-orange-400 to-blue-400 bg-clip-text text-transparent">
