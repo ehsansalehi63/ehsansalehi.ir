@@ -250,11 +250,13 @@ export async function postNewsToAllChannels(
   link: string,
   sourceName: string = 'پایگاه اخبار فناوری'
 ): Promise<{ success: boolean; results: Record<string, boolean>; errors: Record<string, string> }> {
-  const tg = await sendToTelegram(title, summary, imageUrl, link, sourceName);
-  const li = await sendToLinkedIn(title, summary, imageUrl, link);
-  const bl = await sendToBale(title, summary, imageUrl, link, sourceName);
-  const et = await sendToEitaa(title, summary, imageUrl, link, sourceName);
-  const rb = await sendToRubika(title, summary, imageUrl, link, sourceName);
+  const [tg, li, bl, et, rb] = await Promise.all([
+    sendToTelegram(title, summary, imageUrl, link, sourceName),
+    sendToLinkedIn(title, summary, imageUrl, link),
+    sendToBale(title, summary, imageUrl, link, sourceName),
+    sendToEitaa(title, summary, imageUrl, link, sourceName),
+    sendToRubika(title, summary, imageUrl, link, sourceName),
+  ]);
 
   const results: Record<string, boolean> = {
     telegram: tg.success,
