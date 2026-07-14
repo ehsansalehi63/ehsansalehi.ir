@@ -112,11 +112,12 @@ const StatCard = ({ label, value, color }: { label: string; value: number; color
 // ============ MAIN ADMIN PAGE ============
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'projects' | 'blog' | 'users' | 'courses'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'traffic' | 'projects' | 'blog' | 'users' | 'courses'>('dashboard');
   const [loading, setLoading] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [stats, setStats] = useState({ totalUsers: 0, totalProjects: 0, totalPosts: 0, totalSales: 0, revenue: 0 });
+  const [trafficData, setTrafficData] = useState<any>(null);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [projectForm, setProjectForm] = useState({ title: '', desc: '', tech: '', link: '#', image_url: '' });
   const [uploading, setUploading] = useState(false);
@@ -143,17 +144,20 @@ export default function AdminPage() {
     const token = localStorage.getItem('admin_token') || localStorage.getItem('token');
     const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {};
     try {
-      const [projectsRes, usersRes, statsRes] = await Promise.all([
+      const [projectsRes, usersRes, statsRes, trafficRes] = await Promise.all([
         fetch('/api/projects', { headers }),
         fetch('/api/admin/users', { headers }),
         fetch('/api/admin/stats', { headers }),
+        fetch('/api/admin/traffic-ai', { headers }),
       ]);
       const projectsData = await projectsRes.json();
       const usersData = await usersRes.json();
       const statsData = await statsRes.json();
+      const trafficJson = await trafficRes.json();
       if (projectsData.success) setProjects(projectsData.data);
       if (usersData.success) setUsers(usersData.data);
       if (statsData.success) setStats(statsData.data);
+      if (trafficJson.success) setTrafficData(trafficJson);
     } catch (error) {
       toast.error('خطا در دریافت داده‌ها');
     }
@@ -294,6 +298,7 @@ export default function AdminPage() {
 
   const tabs = [
     { id: 'dashboard', label: 'داشبورد', icon: BarChart3 },
+    { id: 'traffic', label: '🚀 رشد بازدید و سئو', icon: BarChart3 },
     { id: 'projects', label: 'پروژه‌ها', icon: FolderOpen },
     { id: 'blog', label: 'وبلاگ', icon: FileText },
     { id: 'users', label: 'کاربران', icon: Users },
@@ -356,6 +361,100 @@ export default function AdminPage() {
               <h3 className="text-xl font-bold mb-2">💰 درآمد کل</h3>
               <p className="text-3xl font-bold text-green-400">{stats.revenue.toLocaleString()} تومان</p>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'traffic' && (
+          <div className="space-y-8 animate-in fade-in duration-300">
+            <div className="bg-gradient-to-r from-orange-600/20 via-zinc-900 to-blue-600/20 p-8 rounded-3xl border border-orange-500/30">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
+                <div>
+                  <span className="bg-orange-500 text-black text-xs font-black px-3 py-1 rounded-full mb-2 inline-block animate-pulse">
+                    ⚡ ماژول هوشمند ترافیک و سئو (VisitTracker + Statsfa)
+                  </span>
+                  <h2 className="text-2xl md:text-3xl font-extrabold text-white">
+                    تحلیل هوشمند آمار بازدید و نقشه راه رشد
+                  </h2>
+                </div>
+                <div className="flex gap-3">
+                  <a
+                    href="/api/admin/resend-all-social?limit=15"
+                    target="_blank"
+                    className="px-5 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-black font-extrabold text-xs transition shadow-lg shadow-orange-500/20 flex items-center gap-2"
+                  >
+                    🚀 بازنشر ۱۵ خبر داغ اخیر روی تلگرام/ایتا
+                  </a>
+                  <a
+                    href="https://search.google.com/search-console"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition border border-white/10 flex items-center gap-2"
+                  >
+                    🔍 ورود به Google Search Console
+                  </a>
+                </div>
+              </div>
+
+              {trafficData?.data ? (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                  <div className="bg-black/50 p-5 rounded-2xl border border-white/10">
+                    <p className="text-xs text-zinc-400 font-medium">بازدیدکنندگان (۷ روز گذشته)</p>
+                    <p className="text-2xl font-black text-amber-400 mt-2">{trafficData.data.visitorsLast7Days} نفر</p>
+                  </div>
+                  <div className="bg-black/50 p-5 rounded-2xl border border-white/10">
+                    <p className="text-xs text-zinc-400 font-medium">تعداد کلیک‌ها و بازدید صفحات</p>
+                    <p className="text-2xl font-black text-blue-400 mt-2">{trafficData.data.pageViewsLast7Days} بازدید</p>
+                  </div>
+                  <div className="bg-black/50 p-5 rounded-2xl border border-white/10">
+                    <p className="text-xs text-zinc-400 font-medium">شناسه ردیاب Statsfa سایت</p>
+                    <p className="text-lg font-mono font-bold text-emerald-400 mt-2">{trafficData.data.statsfaSiteId}</p>
+                  </div>
+                  <div className="bg-black/50 p-5 rounded-2xl border border-white/10">
+                    <p className="text-xs text-zinc-400 font-medium">وضعیت ردیابی VisitTracker</p>
+                    <p className="text-xs font-bold text-emerald-400 mt-2">فعال روی تمام صفحات سایت</p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-zinc-400">در حال دریافت آمار از سرور...</p>
+              )}
+            </div>
+
+            {/* تحلیل چرا آمار پایین است */}
+            {trafficData?.insights && (
+              <div className="grid md:grid-cols-3 gap-6">
+                <div className="md:col-span-1 bg-zinc-900/80 p-6 rounded-3xl border border-white/10 flex flex-col justify-between">
+                  <div>
+                    <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center text-2xl mb-4">
+                      🧐
+                    </div>
+                    <h3 className="text-lg font-bold text-white mb-3">چرا آمار بازدید سایت پایین است؟</h3>
+                    <p className="text-zinc-300 text-xs leading-relaxed whitespace-pre-line font-light">
+                      {trafficData.insights.statusAnalysis}
+                    </p>
+                  </div>
+                  <div className="mt-6 pt-4 border-t border-white/10">
+                    <span className="text-[11px] text-amber-400 font-bold block mb-1">💡 نکته طلایی امروز:</span>
+                    <p className="text-zinc-400 text-[11px]">با فعالیت مستمر و ثبت نقشه سایت، ترافیک سایت شما ظرف ۱۰ روز آینده ۴ برابر خواهد شد.</p>
+                  </div>
+                </div>
+
+                {/* نقشه راه ۷ مرحله ای */}
+                <div className="md:col-span-2 bg-zinc-900/80 p-6 rounded-3xl border border-white/10">
+                  <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                    نقشه راه ۷ مرحله‌ای افزایش فوری بازدید و ترافیک ارگانیک
+                  </h3>
+                  <div className="space-y-3 max-h-[380px] overflow-y-auto pr-2">
+                    {trafficData.insights.sevenStepRoadmap.map((item: any, idx: number) => (
+                      <div key={idx} className="p-4 rounded-2xl bg-black/40 border border-white/5 hover:border-orange-500/30 transition">
+                        <h4 className="text-sm font-bold text-orange-400 mb-1">{item.step}</h4>
+                        <p className="text-xs text-zinc-300 leading-relaxed font-light">{item.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
