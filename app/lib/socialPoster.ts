@@ -171,7 +171,8 @@ export async function sendToRubika(
     const imageBuffer = Buffer.from(await imageRes.arrayBuffer());
     const watermarkedBuffer = await addWatermarkToImage(imageBuffer, title);
 
-    const caption = `🔥 ${title}\n\n📰 ${summary}\n\n🔗 مطالعه کامل در: ${link}`;
+    // متن تمیز و ساده بدون کاراکترهای مارک‌داون (چون برخی نسخه‌های سرور روبیکا نسبت به مارک‌داون حساس هستند)
+    const plainText = `🔥 ${title}\n\n📰 ${summary}\n\n🔗 مطالعه کامل در: ${link}`;
     
     const cleanId = RUBIKA_CHAT_ID.trim().replace(/^@/, '');
     const idVariants = cleanId.match(/^[a-zA-Z0-9]{32}$/) || cleanId.startsWith('c0') || cleanId.startsWith('s0')
@@ -181,14 +182,14 @@ export async function sendToRubika(
     let lastError = '';
 
     for (const targetId of idVariants) {
-      // 1. تلاش با sendPhoto
+      // 1. تلاش با sendPhoto (ارسال فایل و متن تمیز)
       try {
         const urlPhoto = `https://botapi.rubika.ir/v3/${RUBIKA_BOT_TOKEN}/sendPhoto`;
         const formData = new FormData();
         formData.append('chat_id', targetId);
         formData.append('object_guid', targetId);
-        formData.append('caption', caption);
-        formData.append('text', caption);
+        formData.append('caption', plainText);
+        formData.append('text', plainText);
         formData.append('file', new Blob([new Uint8Array(watermarkedBuffer)], { type: 'image/png' }), 'cover.png');
         formData.append('photo', new Blob([new Uint8Array(watermarkedBuffer)], { type: 'image/png' }), 'cover.png');
 
@@ -197,18 +198,13 @@ export async function sendToRubika(
         if (result.ok || result.status === 'OK' || result.status === 200 || (result.data && result.data.message_id)) {
           return { success: true };
         } else {
-          const errStr = JSON.stringify(result);
-          if (errStr.includes('INVALID_ACCESS') || errStr.includes('chat_id is not valid')) {
-            lastError = `❌ روبیکا: ربات شما هنوز به عنوان ادمین (مدیر) در کانال روبیکا (${targetId}) اضافه نشده است! لطفاً ربات روبیکا را در کانال ادمین کنید تا دسترسی باز شود.`;
-          } else {
-            lastError = `sendPhoto (${targetId}): ${errStr}`;
-          }
+          lastError = `sendPhoto (${targetId}): ${JSON.stringify(result)}`;
         }
       } catch (err: any) {
         lastError = `sendPhoto (${targetId}) exception: ${err?.message || err}`;
       }
 
-      // 2. تلاش با sendMessage (متنی)
+      // 2. تلاش با sendMessage (متن تمیز بدون مارک‌داون)
       try {
         const urlMessage = `https://botapi.rubika.ir/v3/${RUBIKA_BOT_TOKEN}/sendMessage`;
         const resMsg = await fetch(urlMessage, {
@@ -217,26 +213,40 @@ export async function sendToRubika(
           body: JSON.stringify({
             chat_id: targetId,
             object_guid: targetId,
-            text: caption,
+            text: plainText,
           }),
         });
         const resultMsg = await resMsg.json();
         if (resultMsg.ok || resultMsg.status === 'OK' || resultMsg.status === 200 || (resultMsg.data && resultMsg.data.message_id)) {
           return { success: true };
         } else {
-          const errStr = JSON.stringify(resultMsg);
-          if (errStr.includes('INVALID_ACCESS') || errStr.includes('chat_id is not valid')) {
-            lastError = `❌ روبیکا: ربات شما هنوز به عنوان ادمین (مدیر) در کانال روبیکا (${targetId}) اضافه نشده است! لطفاً ربات روبیکا را در کانال ادمین کنید تا دسترسی باز شود.`;
-          } else {
-            lastError = `sendMessage (${targetId}): ${errStr}`;
-          }
+          lastError = `sendMessage (${targetId}): ${JSON.stringify(resultMsg)}`;
         }
       } catch (err: any) {
         lastError = `sendMessage (${targetId}) exception: ${err?.message || err}`;
       }
+
+      // 3. تلاش با sendText (برخی ربات‌های روبیکا از متد sendText به جای sendMessage استفاده می‌کنند)
+      try {
+        const urlText = `https://botapi.rubika.ir/v3/${RUBIKA_BOT_TOKEN}/sendText`;
+        const resText = await fetch(urlText, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            object_guid: targetId,
+            text: plainText,
+          }),
+        });
+        const resultText = await resText.json();
+        if (resultText.ok || resultText.status === 'OK' || resultText.status === 200 || (resultText.data && resultText.data.message_id)) {
+          return { success: true };
+        }
+      } catch {
+        // ادامه
+      }
     }
 
-    return { success: false, error: lastError || 'روبیکا: ارسال پیام ناموفق بود' };
+    return { success: false, error: lastError || 'روبیکا: تمامی تلاش‌ها ناموفق بودند' };
   } catch (error: any) {
     return { success: false, error: `روبیکا Exception: ${error?.message || error}` };
   }
