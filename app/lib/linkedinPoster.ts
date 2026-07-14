@@ -13,6 +13,7 @@ export async function sendToLinkedIn(
     return { success: false, error: 'توکن LINKEDIN_ACCESS_TOKEN در متغیرهای Vercel یافت نشد یا خالی است.' };
   }
 
+  // اگر URN فقط عدد باشد یا فرمت ناقص داشته باشد
   if (!authorUrn.startsWith('urn:li:')) {
     if (process.env.LINKEDIN_COMPANY_ID || process.env.LINKEDIN_IS_COMPANY === 'true' || authorUrn.length > 6) {
       authorUrn = `urn:li:organization:${authorUrn}`;
@@ -32,7 +33,7 @@ export async function sendToLinkedIn(
     const imageBuffer = Buffer.from(await imageRes.arrayBuffer());
     const watermarkedBuffer = await addWatermarkToImage(imageBuffer, title);
 
-    // تابع کمکی برای پیدا کردن URN واقعی صاحب توکن (از طریق /v2/userinfo یا /v2/me)
+    // تابع کمکی جهت دریافت دقیق آیدی صاحب توکن
     const getExactPersonalUrn = async (): Promise<string> => {
       try {
         const userInfoRes = await fetch('https://api.linkedin.com/v2/userinfo', {
@@ -54,7 +55,8 @@ export async function sendToLinkedIn(
       } catch {
         // ignore
       }
-      return 'urn:li:person:ZTB9aAQEHQ'; // پیش‌فرض
+      // اگر توکن روی person ست شده بود همان را برگردان، وگرنه پیش‌فرض
+      return authorUrn.includes('person') ? authorUrn : (process.env.LINKEDIN_PERSON_URN || 'urn:li:person:ZTB9aAQEHQ');
     };
 
     // تابع داخلی برای اجرای فرایند ثبت و آپلود و انتشار برای یک URN خاص
@@ -142,12 +144,19 @@ export async function sendToLinkedIn(
 
       if (postRes.ok) {
         const result = await postRes.json();
+        console.log(`✅ لینکدین: پست روی ${targetUrn} با کاور اختصاصی منتشر شد (ID: ${result.id})`);
         return { success: true, asset };
       } else {
         const errorText = await postRes.text();
         return { success: false, error: `ایجاد پست روی (${targetUrn}): HTTP ${postRes.status} - ${errorText}` };
       }
     };
+
+    // اگر کاربر ترجیح می‌دهد مستقیماً روی اکانت شخصی منتشر شود یا اگر URN شخصی ست شده است
+    if (authorUrn.includes('person') || process.env.LINKEDIN_POST_TO_PERSONAL === 'true') {
+      const personalUrn = authorUrn.includes('person') ? authorUrn : await getExactPersonalUrn();
+      return await attemptPostForUrn(personalUrn);
+    }
 
     // تلاش اول با authorUrn اصلی (مثلاً صفحه شرکتی urn:li:organization:135286220)
     const firstAttempt = await attemptPostForUrn(authorUrn);
@@ -156,6 +165,7 @@ export async function sendToLinkedIn(
     // اگر خطای 403 و مربوط به دسترسی سازمان (/author) بود، تلاش دوم روی اکانت شخصی صاحب توکن انجام شود
     if (firstAttempt.error && (firstAttempt.error.includes('processing fields [/author]') || firstAttempt.error.includes('ACCESS_DENIED')) && authorUrn.includes('organization')) {
       const exactPersonalUrn = await getExactPersonalUrn();
+      console.log(`⚠️ لینکدین: دسترسی انتشار روی صفحه شرکتی تایید نشد، انتشار روی پروفایل شخصی (${exactPersonalUrn})...`);
       const secondAttempt = await attemptPostForUrn(exactPersonalUrn);
       if (secondAttempt.success) {
         return { success: true };
