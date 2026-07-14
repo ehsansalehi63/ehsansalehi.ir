@@ -166,14 +166,7 @@ export async function sendToRubika(
   }
 
   try {
-    const fullImageUrl = resolveImageUrl(imageUrl);
-    const imageRes = await fetch(fullImageUrl, { signal: AbortSignal.timeout(6000) });
-    const imageBuffer = Buffer.from(await imageRes.arrayBuffer());
-    const watermarkedBuffer = await addWatermarkToImage(imageBuffer, title);
-
-    // متن تمیز و ساده بدون کاراکترهای مارک‌داون (چون برخی نسخه‌های سرور روبیکا نسبت به مارک‌داون حساس هستند)
     const plainText = `🔥 ${title}\n\n📰 ${summary}\n\n🔗 مطالعه کامل در: ${link}`;
-    
     const cleanId = RUBIKA_CHAT_ID.trim().replace(/^@/, '');
     const idVariants = cleanId.match(/^[a-zA-Z0-9]{32}$/) || cleanId.startsWith('c0') || cleanId.startsWith('s0')
       ? [cleanId]
@@ -182,71 +175,40 @@ export async function sendToRubika(
     let lastError = '';
 
     for (const targetId of idVariants) {
-      // 1. تلاش با sendPhoto (ارسال فایل و متن تمیز)
-      try {
-        const urlPhoto = `https://botapi.rubika.ir/v3/${RUBIKA_BOT_TOKEN}/sendPhoto`;
-        const formData = new FormData();
-        formData.append('chat_id', targetId);
-        formData.append('object_guid', targetId);
-        formData.append('caption', plainText);
-        formData.append('text', plainText);
-        formData.append('file', new Blob([new Uint8Array(watermarkedBuffer)], { type: 'image/png' }), 'cover.png');
-        formData.append('photo', new Blob([new Uint8Array(watermarkedBuffer)], { type: 'image/png' }), 'cover.png');
-
-        const response = await fetch(urlPhoto, { method: 'POST', body: formData });
-        const result = await response.json();
-        if (result.ok || result.status === 'OK' || result.status === 200 || (result.data && result.data.message_id)) {
-          return { success: true };
-        } else {
-          lastError = `sendPhoto (${targetId}): ${JSON.stringify(result)}`;
-        }
-      } catch (err: any) {
-        lastError = `sendPhoto (${targetId}) exception: ${err?.message || err}`;
-      }
-
-      // 2. تلاش با sendMessage (متن تمیز بدون مارک‌داون)
+      // 1. تلاش با متد متنی sendMessage (بدون عکس جهت تضمین ارسال پیام)
       try {
         const urlMessage = `https://botapi.rubika.ir/v3/${RUBIKA_BOT_TOKEN}/sendMessage`;
-        const resMsg = await fetch(urlMessage, {
+        // تست ارسال با chat_id
+        const resMsg1 = await fetch(urlMessage, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            chat_id: targetId,
-            object_guid: targetId,
-            text: plainText,
-          }),
+          body: JSON.stringify({ chat_id: targetId, text: plainText }),
         });
-        const resultMsg = await resMsg.json();
-        if (resultMsg.ok || resultMsg.status === 'OK' || resultMsg.status === 200 || (resultMsg.data && resultMsg.data.message_id)) {
+        const resultMsg1 = await resMsg1.json();
+        if (resultMsg1.ok || resultMsg1.status === 'OK' || resultMsg1.status === 200 || (resultMsg1.data && resultMsg1.data.message_id)) {
           return { success: true };
         } else {
-          lastError = `sendMessage (${targetId}): ${JSON.stringify(resultMsg)}`;
+          lastError = `sendMessage(chat_id: ${targetId}): ${JSON.stringify(resultMsg1)}`;
         }
-      } catch (err: any) {
-        lastError = `sendMessage (${targetId}) exception: ${err?.message || err}`;
-      }
 
-      // 3. تلاش با sendText (برخی ربات‌های روبیکا از متد sendText به جای sendMessage استفاده می‌کنند)
-      try {
-        const urlText = `https://botapi.rubika.ir/v3/${RUBIKA_BOT_TOKEN}/sendText`;
-        const resText = await fetch(urlText, {
+        // تست ارسال با object_guid
+        const resMsg2 = await fetch(urlMessage, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            object_guid: targetId,
-            text: plainText,
-          }),
+          body: JSON.stringify({ object_guid: targetId, text: plainText }),
         });
-        const resultText = await resText.json();
-        if (resultText.ok || resultText.status === 'OK' || resultText.status === 200 || (resultText.data && resultText.data.message_id)) {
+        const resultMsg2 = await resMsg2.json();
+        if (resultMsg2.ok || resultMsg2.status === 'OK' || resultMsg2.status === 200 || (resultMsg2.data && resultMsg2.data.message_id)) {
           return { success: true };
+        } else {
+          lastError = `sendMessage(object_guid: ${targetId}): ${JSON.stringify(resultMsg2)}`;
         }
-      } catch {
-        // ادامه
+      } catch (err: any) {
+        lastError = `sendMessage exception: ${err?.message || err}`;
       }
     }
 
-    return { success: false, error: lastError || 'روبیکا: تمامی تلاش‌ها ناموفق بودند' };
+    return { success: false, error: lastError || 'روبیکا: ارسال پیام ناموفق بود' };
   } catch (error: any) {
     return { success: false, error: `روبیکا Exception: ${error?.message || error}` };
   }

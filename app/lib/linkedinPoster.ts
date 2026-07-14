@@ -13,7 +13,6 @@ export async function sendToLinkedIn(
     return { success: false, error: 'توکن LINKEDIN_ACCESS_TOKEN در متغیرهای Vercel یافت نشد یا خالی است.' };
   }
 
-  // اگر URN فقط عدد باشد (مثلاً آیدی صفحه شرکتی 135286220 یا آیدی شخص)
   if (!authorUrn.startsWith('urn:li:')) {
     if (process.env.LINKEDIN_COMPANY_ID || process.env.LINKEDIN_IS_COMPANY === 'true' || authorUrn.length > 6) {
       authorUrn = `urn:li:organization:${authorUrn}`;
@@ -33,9 +32,33 @@ export async function sendToLinkedIn(
     const imageBuffer = Buffer.from(await imageRes.arrayBuffer());
     const watermarkedBuffer = await addWatermarkToImage(imageBuffer, title);
 
+    // تابع کمکی برای پیدا کردن URN واقعی صاحب توکن (از طریق /v2/userinfo یا /v2/me)
+    const getExactPersonalUrn = async (): Promise<string> => {
+      try {
+        const userInfoRes = await fetch('https://api.linkedin.com/v2/userinfo', {
+          headers: { 'Authorization': `Bearer ${accessToken}` },
+          signal: AbortSignal.timeout(5000),
+        });
+        if (userInfoRes.ok) {
+          const info = await userInfoRes.json();
+          if (info.sub) return `urn:li:person:${info.sub}`;
+        }
+        const meRes = await fetch('https://api.linkedin.com/v2/me', {
+          headers: { 'Authorization': `Bearer ${accessToken}` },
+          signal: AbortSignal.timeout(5000),
+        });
+        if (meRes.ok) {
+          const me = await meRes.json();
+          if (me.id) return `urn:li:person:${me.id}`;
+        }
+      } catch {
+        // ignore
+      }
+      return 'urn:li:person:ZTB9aAQEHQ'; // پیش‌فرض
+    };
+
     // تابع داخلی برای اجرای فرایند ثبت و آپلود و انتشار برای یک URN خاص
     const attemptPostForUrn = async (targetUrn: string): Promise<{ success: boolean; error?: string; asset?: string }> => {
-      // 1. ثبت درخواست آپلود تصویر در لینکدین (registerUpload)
       const registerUrl = 'https://api.linkedin.com/v2/assets?action=registerUpload';
       const registerRes = await fetch(registerUrl, {
         method: 'POST',
@@ -71,7 +94,6 @@ export async function sendToLinkedIn(
         return { success: false, error: `پاسخ نامعتبر از registerUpload روی (${targetUrn})` };
       }
 
-      // 2. آپلود بافر تصویر روی سرور لینکدین
       const uploadImageRes = await fetch(uploadUrl2, {
         method: 'PUT',
         headers: {
@@ -86,7 +108,6 @@ export async function sendToLinkedIn(
         return { success: false, error: `آپلود بافر تصویر روی (${targetUrn}): HTTP ${uploadImageRes.status} - ${errorText}` };
       }
 
-      // 3. ایجاد پست لینکدین (v2/ugcPosts)
       const text = `📰 ${title}\n\n${summary}\n\n🔗 مطالعه کامل در پایگاه اخبار و فناوری احسان صالحی: ${link}\n\n#فناوری #هوش_مصنوعی #رمزارز #امنیت_سایبری #IT #Nextjs #بلاکچین`;
       const postUrl = 'https://api.linkedin.com/v2/ugcPosts';
       const postRes = await fetch(postUrl, {
@@ -121,7 +142,6 @@ export async function sendToLinkedIn(
 
       if (postRes.ok) {
         const result = await postRes.json();
-        console.log(`✅ لینکدین: پست روی ${targetUrn} با کاور اختصاصی منتشر شد (ID: ${result.id})`);
         return { success: true, asset };
       } else {
         const errorText = await postRes.text();
@@ -133,15 +153,14 @@ export async function sendToLinkedIn(
     const firstAttempt = await attemptPostForUrn(authorUrn);
     if (firstAttempt.success) return { success: true };
 
-    // اگر خطای 403 و مربوط به دسترسی سازمان (/author) بود، تلاش دوم به صورت خودکار روی اکانت شخصی (urn:li:person:ZTB9aAQEHQ) انجام شود
-    if (firstAttempt.error && firstAttempt.error.includes('processing fields [/author]') && authorUrn.includes('organization')) {
-      const personalUrn = 'urn:li:person:ZTB9aAQEHQ';
-      console.log(`⚠️ توکن دسترسی انتشار سازمانی (w_organization_social) ندارد، تلاش دوم روی اکانت شخصی (${personalUrn})...`);
-      const secondAttempt = await attemptPostForUrn(personalUrn);
+    // اگر خطای 403 و مربوط به دسترسی سازمان (/author) بود، تلاش دوم روی اکانت شخصی صاحب توکن انجام شود
+    if (firstAttempt.error && (firstAttempt.error.includes('processing fields [/author]') || firstAttempt.error.includes('ACCESS_DENIED')) && authorUrn.includes('organization')) {
+      const exactPersonalUrn = await getExactPersonalUrn();
+      const secondAttempt = await attemptPostForUrn(exactPersonalUrn);
       if (secondAttempt.success) {
         return { success: true };
       }
-      return { success: false, error: `سازمانی ناموفق (${firstAttempt.error}) | شخصی نیز ناموفق: ${secondAttempt.error}` };
+      return { success: false, error: `سازمانی ناموفق (${firstAttempt.error}) | شخصی (${exactPersonalUrn}) نیز ناموفق: ${secondAttempt.error}` };
     }
 
     return firstAttempt;
