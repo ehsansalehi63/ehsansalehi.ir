@@ -174,41 +174,59 @@ export async function sendToRubika(
 
     const caption = `🔥 ${title}\n\n📰 ${summary}\n\n🔗 مطالعه کامل در: ${link}`;
     
-    // 1. تلاش اول: ارسال تصویر با sendPhoto
-    try {
-      const urlPhoto = `https://botapi.rubika.ir/v3/${RUBIKA_BOT_TOKEN}/sendPhoto`;
-      const formData = new FormData();
-      formData.append('chat_id', RUBIKA_CHAT_ID);
-      formData.append('caption', caption);
-      formData.append('file', new Blob([new Uint8Array(watermarkedBuffer)], { type: 'image/png' }), 'cover.png');
-      formData.append('photo', new Blob([new Uint8Array(watermarkedBuffer)], { type: 'image/png' }), 'cover.png');
+    const cleanId = RUBIKA_CHAT_ID.replace(/^@/, '');
+    const idVariants = [RUBIKA_CHAT_ID, cleanId, `@${cleanId}`];
+    const uniqueIds = Array.from(new Set(idVariants));
 
-      const response = await fetch(urlPhoto, { method: 'POST', body: formData });
-      const result = await response.json();
+    let lastError = '';
 
-      if (result.ok || result.status === 'OK' || result.status === 200) {
-        return { success: true };
+    for (const targetId of uniqueIds) {
+      // 1. تلاش با sendPhoto
+      try {
+        const urlPhoto = `https://botapi.rubika.ir/v3/${RUBIKA_BOT_TOKEN}/sendPhoto`;
+        const formData = new FormData();
+        formData.append('chat_id', targetId);
+        formData.append('object_guid', targetId);
+        formData.append('caption', caption);
+        formData.append('text', caption);
+        formData.append('file', new Blob([new Uint8Array(watermarkedBuffer)], { type: 'image/png' }), 'cover.png');
+        formData.append('photo', new Blob([new Uint8Array(watermarkedBuffer)], { type: 'image/png' }), 'cover.png');
+
+        const response = await fetch(urlPhoto, { method: 'POST', body: formData });
+        const result = await response.json();
+        if (result.ok || result.status === 'OK' || result.status === 200 || (result.data && result.data.message_id)) {
+          return { success: true };
+        } else {
+          lastError = `sendPhoto (${targetId}): ${JSON.stringify(result)}`;
+        }
+      } catch (err: any) {
+        lastError = `sendPhoto (${targetId}) exception: ${err?.message || err}`;
       }
-    } catch {
-      // ادامه به تلاش دوم (sendMessage)
+
+      // 2. تلاش با sendMessage (متنی)
+      try {
+        const urlMessage = `https://botapi.rubika.ir/v3/${RUBIKA_BOT_TOKEN}/sendMessage`;
+        const resMsg = await fetch(urlMessage, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: targetId,
+            object_guid: targetId,
+            text: caption,
+          }),
+        });
+        const resultMsg = await resMsg.json();
+        if (resultMsg.ok || resultMsg.status === 'OK' || resultMsg.status === 200 || (resultMsg.data && resultMsg.data.message_id)) {
+          return { success: true };
+        } else {
+          lastError = `sendMessage (${targetId}): ${JSON.stringify(resultMsg)}`;
+        }
+      } catch (err: any) {
+        lastError = `sendMessage (${targetId}) exception: ${err?.message || err}`;
+      }
     }
 
-    // 2. تلاش دوم (فال‌بک مطمئن): اگر سرور عکس روبیکا SERVER_ERROR داد، پیام متنی کامل (sendMessage) ارسال شود
-    const urlMessage = `https://botapi.rubika.ir/v3/${RUBIKA_BOT_TOKEN}/sendMessage`;
-    const resMsg = await fetch(urlMessage, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: RUBIKA_CHAT_ID,
-        text: caption,
-      }),
-    });
-    const resultMsg = await resMsg.json();
-    if (resultMsg.ok || resultMsg.status === 'OK' || resultMsg.status === 200) {
-      return { success: true };
-    }
-
-    return { success: false, error: `روبیکا API Error: ${JSON.stringify(resultMsg)}` };
+    return { success: false, error: lastError || 'روبیکا: تمامی فرمت‌های شناسه کانال ناموفق بودند' };
   } catch (error: any) {
     return { success: false, error: `روبیکا Exception: ${error?.message || error}` };
   }
