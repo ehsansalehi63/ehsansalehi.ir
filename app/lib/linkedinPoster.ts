@@ -13,9 +13,13 @@ export async function sendToLinkedIn(
     return { success: false, error: 'توکن LINKEDIN_ACCESS_TOKEN در متغیرهای Vercel یافت نشد یا خالی است.' };
   }
 
-  // اگر URN با urn:li: شروع نشود، پیش‌فرض urn:li:person: اضافه شود
+  // اگر URN فقط عدد باشد (مثلاً آیدی صفحه شرکتی 10123456 یا آیدی شخص)
   if (!authorUrn.startsWith('urn:li:')) {
-    authorUrn = `urn:li:person:${authorUrn}`;
+    if (process.env.LINKEDIN_COMPANY_ID || process.env.LINKEDIN_IS_COMPANY === 'true') {
+      authorUrn = `urn:li:organization:${authorUrn}`;
+    } else {
+      authorUrn = `urn:li:person:${authorUrn}`;
+    }
   }
 
   try {
@@ -54,7 +58,7 @@ export async function sendToLinkedIn(
 
     if (!registerRes.ok) {
       const errorText = await registerRes.text();
-      return { success: false, error: `لینکدین ثبت آپلود (registerUpload): HTTP ${registerRes.status} - ${errorText}` };
+      return { success: false, error: `لینکدین ثبت آپلود (registerUpload روی ${authorUrn}): HTTP ${registerRes.status} - ${errorText}` };
     }
 
     const registerData = await registerRes.json();
@@ -81,7 +85,7 @@ export async function sendToLinkedIn(
     }
 
     // 3. ایجاد پست لینکدین (v2/ugcPosts)
-    const text = `📰 ${title}\n\n${summary}\n\n🔗 مطالعه کامل در پایگاه اخبار و فناوری: ${link}\n\n#فناوری #هوش_مصنوعی #رمزارز #امنیت_سایبری #IT #Nextjs`;
+    const text = `📰 ${title}\n\n${summary}\n\n🔗 مطالعه کامل در پایگاه اخبار و فناوری احسان صالحی: ${link}\n\n#فناوری #هوش_مصنوعی #رمزارز #امنیت_سایبری #IT #Nextjs #بلاکچین`;
     const postUrl = 'https://api.linkedin.com/v2/ugcPosts';
     const postRes = await fetch(postUrl, {
       method: 'POST',
@@ -115,11 +119,11 @@ export async function sendToLinkedIn(
 
     if (postRes.ok) {
       const result = await postRes.json();
-      console.log('✅ لینکدین: پست با کاور اختصاصی با موفقیت منتشر شد (ID:', result.id, ')');
+      console.log(`✅ لینکدین: پست روی ${authorUrn} با کاور اختصاصی منتشر شد (ID: ${result.id})`);
       return { success: true };
     } else {
       const errorText = await postRes.text();
-      return { success: false, error: `لینکدین ایجاد پست (ugcPosts): HTTP ${postRes.status} - ${errorText}` };
+      return { success: false, error: `لینکدین ایجاد پست روی (${authorUrn}): HTTP ${postRes.status} - ${errorText}` };
     }
   } catch (error: any) {
     return { success: false, error: `لینکدین Exception: ${error?.message || error}` };
