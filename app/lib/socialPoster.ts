@@ -86,21 +86,32 @@ export async function sendToBale(
     const watermarkedBuffer = await addWatermarkToImage(imageBuffer, title);
 
     const caption = `🔥 ${title}\n\n📰 ${summary}\n\n🔗 مطالعه کامل در: ${link}`;
-    const url = `https://tumbleweed.bale.ai/bot${BALE_BOT_TOKEN}/sendPhoto`;
+    
+    // تلاش با آدرس‌های متعدد API بله جهت عبور از محدودیت‌های شبکه ابری Vercel
+    const baleDomains = ['https://tapi.bale.ai', 'https://api.bale.ai', 'https://tumbleweed.bale.ai'];
+    let lastErr = '';
 
-    const formData = new FormData();
-    formData.append('chat_id', BALE_CHAT_ID);
-    formData.append('caption', caption);
-    formData.append('photo', new Blob([new Uint8Array(watermarkedBuffer)], { type: 'image/png' }), 'cover.png');
+    for (const domain of baleDomains) {
+      try {
+        const url = `${domain}/bot${BALE_BOT_TOKEN}/sendPhoto`;
+        const formData = new FormData();
+        formData.append('chat_id', BALE_CHAT_ID);
+        formData.append('caption', caption);
+        formData.append('photo', new Blob([new Uint8Array(watermarkedBuffer)], { type: 'image/png' }), 'cover.png');
 
-    const response = await fetch(url, { method: 'POST', body: formData });
-    const result = await response.json();
-
-    if (result.ok) {
-      return { success: true };
-    } else {
-      return { success: false, error: `بله API Error: ${result.description}` };
+        const response = await fetch(url, { method: 'POST', body: formData });
+        const result = await response.json();
+        if (result.ok) {
+          return { success: true };
+        } else {
+          lastErr = `${domain}: ${result.description}`;
+        }
+      } catch (err: any) {
+        lastErr = `${domain} Exception: ${err?.message || err}`;
+      }
     }
+
+    return { success: false, error: lastErr || 'تمام آدرس‌های بله شکست خوردند' };
   } catch (error: any) {
     return { success: false, error: `بله Exception: ${error?.message || error}` };
   }
@@ -163,21 +174,41 @@ export async function sendToRubika(
 
     const caption = `🔥 ${title}\n\n📰 ${summary}\n\n🔗 مطالعه کامل در: ${link}`;
     
-    // تلاش برای ارسال روی روبیکا از طریق botapi
-    const url = `https://botapi.rubika.ir/v3/${RUBIKA_BOT_TOKEN}/sendPhoto`;
-    const formData = new FormData();
-    formData.append('chat_id', RUBIKA_CHAT_ID);
-    formData.append('caption', caption);
-    formData.append('photo', new Blob([new Uint8Array(watermarkedBuffer)], { type: 'image/png' }), 'cover.png');
+    // 1. تلاش اول: ارسال تصویر با sendPhoto
+    try {
+      const urlPhoto = `https://botapi.rubika.ir/v3/${RUBIKA_BOT_TOKEN}/sendPhoto`;
+      const formData = new FormData();
+      formData.append('chat_id', RUBIKA_CHAT_ID);
+      formData.append('caption', caption);
+      formData.append('file', new Blob([new Uint8Array(watermarkedBuffer)], { type: 'image/png' }), 'cover.png');
+      formData.append('photo', new Blob([new Uint8Array(watermarkedBuffer)], { type: 'image/png' }), 'cover.png');
 
-    const response = await fetch(url, { method: 'POST', body: formData });
-    const result = await response.json();
+      const response = await fetch(urlPhoto, { method: 'POST', body: formData });
+      const result = await response.json();
 
-    if (result.ok || result.status === 'OK' || result.status === 200) {
-      return { success: true };
-    } else {
-      return { success: false, error: `روبیکا API Error: ${JSON.stringify(result)}` };
+      if (result.ok || result.status === 'OK' || result.status === 200) {
+        return { success: true };
+      }
+    } catch {
+      // ادامه به تلاش دوم (sendMessage)
     }
+
+    // 2. تلاش دوم (فال‌بک مطمئن): اگر سرور عکس روبیکا SERVER_ERROR داد، پیام متنی کامل (sendMessage) ارسال شود
+    const urlMessage = `https://botapi.rubika.ir/v3/${RUBIKA_BOT_TOKEN}/sendMessage`;
+    const resMsg = await fetch(urlMessage, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: RUBIKA_CHAT_ID,
+        text: caption,
+      }),
+    });
+    const resultMsg = await resMsg.json();
+    if (resultMsg.ok || resultMsg.status === 'OK' || resultMsg.status === 200) {
+      return { success: true };
+    }
+
+    return { success: false, error: `روبیکا API Error: ${JSON.stringify(resultMsg)}` };
   } catch (error: any) {
     return { success: false, error: `روبیکا Exception: ${error?.message || error}` };
   }

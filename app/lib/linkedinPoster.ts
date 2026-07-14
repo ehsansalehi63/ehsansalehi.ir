@@ -29,9 +29,9 @@ export async function sendToLinkedIn(
     const imageBuffer = Buffer.from(await imageRes.arrayBuffer());
     const watermarkedBuffer = await addWatermarkToImage(imageBuffer, title);
 
-    // 1. ثبت درخواست آپلود تصویر در لینکدین (v2/images)
-    const uploadUrl = 'https://api.linkedin.com/v2/images?action=upload';
-    const uploadRes = await fetch(uploadUrl, {
+    // 1. ثبت درخواست آپلود تصویر در لینکدین (registerUpload)
+    const registerUrl = 'https://api.linkedin.com/v2/assets?action=registerUpload';
+    const registerRes = await fetch(registerUrl, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${accessToken}`,
@@ -39,21 +39,30 @@ export async function sendToLinkedIn(
         'X-Restli-Protocol-Version': '2.0.0',
       },
       body: JSON.stringify({
-        owner: authorUrn,
+        registerUploadRequest: {
+          recipes: ['urn:li:digitalmediaRecipe:feedshare-image'],
+          owner: authorUrn,
+          serviceRelationships: [
+            {
+              relationshipType: 'OWNER',
+              identifier: 'urn:li:userGeneratedContent'
+            }
+          ]
+        }
       }),
     });
 
-    if (!uploadRes.ok) {
-      const errorText = await uploadRes.text();
-      return { success: false, error: `لینکدین آپلود تصویر (v2/images): HTTP ${uploadRes.status} - ${errorText}` };
+    if (!registerRes.ok) {
+      const errorText = await registerRes.text();
+      return { success: false, error: `لینکدین ثبت آپلود (registerUpload): HTTP ${registerRes.status} - ${errorText}` };
     }
 
-    const uploadData = await uploadRes.json();
-    const uploadUrl2 = uploadData.uploadUrl;
-    const asset = uploadData.image;
+    const registerData = await registerRes.json();
+    const uploadUrl2 = registerData.value?.uploadMechanism?.['com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest']?.uploadUrl;
+    const asset = registerData.value?.asset;
 
     if (!uploadUrl2 || !asset) {
-      return { success: false, error: `لینکدین: پاسخ نامعتبر از v2/images: ${JSON.stringify(uploadData)}` };
+      return { success: false, error: `لینکدین پاسخ نامعتبر از registerUpload: ${JSON.stringify(registerData)}` };
     }
 
     // 2. آپلود بافر تصویر روی سرور لینکدین
@@ -106,7 +115,7 @@ export async function sendToLinkedIn(
 
     if (postRes.ok) {
       const result = await postRes.json();
-      console.log('✅ لینکدین: پست با کاور زیبا با موفقیت منتشر شد (ID:', result.id, ')');
+      console.log('✅ لینکدین: پست با کاور اختصاصی با موفقیت منتشر شد (ID:', result.id, ')');
       return { success: true };
     } else {
       const errorText = await postRes.text();
