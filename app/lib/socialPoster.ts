@@ -87,7 +87,6 @@ export async function sendToBale(
 
     const caption = `🔥 ${title}\n\n📰 ${summary}\n\n🔗 مطالعه کامل در: ${link}`;
     
-    // تلاش با آدرس‌های متعدد API بله جهت عبور از محدودیت‌های شبکه ابری Vercel
     const baleDomains = ['https://tapi.bale.ai', 'https://api.bale.ai', 'https://tumbleweed.bale.ai'];
     let lastErr = '';
 
@@ -174,13 +173,14 @@ export async function sendToRubika(
 
     const caption = `🔥 ${title}\n\n📰 ${summary}\n\n🔗 مطالعه کامل در: ${link}`;
     
-    const cleanId = RUBIKA_CHAT_ID.replace(/^@/, '');
-    const idVariants = [RUBIKA_CHAT_ID, cleanId, `@${cleanId}`];
-    const uniqueIds = Array.from(new Set(idVariants));
+    const cleanId = RUBIKA_CHAT_ID.trim().replace(/^@/, '');
+    const idVariants = cleanId.match(/^[a-zA-Z0-9]{32}$/) || cleanId.startsWith('c0') || cleanId.startsWith('s0')
+      ? [cleanId]
+      : [cleanId, `@${cleanId}`];
 
     let lastError = '';
 
-    for (const targetId of uniqueIds) {
+    for (const targetId of idVariants) {
       // 1. تلاش با sendPhoto
       try {
         const urlPhoto = `https://botapi.rubika.ir/v3/${RUBIKA_BOT_TOKEN}/sendPhoto`;
@@ -197,7 +197,12 @@ export async function sendToRubika(
         if (result.ok || result.status === 'OK' || result.status === 200 || (result.data && result.data.message_id)) {
           return { success: true };
         } else {
-          lastError = `sendPhoto (${targetId}): ${JSON.stringify(result)}`;
+          const errStr = JSON.stringify(result);
+          if (errStr.includes('INVALID_ACCESS') || errStr.includes('chat_id is not valid')) {
+            lastError = `❌ روبیکا: ربات شما هنوز به عنوان ادمین (مدیر) در کانال روبیکا (${targetId}) اضافه نشده است! لطفاً ربات روبیکا را در کانال ادمین کنید تا دسترسی باز شود.`;
+          } else {
+            lastError = `sendPhoto (${targetId}): ${errStr}`;
+          }
         }
       } catch (err: any) {
         lastError = `sendPhoto (${targetId}) exception: ${err?.message || err}`;
@@ -219,14 +224,19 @@ export async function sendToRubika(
         if (resultMsg.ok || resultMsg.status === 'OK' || resultMsg.status === 200 || (resultMsg.data && resultMsg.data.message_id)) {
           return { success: true };
         } else {
-          lastError = `sendMessage (${targetId}): ${JSON.stringify(resultMsg)}`;
+          const errStr = JSON.stringify(resultMsg);
+          if (errStr.includes('INVALID_ACCESS') || errStr.includes('chat_id is not valid')) {
+            lastError = `❌ روبیکا: ربات شما هنوز به عنوان ادمین (مدیر) در کانال روبیکا (${targetId}) اضافه نشده است! لطفاً ربات روبیکا را در کانال ادمین کنید تا دسترسی باز شود.`;
+          } else {
+            lastError = `sendMessage (${targetId}): ${errStr}`;
+          }
         }
       } catch (err: any) {
         lastError = `sendMessage (${targetId}) exception: ${err?.message || err}`;
       }
     }
 
-    return { success: false, error: lastError || 'روبیکا: تمامی فرمت‌های شناسه کانال ناموفق بودند' };
+    return { success: false, error: lastError || 'روبیکا: ارسال پیام ناموفق بود' };
   } catch (error: any) {
     return { success: false, error: `روبیکا Exception: ${error?.message || error}` };
   }
