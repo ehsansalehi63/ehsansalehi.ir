@@ -6,10 +6,13 @@ const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
 const TELEGRAM_CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID || '';
 
 const BALE_BOT_TOKEN = process.env.BALE_BOT_TOKEN || '';
-const BALE_CHAT_ID = process.env.BALE_CHAT_ID || '';
+const BALE_CHAT_ID = process.env.BALE_CHANNEL_ID || process.env.BALE_CHAT_ID || '';
 
 const EITAA_BOT_TOKEN = process.env.EITAA_BOT_TOKEN || '';
-const EITAA_CHAT_ID = process.env.EITAA_CHAT_ID || '';
+const EITAA_CHAT_ID = process.env.EITAA_CHANNEL_ID || process.env.EITAA_CHAT_ID || '';
+
+const RUBIKA_BOT_TOKEN = process.env.RUBIKA_BOT_TOKEN || '';
+const RUBIKA_CHAT_ID = process.env.RUBIKA_CHANNEL_ID || process.env.RUBIKA_CHAT_ID || '';
 
 const DEFAULT_IMAGE = 'https://ehsansalehi.ir/images/og-image.jpg';
 
@@ -29,18 +32,16 @@ export async function sendToTelegram(
   imageUrl: string | null,
   link: string,
   sourceName: string
-): Promise<boolean> {
+): Promise<{ success: boolean; error?: string }> {
   if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHANNEL_ID) {
-    console.log('⏭️ تلگرام: توکن یا کانال تنظیم نشده است.');
-    return false;
+    return { success: false, error: 'TELEGRAM_BOT_TOKEN یا TELEGRAM_CHANNEL_ID تنظیم نشده است' };
   }
 
   try {
     const fullImageUrl = resolveImageUrl(imageUrl);
     const imageRes = await fetch(fullImageUrl, { signal: AbortSignal.timeout(6000) });
     if (!imageRes.ok) {
-      console.error(`❌ تلگرام: خطا در دریافت تصویر (${imageRes.status})`);
-      return false;
+      return { success: false, error: `خطا در دانلود عکس از ${fullImageUrl} (${imageRes.status})` };
     }
     const imageBuffer = Buffer.from(await imageRes.arrayBuffer());
     const watermarkedBuffer = await addWatermarkToImage(imageBuffer, title);
@@ -58,15 +59,12 @@ export async function sendToTelegram(
     const result = await response.json();
 
     if (result.ok) {
-      console.log('✅ تلگرام: پست با کاور اختصاصی ارسال شد.');
-      return true;
+      return { success: true };
     } else {
-      console.error('❌ تلگرام API Error:', result.description);
-      return false;
+      return { success: false, error: `تلگرام API Error: ${result.description}` };
     }
   } catch (error: any) {
-    console.error('❌ تلگرام Exception:', error?.message || error);
-    return false;
+    return { success: false, error: `تلگرام Exception: ${error?.message || error}` };
   }
 }
 
@@ -76,10 +74,9 @@ export async function sendToBale(
   imageUrl: string | null,
   link: string,
   sourceName: string
-): Promise<boolean> {
+): Promise<{ success: boolean; error?: string }> {
   if (!BALE_BOT_TOKEN || !BALE_CHAT_ID) {
-    console.log('⏭️ بله: توکن (BALE_BOT_TOKEN) یا شناسه چت (BALE_CHAT_ID) تنظیم نشده است.');
-    return false;
+    return { success: false, error: 'BALE_BOT_TOKEN یا BALE_CHANNEL_ID تنظیم نشده است' };
   }
 
   try {
@@ -100,15 +97,12 @@ export async function sendToBale(
     const result = await response.json();
 
     if (result.ok) {
-      console.log('✅ بله: پست با کاور اختصاصی ارسال شد.');
-      return true;
+      return { success: true };
     } else {
-      console.error('❌ بله API Error:', result.description);
-      return false;
+      return { success: false, error: `بله API Error: ${result.description}` };
     }
   } catch (error: any) {
-    console.error('❌ بله Exception:', error?.message || error);
-    return false;
+    return { success: false, error: `بله Exception: ${error?.message || error}` };
   }
 }
 
@@ -118,10 +112,9 @@ export async function sendToEitaa(
   imageUrl: string | null,
   link: string,
   sourceName: string
-): Promise<boolean> {
+): Promise<{ success: boolean; error?: string }> {
   if (!EITAA_BOT_TOKEN || !EITAA_CHAT_ID) {
-    console.log('⏭️ ایتا: توکن (EITAA_BOT_TOKEN) یا شناسه چت (EITAA_CHAT_ID) تنظیم نشده است.');
-    return false;
+    return { success: false, error: 'EITAA_BOT_TOKEN یا EITAA_CHANNEL_ID تنظیم نشده است' };
   }
 
   try {
@@ -142,21 +135,52 @@ export async function sendToEitaa(
     const result = await response.json();
 
     if (result.ok || result.success) {
-      console.log('✅ ایتا: پست با کاور اختصاصی ارسال شد.');
-      return true;
+      return { success: true };
     } else {
-      console.error('❌ ایتا API Error:', result.description || result.error);
-      return false;
+      return { success: false, error: `ایتا API Error: ${JSON.stringify(result)}` };
     }
   } catch (error: any) {
-    console.error('❌ ایتا Exception:', error?.message || error);
-    return false;
+    return { success: false, error: `ایتا Exception: ${error?.message || error}` };
   }
 }
 
-export async function sendToRubika(...args: any[]): Promise<boolean> {
-  console.log('⏭️ روبیکا: وب‌هوک و توکن رسمی عمومی ندارد.');
-  return false;
+export async function sendToRubika(
+  title: string,
+  summary: string,
+  imageUrl: string | null,
+  link: string,
+  sourceName: string
+): Promise<{ success: boolean; error?: string }> {
+  if (!RUBIKA_BOT_TOKEN || !RUBIKA_CHAT_ID) {
+    return { success: false, error: 'RUBIKA_BOT_TOKEN یا RUBIKA_CHANNEL_ID تنظیم نشده است' };
+  }
+
+  try {
+    const fullImageUrl = resolveImageUrl(imageUrl);
+    const imageRes = await fetch(fullImageUrl, { signal: AbortSignal.timeout(6000) });
+    const imageBuffer = Buffer.from(await imageRes.arrayBuffer());
+    const watermarkedBuffer = await addWatermarkToImage(imageBuffer, title);
+
+    const caption = `🔥 ${title}\n\n📰 ${summary}\n\n🔗 مطالعه کامل در: ${link}`;
+    
+    // تلاش برای ارسال روی روبیکا از طریق botapi
+    const url = `https://botapi.rubika.ir/v3/${RUBIKA_BOT_TOKEN}/sendPhoto`;
+    const formData = new FormData();
+    formData.append('chat_id', RUBIKA_CHAT_ID);
+    formData.append('caption', caption);
+    formData.append('photo', new Blob([new Uint8Array(watermarkedBuffer)], { type: 'image/png' }), 'cover.png');
+
+    const response = await fetch(url, { method: 'POST', body: formData });
+    const result = await response.json();
+
+    if (result.ok || result.status === 'OK' || result.status === 200) {
+      return { success: true };
+    } else {
+      return { success: false, error: `روبیکا API Error: ${JSON.stringify(result)}` };
+    }
+  } catch (error: any) {
+    return { success: false, error: `روبیکا Exception: ${error?.message || error}` };
+  }
 }
 
 export async function postNewsToAllChannels(
@@ -166,22 +190,36 @@ export async function postNewsToAllChannels(
   imageUrl: string | null,
   link: string,
   sourceName: string = 'پایگاه اخبار فناوری'
-): Promise<{ success: boolean; results: Record<string, boolean> }> {
+): Promise<{ success: boolean; results: Record<string, boolean>; errors: Record<string, string> }> {
+  const tg = await sendToTelegram(title, summary, imageUrl, link, sourceName);
+  const li = await sendToLinkedIn(title, summary, imageUrl, link);
+  const bl = await sendToBale(title, summary, imageUrl, link, sourceName);
+  const et = await sendToEitaa(title, summary, imageUrl, link, sourceName);
+  const rb = await sendToRubika(title, summary, imageUrl, link, sourceName);
+
   const results: Record<string, boolean> = {
-    telegram: await sendToTelegram(title, summary, imageUrl, link, sourceName),
-    linkedin: await sendToLinkedIn(title, summary, imageUrl, link),
-    bale: await sendToBale(title, summary, imageUrl, link, sourceName),
-    eitaa: await sendToEitaa(title, summary, imageUrl, link, sourceName),
+    telegram: tg.success,
+    linkedin: li.success,
+    bale: bl.success,
+    eitaa: et.success,
+    rubika: rb.success,
   };
 
-  const success = results.telegram || results.linkedin || results.bale || results.eitaa;
+  const errors: Record<string, string> = {};
+  if (!tg.success && tg.error) errors.telegram = tg.error;
+  if (!li.success && li.error) errors.linkedin = li.error;
+  if (!bl.success && bl.error) errors.bale = bl.error;
+  if (!et.success && et.error) errors.eitaa = et.error;
+  if (!rb.success && rb.error) errors.rubika = rb.error;
+
+  const success = Object.values(results).some((val) => val === true);
 
   await pool.execute(
     `UPDATE news_posts 
      SET posted_to_social = ? 
      WHERE id = ?`,
-    [JSON.stringify(results), newsId]
+    [JSON.stringify({ results, errors }), newsId]
   );
 
-  return { success, results };
+  return { success, results, errors };
 }

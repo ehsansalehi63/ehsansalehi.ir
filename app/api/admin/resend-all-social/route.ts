@@ -54,7 +54,8 @@ export async function GET(request: NextRequest) {
       report.push({
         id: news.id,
         title: news.title,
-        channels: result.results
+        channels: result.results,
+        errors: result.errors,
       });
     }
 
@@ -63,7 +64,7 @@ export async function GET(request: NextRequest) {
       total: newsList.length,
       successCount,
       report,
-      message: `🎉 عملیات تولید کاور جدید اختصاصی و بازنشر ${successCount} از ${newsList.length} خبر روی شبکه‌های اجتماعی (تلگرام، لینکدین، ایتا، بله) انجام شد.`
+      message: `🎉 عملیات تولید کاور جدید اختصاصی و بازنشر ${successCount} از ${newsList.length} خبر روی شبکه‌های اجتماعی انجام شد.`
     });
   } catch (error: any) {
     console.error('❌ خطا در بازنشر اخبار:', error);

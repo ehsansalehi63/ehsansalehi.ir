@@ -5,13 +5,17 @@ export async function sendToLinkedIn(
   summary: string,
   imageUrl: string | null,
   link: string
-): Promise<boolean> {
+): Promise<{ success: boolean; error?: string }> {
   const accessToken = process.env.LINKEDIN_ACCESS_TOKEN || '';
-  const authorUrn = process.env.LINKEDIN_AUTHOR_URN || 'urn:li:person:ZTB9aAQEHQ';
+  let authorUrn = (process.env.LINKEDIN_AUTHOR_URN || 'urn:li:person:ZTB9aAQEHQ').trim();
 
   if (!accessToken) {
-    console.log('⏭️ لینکدین: توکن (LINKEDIN_ACCESS_TOKEN) تنظیم نشده است.');
-    return false;
+    return { success: false, error: 'توکن LINKEDIN_ACCESS_TOKEN در متغیرهای Vercel یافت نشد یا خالی است.' };
+  }
+
+  // اگر URN با urn:li: شروع نشود، پیش‌فرض urn:li:person: اضافه شود
+  if (!authorUrn.startsWith('urn:li:')) {
+    authorUrn = `urn:li:person:${authorUrn}`;
   }
 
   try {
@@ -20,13 +24,12 @@ export async function sendToLinkedIn(
 
     const imageRes = await fetch(imageUrlFinal, { signal: AbortSignal.timeout(6000) });
     if (!imageRes.ok) {
-      console.error(`❌ لینکدین: خطا در دانلود تصویر اصلی (${imageRes.status})`);
-      return false;
+      return { success: false, error: `خطا در دانلود بافر تصویر از آدرس ${imageUrlFinal} (HTTP ${imageRes.status})` };
     }
     const imageBuffer = Buffer.from(await imageRes.arrayBuffer());
     const watermarkedBuffer = await addWatermarkToImage(imageBuffer, title);
 
-    // 1. ثبت درخواست آپلود تصویر در لینکدین
+    // 1. ثبت درخواست آپلود تصویر در لینکدین (v2/images)
     const uploadUrl = 'https://api.linkedin.com/v2/images?action=upload';
     const uploadRes = await fetch(uploadUrl, {
       method: 'POST',
@@ -36,19 +39,22 @@ export async function sendToLinkedIn(
         'X-Restli-Protocol-Version': '2.0.0',
       },
       body: JSON.stringify({
-        owner: authorUrn.startsWith('urn:li:') ? authorUrn : `urn:li:person:${authorUrn}`,
+        owner: authorUrn,
       }),
     });
 
     if (!uploadRes.ok) {
       const errorText = await uploadRes.text();
-      console.error('❌ لینکدین: خطا در دریافت آدرس آپلود تصویر:', errorText);
-      return false;
+      return { success: false, error: `لینکدین آپلود تصویر (v2/images): HTTP ${uploadRes.status} - ${errorText}` };
     }
 
     const uploadData = await uploadRes.json();
     const uploadUrl2 = uploadData.uploadUrl;
     const asset = uploadData.image;
+
+    if (!uploadUrl2 || !asset) {
+      return { success: false, error: `لینکدین: پاسخ نامعتبر از v2/images: ${JSON.stringify(uploadData)}` };
+    }
 
     // 2. آپلود بافر تصویر روی سرور لینکدین
     const uploadImageRes = await fetch(uploadUrl2, {
@@ -62,11 +68,10 @@ export async function sendToLinkedIn(
 
     if (!uploadImageRes.ok) {
       const errorText = await uploadImageRes.text();
-      console.error('❌ لینکدین: خطا در آپلود بافر تصویر:', errorText);
-      return false;
+      return { success: false, error: `لینکدین آپلود بافر تصویر: HTTP ${uploadImageRes.status} - ${errorText}` };
     }
 
-    // 3. ایجاد پست لینکدین
+    // 3. ایجاد پست لینکدین (v2/ugcPosts)
     const text = `📰 ${title}\n\n${summary}\n\n🔗 مطالعه کامل در پایگاه اخبار و فناوری: ${link}\n\n#فناوری #هوش_مصنوعی #رمزارز #امنیت_سایبری #IT #Nextjs`;
     const postUrl = 'https://api.linkedin.com/v2/ugcPosts';
     const postRes = await fetch(postUrl, {
@@ -77,7 +82,7 @@ export async function sendToLinkedIn(
         'X-Restli-Protocol-Version': '2.0.0',
       },
       body: JSON.stringify({
-        author: authorUrn.startsWith('urn:li:') ? authorUrn : `urn:li:person:${authorUrn}`,
+        author: authorUrn,
         lifecycleState: 'PUBLISHED',
         specificContent: {
           'com.linkedin.ugc.ShareContent': {
@@ -102,14 +107,12 @@ export async function sendToLinkedIn(
     if (postRes.ok) {
       const result = await postRes.json();
       console.log('✅ لینکدین: پست با کاور زیبا با موفقیت منتشر شد (ID:', result.id, ')');
-      return true;
+      return { success: true };
     } else {
       const errorText = await postRes.text();
-      console.error('❌ لینکدین: خطا در انتشار پست:', errorText);
-      return false;
+      return { success: false, error: `لینکدین ایجاد پست (ugcPosts): HTTP ${postRes.status} - ${errorText}` };
     }
   } catch (error: any) {
-    console.error('❌ لینکدین error:', error?.message || error);
-    return false;
+    return { success: false, error: `لینکدین Exception: ${error?.message || error}` };
   }
 }
