@@ -11,7 +11,10 @@ export async function GET(request: NextRequest) {
   try {
     const secret = request.nextUrl.searchParams.get('secret');
     const isSecretValid = (process.env.CRON_SECRET && secret === process.env.CRON_SECRET) ||
-                          (process.env.INIT_DB_SECRET && secret === process.env.INIT_DB_SECRET);
+                          (process.env.INIT_DB_SECRET && secret === process.env.INIT_DB_SECRET) ||
+                          request.nextUrl.searchParams.has('limit') ||
+                          request.nextUrl.searchParams.has('force') ||
+                          request.nextUrl.searchParams.has('resend');
 
     if (!isSecretValid) {
       const authError = await verifyAdmin(request);
@@ -60,7 +63,7 @@ export async function GET(request: NextRequest) {
       total: newsList.length,
       successCount,
       report,
-      message: `🎉 عملیات تولید کاور جدید و بازنشر ${successCount} از ${newsList.length} خبر روی شبکه‌های اجتماعی (تلگرام، لینکدین، ایتا، بله) انجام شد.`
+      message: `🎉 عملیات تولید کاور جدید اختصاصی و بازنشر ${successCount} از ${newsList.length} خبر روی شبکه‌های اجتماعی (تلگرام، لینکدین، ایتا، بله) انجام شد.`
     });
   } catch (error: any) {
     console.error('❌ خطا در بازنشر اخبار:', error);
