@@ -12,12 +12,19 @@ export async function GET(request: NextRequest) {
     const cronError = verifyCron(request);
     if (cronError) return cronError;
 
-    // دریافت اخباری که هنوز ارسال نشده‌اند
+    // دریافت اخباری که هنوز ارسال نشده‌اند یا حداقل روی یکی از شبکه‌های اصلی (تلگرام، لینکدین، ایتا، بله) ارسال ناموفق داشته‌اند
     const [rows] = await pool.execute(
-      `SELECT id, title, summary, image_url 
+      `SELECT id, title, summary, image_url, source_name 
        FROM news_posts 
        WHERE is_published = TRUE 
-         AND (posted_to_social IS NULL OR posted_to_social = '')
+         AND (
+           posted_to_social IS NULL 
+           OR posted_to_social = '' 
+           OR posted_to_social NOT LIKE '%"telegram":true%' 
+           OR posted_to_social NOT LIKE '%"linkedin":true%'
+           OR posted_to_social NOT LIKE '%"eitaa":true%'
+           OR posted_to_social NOT LIKE '%"bale":true%'
+         )
        ORDER BY published_at DESC 
        LIMIT 5`
     );
@@ -25,7 +32,7 @@ export async function GET(request: NextRequest) {
     if ((rows as any[]).length === 0) {
       return NextResponse.json({ 
         success: true, 
-        message: 'هیچ خبر جدیدی برای ارسال وجود ندارد' 
+        message: 'تمام اخبار داغ اخیر قبلاً روی تمامی شبکه‌های اجتماعی (تلگرام، لینکدین، ایتا، بله) منتشر شده‌اند' 
       });
     }
 
@@ -37,15 +44,16 @@ export async function GET(request: NextRequest) {
         news.title,
         news.summary || news.title,
         news.image_url,
-        link
+        link,
+        news.source_name || 'فناوری و رمزارز'
       );
-      results.push({ id: news.id, ...result });
+      results.push({ id: news.id, title: news.title, ...result });
     }
 
     return NextResponse.json({ 
       success: true, 
       results,
-      message: `${results.length} خبر ارسال شد`,
+      message: `🎉 تعداد ${results.length} خبر جدید یا بازنشری روی شبکه‌های اجتماعی (تلگرام، لینکدین، ایتا، بله) بررسی و منتشر شد`,
     });
   } catch (error: any) {
     console.error('Social post error:', error);

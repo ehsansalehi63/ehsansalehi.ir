@@ -5,26 +5,34 @@ import { verifyCron } from '../../../lib/auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-export const maxDuration = 300; // ۵ دقیقه زمان برای ارسال همه اخبار
+export const maxDuration = 300;
 
 export async function GET(request: NextRequest) {
   try {
     const cronError = verifyCron(request);
     if (cronError) return cronError;
 
-    // دریافت همه اخباری که تاکنون ارسال نشده‌اند
+    // دریافت تمامی اخباری که هنوز ارسال نشده‌اند یا حداقل روی یکی از شبکه‌های اصلی ناموفق بودند
     const [rows] = await pool.execute(
-      `SELECT id, title, summary, image_url 
+      `SELECT id, title, summary, image_url, source_name 
        FROM news_posts 
        WHERE is_published = TRUE 
-         AND (posted_to_social IS NULL OR posted_to_social = '')
-       ORDER BY published_at ASC`
+         AND (
+           posted_to_social IS NULL 
+           OR posted_to_social = '' 
+           OR posted_to_social NOT LIKE '%"telegram":true%' 
+           OR posted_to_social NOT LIKE '%"linkedin":true%'
+           OR posted_to_social NOT LIKE '%"eitaa":true%'
+           OR posted_to_social NOT LIKE '%"bale":true%'
+         )
+       ORDER BY published_at DESC 
+       LIMIT 15`
     );
 
     if ((rows as any[]).length === 0) {
       return NextResponse.json({ 
         success: true, 
-        message: 'همه اخبار قبلاً ارسال شده‌اند' 
+        message: 'تمامی اخبار موجود در دیتابیس قبلاً روی تمام شبکه‌های اجتماعی منتشر شده‌اند' 
       });
     }
 
@@ -40,14 +48,16 @@ export async function GET(request: NextRequest) {
         news.title,
         news.summary || news.title,
         news.image_url,
-        link
+        link,
+        news.source_name || 'فناوری و رمزارز'
       );
       
       results.push({ 
         id: news.id, 
         title: news.title, 
         success: result.success,
-        results: result.results 
+        results: result.results,
+        errors: result.errors,
       });
 
       if (result.success) successCount++;
@@ -60,7 +70,7 @@ export async function GET(request: NextRequest) {
       successCount,
       failCount,
       results,
-      message: `${successCount} خبر با موفقیت ارسال شد، ${failCount} خبر ناموفق بود`,
+      message: `🎉 بررسی و انتشار ${successCount} خبر با موفقیت روی شبکه‌های اجتماعی انجام شد (${failCount} ناموفق)`,
     });
   } catch (error: any) {
     console.error('Social post all error:', error);
