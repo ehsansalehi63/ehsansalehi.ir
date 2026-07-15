@@ -334,7 +334,17 @@ export default function AdminPage() {
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => {
+                setActiveTab(tab.id as any);
+                if (tab.id === 'traffic' && !trafficData) {
+                  const token = localStorage.getItem('admin_token') || localStorage.getItem('token');
+                  const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {};
+                  fetch('/api/admin/traffic-ai', { headers })
+                    .then(r => r.json())
+                    .then(d => { if (d.success) setTrafficData(d); })
+                    .catch(() => {});
+                }
+              }}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                 activeTab === tab.id
                   ? 'bg-blue-600/20 text-blue-400'
