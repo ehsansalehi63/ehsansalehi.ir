@@ -67,6 +67,9 @@ export const metadata: Metadata = {
   alternates: {
     canonical: 'https://ehsansalehi.ir',
   },
+  verification: {
+    google: 'BnEji84Y7nkC_yw_bKqvxl5F7OTziQjuM2E0utc3XNc',
+  },
   category: 'technology',
 };
 
@@ -84,6 +87,9 @@ export default function RootLayout({
         <meta name="theme-color" content="#0a0a0a" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+
+        {/* متا تگ تأیید گوگل سرچ کنسول */}
+        <meta name="google-site-verification" content="BnEji84Y7nkC_yw_bKqvxl5F7OTziQjuM2E0utc3XNc" />
 
         {/* متا تگ تأیید فیسبوک */}
         <meta name="facebook-domain-verification" content="7edxl1xqt2d8sc3zurcms3hbqfkfju" />
