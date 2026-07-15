@@ -26,14 +26,17 @@ import CustomCursor from './components/CustomCursor';
 import BreakingNews from './components/BreakingNews';
 import SocialCallout from './components/SocialCallout';
 import UnifiedHeroCard from './components/UnifiedHeroCard';
+import LanguageSwitcher from './components/LanguageSwitcher';
+import { useI18n } from './components/I18nProvider';
 
 export default function Home() {
+  const { t, lang } = useI18n();
   const [text, setText] = useState('');
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const fullText = 'احسان صالحی';
+  const fullText = lang === 'en' ? 'Ehsan Salehi' : 'احسان صالحی';
   const formRef = useRef<HTMLFormElement>(null);
   
   const { scrollYProgress } = useScroll();
@@ -173,13 +176,13 @@ export default function Home() {
   };
 
   const navItems = [
-    { name: 'خانه', href: '#' },
-    { name: 'اخبار فناوری و رمزارز 🔥', href: '/news' },
-    { name: 'پروژه‌ها', href: '/projects' },
-    { name: 'خدمات', href: '#services' },
-    { name: 'مهارت‌ها', href: '#skills' },
-    { name: 'درباره', href: '#about' },
-    { name: 'تماس', href: '#contact' },
+    { name: t.navHome, href: '#' },
+    { name: t.navNews, href: '/news' },
+    { name: t.navProjects, href: '/projects' },
+    { name: t.navServices, href: '#services' },
+    { name: t.navSkills, href: '#skills' },
+    { name: t.navAbout, href: '#about' },
+    { name: t.navContact, href: '#contact' },
   ];
 
   // ====== استفاده از as any برای رفع خطای TypeScript ======
@@ -319,7 +322,7 @@ export default function Home() {
 
       <CustomCursor />
 
-      <main className="min-h-screen bg-[#05070b] text-white font-vazir" dir="rtl">
+      <main className="min-h-screen bg-[#05070b] text-white font-vazir" dir={lang === 'fa' ? 'rtl' : 'ltr'}>
         <canvas id="particleCanvas" className="fixed inset-0 pointer-events-none z-0" />
 
         {/* ====== خبر فوری (Breaking News) ====== */}
@@ -349,9 +352,12 @@ export default function Home() {
                 </>
               )}
             </nav>
-            <button className="md:hidden text-white text-2xl" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-              {mobileMenuOpen ? '✕' : '☰'}
-            </button>
+            <div className="flex items-center gap-3">
+              <LanguageSwitcher />
+              <button className="md:hidden text-white text-2xl" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+                {mobileMenuOpen ? '✕' : '☰'}
+              </button>
+            </div>
           </div>
           {mobileMenuOpen && (
             <div className="md:hidden mt-3 glass rounded-xl p-4 flex flex-col gap-2">

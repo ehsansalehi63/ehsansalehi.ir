@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Sparkles, Bot, User, CornerDownLeft } from 'lucide-react';
+import { useI18n } from './I18nProvider';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -8,18 +9,40 @@ interface ChatMessage {
 }
 
 export default function AiChatbot() {
+  const { lang } = useI18n();
+  const isEn = lang === 'en';
+
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',
-      content: 'سلام و درود! 🚀😎 من دستیار هوشمند و بامزه مهندس احسان صالحی هستم! چه کمکی از دست من برمیاد؟ می‌خوای درباره ۲۰ سال تجربه احسان برات بگم یا دنبال سفارش پروژه و مشاوره هستی؟ 🍕'
+      content: isEn 
+        ? 'Hello and welcome! 🚀😎 I am Ehsan Salehi\'s witty & smart AI assistant! How can I help you? Want to hear about Ehsan\'s 20 years of IT experience or request a project consultation? 🍕'
+        : 'سلام و درود! 🚀😎 من دستیار هوشمند و بامزه مهندس احسان صالحی هستم! چه کمکی از دست من برمیاد؟ می‌خوای درباره ۲۰ سال تجربه احسان برات بگم یا دنبال سفارش پروژه و مشاوره هستی؟ 🍕'
     }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const quickQuestions = [
+  useEffect(() => {
+    // بروزرسانی پیام خوش‌آمدگویی در صورت تغییر زبان
+    setMessages([
+      {
+        role: 'assistant',
+        content: isEn 
+          ? 'Hello and welcome! 🚀😎 I am Ehsan Salehi\'s witty & smart AI assistant! How can I help you? Want to hear about Ehsan\'s 20 years of IT experience or request a project consultation? 🍕'
+          : 'سلام و درود! 🚀😎 من دستیار هوشمند و بامزه مهندس احسان صالحی هستم! چه کمکی از دست من برمیاد؟ می‌خوای درباره ۲۰ سال تجربه احسان برات بگم یا دنبال سفارش پروژه و مشاوره هستی؟ 🍕'
+      }
+    ]);
+  }, [isEn]);
+
+  const quickQuestions = isEn ? [
+    'Tell me about Ehsan\'s 20-year background 😎',
+    'What are project pricing and rates? 🍕',
+    'How does live Crypto & AI news work? 📰',
+    'Direct contact & Telegram channels 🚀'
+  ] : [
     'درباره سوابق و تجربه احسان بگو 😎',
     'تعرفه و هزینه پروژه‌ها چقدره؟ 🍕',
     'پوشش اخبار رمزارز و AI چطوره؟ 📰',
@@ -52,7 +75,7 @@ export default function AiChatbot() {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: newMessages }),
+        body: JSON.stringify({ messages: newMessages, lang }),
       });
       const data = await res.json();
       if (res.ok && data.reply) {
@@ -60,13 +83,13 @@ export default function AiChatbot() {
       } else {
         setMessages((prev) => [
           ...prev,
-          { role: 'assistant', content: 'متأسفانه در پاسخ‌گویی مشکلی موقتی پیش اومد! 😅 می‌تونی مستقیم به واتساپ یا تلگرام احسان پیام بدی: @ehsansalehi_tech' }
+          { role: 'assistant', content: isEn ? 'Sorry, temporary response issue! 😅 Contact Ehsan directly on WhatsApp/Telegram: @ehsansalehi_tech' : 'متأسفانه در پاسخ‌گویی مشکلی موقتی پیش اومد! 😅 می‌تونی مستقیم به واتساپ یا تلگرام احسان پیام بدی: @ehsansalehi_tech' }
         ]);
       }
     } catch {
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: 'اتصال شبکه قطع شد! 😅 ولی برای کار فوری حتماً به تلگرام @ehsansalehi_tech پیام بده.' }
+        { role: 'assistant', content: isEn ? 'Network disconnected! 😅 Please reach out via Telegram @ehsansalehi_tech.' : 'اتصال شبکه قطع شد! 😅 ولی برای کار فوری حتماً به تلگرام @ehsansalehi_tech پیام بده.' }
       ]);
     } finally {
       setLoading(false);
@@ -74,18 +97,18 @@ export default function AiChatbot() {
   };
 
   return (
-    <div className="fixed bottom-6 left-6 z-50 font-vazir" dir="rtl">
+    <div className={`fixed bottom-6 ${isEn ? 'right-6' : 'left-6'} z-50 font-vazir`} dir={isEn ? 'ltr' : 'rtl'}>
       {/* Floating Toggle Button */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
           className="group relative flex items-center gap-3 px-5 py-3.5 rounded-full bg-gradient-to-r from-orange-500 via-amber-500 to-blue-600 text-black font-extrabold shadow-2xl hover:scale-105 transition-all duration-300 border border-white/20 animate-bounce"
-          aria-label="باز کردن چت‌بات هوشمند"
+          aria-label={isEn ? 'Open AI Smart Assistant' : 'باز کردن چت‌بات هوشمند'}
         >
           <span className="w-8 h-8 rounded-full bg-black/20 flex items-center justify-center text-white text-lg">
             🤖
           </span>
-          <span className="text-sm tracking-wide">دستیار هوشمند احسان</span>
+          <span className="text-sm tracking-wide">{isEn ? 'Ehsan AI Assistant' : 'دستیار هوشمند احسان'}</span>
           <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-black animate-ping" />
         </button>
       )}
@@ -101,17 +124,17 @@ export default function AiChatbot() {
               </div>
               <div>
                 <h4 className="text-sm font-bold text-white flex items-center gap-1.5">
-                  دستیار هوشمند احسان <Sparkles size={13} className="text-amber-400 animate-pulse" />
+                  {isEn ? 'Ehsan AI Witty Assistant' : 'دستیار هوشمند احسان'} <Sparkles size={13} className="text-amber-400 animate-pulse" />
                 </h4>
                 <p className="text-[11px] text-zinc-400 flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse" /> آنلاین و پاسخگو
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse" /> {isEn ? 'Online & Ready' : 'آنلاین و پاسخگو'}
                 </p>
               </div>
             </div>
             <button
               onClick={() => setIsOpen(false)}
               className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-zinc-300 hover:text-white flex items-center justify-center transition"
-              aria-label="بستن چت‌بات"
+              aria-label="Close Chat"
             >
               <X size={18} />
             </button>
@@ -165,7 +188,7 @@ export default function AiChatbot() {
                   🤖
                 </div>
                 <div className="bg-white/10 text-zinc-400 rounded-2xl rounded-tr-none px-4 py-3 text-xs border border-white/5 flex items-center gap-1.5">
-                  <span>در حال فکر کردن و نوشتن</span>
+                  <span>{isEn ? 'Thinking and writing...' : 'در حال فکر کردن و نوشتن...'}</span>
                   <span className="flex gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-bounce" />
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-bounce [animation-delay:0.2s]" />
@@ -189,7 +212,7 @@ export default function AiChatbot() {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="پیام یا سوالت رو بنویس..."
+              placeholder={isEn ? 'Type your message or question...' : 'پیام یا سوالت رو بنویس...'}
               disabled={loading}
               className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-4 py-2.5 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-orange-500/50 transition"
             />
@@ -197,9 +220,9 @@ export default function AiChatbot() {
               type="submit"
               disabled={!input.trim() || loading}
               className="w-10 h-10 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 disabled:opacity-40 text-black font-black flex items-center justify-center transition shadow-lg shrink-0 hover:scale-105"
-              aria-label="ارسال پیام"
+              aria-label="Send Message"
             >
-              <Send size={16} className="transform -rotate-90" />
+              <Send size={16} className={`transform ${isEn ? 'rotate-0' : '-rotate-90'}`} />
             </button>
           </form>
         </div>

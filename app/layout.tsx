@@ -5,6 +5,7 @@ import { Toaster } from 'sonner';
 import Script from 'next/script';
 import AiChatbot from './components/AiChatbot';
 import VisitTracker from './components/VisitTracker';
+import { I18nProvider } from './components/I18nProvider';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://ehsansalehi.ir'),
@@ -106,10 +107,12 @@ export default function RootLayout({
         {/* ====== پایان Statsfa ====== */}
       </head>
       <body className="font-vazir antialiased bg-[#0a0a0a] text-white">
-        <VisitTracker />
-        {children}
-        <AiChatbot />
-        <Toaster position="top-center" richColors theme="dark" />
+        <I18nProvider>
+          <VisitTracker />
+          {children}
+          <AiChatbot />
+          <Toaster position="top-center" richColors theme="dark" />
+        </I18nProvider>
       </body>
     </html>
   );

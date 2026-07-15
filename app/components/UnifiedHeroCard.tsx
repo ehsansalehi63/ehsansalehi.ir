@@ -3,8 +3,10 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, Flame, Sparkles, Clock, ChevronLeft, ChevronRight, ShieldCheck } from 'lucide-react';
+import { useI18n } from './I18nProvider';
 
 export default function UnifiedHeroCard() {
+  const { t, lang } = useI18n();
   const [newsList, setNewsList] = useState<any[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -30,11 +32,11 @@ export default function UnifiedHeroCard() {
   }, [newsList]);
 
   const currentNews = newsList[currentIndex] || null;
-  const categoryBadge = currentNews?.category || 'فناوری و رمزارز';
+  const categoryBadge = currentNews?.category || (lang === 'en' ? 'IT & Crypto News' : 'فناوری و رمزارز');
 
   const socialLinks = [
     { 
-      name: 'تلگرام', 
+      name: lang === 'en' ? 'Telegram' : 'تلگرام', 
       url: 'https://t.me/ehsansalehi_tech', 
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400">
@@ -43,7 +45,7 @@ export default function UnifiedHeroCard() {
       )
     },
     { 
-      name: 'واتساپ', 
+      name: lang === 'en' ? 'WhatsApp' : 'واتساپ', 
       url: 'https://wa.me/989108308799', 
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-400">
@@ -52,7 +54,7 @@ export default function UnifiedHeroCard() {
       )
     },
     { 
-      name: 'لینکدین', 
+      name: lang === 'en' ? 'LinkedIn' : 'لینکدین', 
       url: 'https://www.linkedin.com/company/ehsansalehi-ir', 
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-sky-400">
@@ -61,7 +63,7 @@ export default function UnifiedHeroCard() {
       )
     },
     { 
-      name: 'گیت‌هاب', 
+      name: lang === 'en' ? 'GitHub' : 'گیت‌هاب', 
       url: 'https://github.com/ehsansalehi63', 
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-400">
@@ -70,7 +72,7 @@ export default function UnifiedHeroCard() {
       )
     },
     { 
-      name: 'ایمیل', 
+      name: lang === 'en' ? 'Email' : 'ایمیل', 
       url: 'mailto:info@ehsansalehi.ir', 
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-rose-400">
@@ -80,8 +82,10 @@ export default function UnifiedHeroCard() {
     },
   ];
 
+  const isRtl = lang === 'fa';
+
   return (
-    <div className="w-full max-w-7xl mx-auto bg-gradient-to-b from-[#151824]/95 via-[#0e1017]/95 to-[#0b0c12]/95 backdrop-blur-3xl rounded-[42px] p-6 sm:p-8 md:p-12 border border-orange-500/35 shadow-[0_25px_100px_rgba(255,107,0,0.18)] relative overflow-hidden group font-vazir" dir="rtl">
+    <div className="w-full max-w-7xl mx-auto bg-gradient-to-b from-[#151824]/95 via-[#0e1017]/95 to-[#0b0c12]/95 backdrop-blur-3xl rounded-[42px] p-6 sm:p-8 md:p-12 border border-orange-500/35 shadow-[0_25px_100px_rgba(255,107,0,0.18)] relative overflow-hidden group font-vazir" dir={isRtl ? 'rtl' : 'ltr'}>
       {/* Background ambient glowing spheres */}
       <div className="absolute -top-20 -right-20 w-96 h-96 bg-orange-500/15 rounded-full blur-[130px] pointer-events-none group-hover:bg-orange-500/25 transition-all duration-700" />
       <div className="absolute -bottom-20 -left-20 w-96 h-96 bg-blue-600/15 rounded-full blur-[130px] pointer-events-none" />
@@ -90,14 +94,14 @@ export default function UnifiedHeroCard() {
       <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center relative z-10">
         
         {/* ==================== ستون راست: پروفایل اجرایی، تخصص و دکمه‌های اقدام (۶ ستون) ==================== */}
-        <div className="lg:col-span-6 flex flex-col justify-between space-y-6 text-right">
+        <div className={`lg:col-span-6 flex flex-col justify-between space-y-6 ${isRtl ? 'text-right' : 'text-left'}`}>
           
           {/* ردیف عکس پروفایل و عنوان مهندس احسان صالحی */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 pb-5 border-b border-white/10">
             <div className="relative w-24 h-24 sm:w-26 sm:h-26 rounded-3xl overflow-hidden border-2 border-orange-500/50 shadow-2xl shrink-0 group/img">
               <Image
                 src="/images/profile.jpg"
-                alt="احسان صالحی"
+                alt={t.heroName}
                 width={110}
                 height={110}
                 className="w-full h-full object-cover group-hover/img:scale-110 transition-transform duration-700"
@@ -109,17 +113,17 @@ export default function UnifiedHeroCard() {
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-2 mb-2">
                 <span className="bg-gradient-to-r from-orange-500 via-amber-400 to-yellow-400 text-black text-xs font-black px-3 py-1 rounded-full shadow-md flex items-center gap-1">
-                  👑 ۲۰+ سال سابقه درخشان
+                  {t.heroBadge}
                 </span>
                 <span className="bg-white/10 text-emerald-300 text-xs px-2.5 py-1 rounded-full border border-white/10 flex items-center gap-1">
-                  <ShieldCheck size={13} className="text-emerald-400" /> معمار IT و امنیت
+                  <ShieldCheck size={13} className="text-emerald-400" /> {t.heroRole}
                 </span>
               </div>
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight">
-                مهندس احسان صالحی
+                {t.heroName}
               </h1>
               <p className="text-zinc-300 text-sm sm:text-base mt-1 font-light">
-                مشاور فناوری اطلاعات، معمار شبکه، امنیت سایبری و هوش مصنوعی
+                {t.heroSubtitle}
               </p>
             </div>
           </div>
@@ -127,28 +131,28 @@ export default function UnifiedHeroCard() {
           {/* شعار اصلی و معرفی خدمات */}
           <div className="space-y-3">
             <h2 className="text-xl sm:text-2xl font-extrabold text-white/90 leading-snug">
-              ساده‌سازی چالش‌های پیچیده در دنیای فناوری
+              {t.heroTagline}
             </h2>
             <p className="text-zinc-300 text-sm sm:text-base leading-relaxed font-light">
-              از طراحی و ایمن‌سازی شبکه‌های پیشرفته سازمانی تا پیاده‌سازی سیستم‌های مدرن وب با Next.js و اتوماسیون‌های هوش مصنوعی؛ پروژه‌های شما با بالاترین استاندارد مهندسی تحویل داده می‌شود.
+              {t.heroDesc}
             </p>
           </div>
 
           {/* دکمه‌های اقدام اصلی (CTA) */}
           <div className="flex flex-wrap items-center gap-3 pt-2">
             <a href="#services" className="btn-primary flex items-center gap-2 text-sm px-7 py-3.5 shadow-lg shadow-orange-500/20">
-              <span>چطور می‌تونم کمک کنم؟</span>
-              <ArrowRight className="w-4 h-4" />
+              <span>{t.heroCtaPrimary}</span>
+              <ArrowRight className={`w-4 h-4 ${!isRtl ? 'rotate-180' : ''}`} />
             </a>
             <Link href="/projects" className="btn-outline text-sm px-6 py-3.5 border-white/20 hover:border-orange-500">
-              نمونه کارها و پروژه‌ها
+              {t.heroCtaSecondary}
             </Link>
           </div>
 
-          {/* شبکه‌های اجتماعی یکپارچه (بدون هیچ تکراری در کل هیرو) */}
+          {/* شبکه‌های اجتماعی یکپارچه */}
           <div className="pt-5 border-t border-white/10">
             <div className="flex items-center gap-2 mb-3 text-xs text-zinc-400 font-medium">
-              <Sparkles size={13} className="text-amber-400" /> ارتباط مستقیم و سریع در شبکه‌های اجتماعی:
+              <Sparkles size={13} className="text-amber-400" /> {t.heroSocialHeader}
             </div>
             <div className="flex flex-wrap gap-2.5">
               {socialLinks.map((link) => (
@@ -176,10 +180,10 @@ export default function UnifiedHeroCard() {
             <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-white/10 mb-4">
               <div className="flex items-center gap-2">
                 <span className="flex items-center gap-1 text-xs font-black bg-gradient-to-r from-orange-500 to-amber-400 text-black px-3 py-1 rounded-full shadow-md animate-pulse">
-                  <Flame size={14} className="fill-current" /> اخبار فوری فناوری و رمزارز
+                  <Flame size={14} className="fill-current" /> {t.heroLiveNewsTitle}
                 </span>
                 <span className="text-[11px] text-zinc-400 flex items-center gap-1 font-mono">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse" /> آنلاین
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse" /> {t.heroOnline}
                 </span>
               </div>
 
@@ -188,9 +192,9 @@ export default function UnifiedHeroCard() {
                   <button 
                     onClick={() => setCurrentIndex((prev) => (prev - 1 + newsList.length) % newsList.length)}
                     className="p-1 rounded-lg hover:bg-white/10 text-zinc-400 hover:text-white transition"
-                    aria-label="خبر قبلی"
+                    aria-label="Previous News"
                   >
-                    <ChevronRight size={15} />
+                    <ChevronRight size={15} className={!isRtl ? 'rotate-180' : ''} />
                   </button>
                   <span className="text-xs font-mono font-bold text-amber-400 px-1">
                     {currentIndex + 1} / {newsList.length}
@@ -198,9 +202,9 @@ export default function UnifiedHeroCard() {
                   <button 
                     onClick={() => setCurrentIndex((prev) => (prev + 1) % newsList.length)}
                     className="p-1 rounded-lg hover:bg-white/10 text-zinc-400 hover:text-white transition"
-                    aria-label="خبر بعدی"
+                    aria-label="Next News"
                   >
-                    <ChevronLeft size={15} />
+                    <ChevronLeft size={15} className={!isRtl ? 'rotate-180' : ''} />
                   </button>
                 </div>
               )}
@@ -224,18 +228,18 @@ export default function UnifiedHeroCard() {
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-95" />
                   
-                  <span className="absolute top-3.5 right-3.5 bg-black/85 backdrop-blur-md text-orange-400 border border-orange-500/40 text-xs font-extrabold px-3 py-1 rounded-full shadow-lg">
+                  <span className={`absolute top-3.5 ${isRtl ? 'right-3.5' : 'left-3.5'} bg-black/85 backdrop-blur-md text-orange-400 border border-orange-500/40 text-xs font-extrabold px-3 py-1 rounded-full shadow-lg`}>
                     {categoryBadge}
                   </span>
 
                   {currentNews.source_name && (
-                    <span className="absolute bottom-3.5 left-3.5 bg-white/15 backdrop-blur-md text-white/90 text-[11px] px-3 py-0.5 rounded-lg border border-white/10 font-bold">
-                      منبع: {currentNews.source_name}
+                    <span className={`absolute bottom-3.5 ${isRtl ? 'left-3.5' : 'right-3.5'} bg-white/15 backdrop-blur-md text-white/90 text-[11px] px-3 py-0.5 rounded-lg border border-white/10 font-bold`}>
+                      {lang === 'fa' ? 'منبع:' : 'Source:'} {currentNews.source_name}
                     </span>
                   )}
 
-                  <div className="absolute bottom-3.5 right-3.5 flex items-center gap-1.5 text-xs text-zinc-300 bg-black/70 px-2.5 py-1 rounded-lg font-medium">
-                    <Clock size={13} className="text-amber-400" /> ۲ دقیقه مطالعه
+                  <div className={`absolute bottom-3.5 ${isRtl ? 'right-3.5' : 'left-3.5'} flex items-center gap-1.5 text-xs text-zinc-300 bg-black/70 px-2.5 py-1 rounded-lg font-medium`}>
+                    <Clock size={13} className="text-amber-400" /> {lang === 'fa' ? '۲ دقیقه مطالعه' : '2 Min Read'}
                   </div>
                 </div>
 
@@ -250,7 +254,7 @@ export default function UnifiedHeroCard() {
               </Link>
             ) : (
               <div className="h-72 rounded-2xl bg-zinc-800/40 animate-pulse flex items-center justify-center text-zinc-400 text-sm">
-                در حال دریافت آخرین اخبار فوری از سرور...
+                {lang === 'fa' ? 'در حال دریافت آخرین اخبار فوری از سرور...' : 'Loading latest breaking news...'}
               </div>
             )}
 
@@ -261,8 +265,8 @@ export default function UnifiedHeroCard() {
                   href={`/news/${currentNews.id}`}
                   className="text-xs sm:text-sm font-bold text-orange-400 hover:text-amber-300 transition-colors inline-flex items-center gap-1.5 group/btn"
                 >
-                  <span>مطالعه تحلیل هوش مصنوعی خبر</span>
-                  <ArrowRight size={15} className="rotate-180 transform group-hover/btn:-translate-x-1 transition-transform" />
+                  <span>{t.heroReadAI}</span>
+                  <ArrowRight size={15} className={`${isRtl ? 'rotate-180 transform group-hover/btn:-translate-x-1' : 'transform group-hover/btn:translate-x-1'} transition-transform`} />
                 </Link>
               ) : <span />}
 
@@ -270,8 +274,8 @@ export default function UnifiedHeroCard() {
                 href="/news" 
                 className="px-4 py-2 rounded-xl bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/30 transition text-xs font-bold flex items-center gap-1"
               >
-                <span>مشاهده تمام اخبار</span>
-                <ChevronLeft size={14} />
+                <span>{t.heroViewAllNews}</span>
+                <ChevronLeft size={14} className={!isRtl ? 'rotate-180' : ''} />
               </Link>
             </div>
           </div>
