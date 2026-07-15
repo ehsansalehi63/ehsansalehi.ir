@@ -25,7 +25,7 @@ import SocialLinks from './components/SocialLinks';
 import CustomCursor from './components/CustomCursor';
 import BreakingNews from './components/BreakingNews';
 import SocialCallout from './components/SocialCallout';
-import HeroNewsSlideshow from './components/HeroNewsSlideshow';
+import HeroProfileNewsCard from './components/HeroProfileNewsCard';
 
 export default function Home() {
   const [text, setText] = useState('');
@@ -385,26 +385,10 @@ export default function Home() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 1, ease: 'easeInOut' }}
-              className="flex flex-col items-center lg:items-end order-2 lg:order-1 w-full"
+              className="flex justify-center lg:justify-end order-2 lg:order-1 w-full"
             >
-              <div className="relative group">
-                <div className="absolute -inset-8 bg-gradient-to-r from-orange-500/20 to-blue-600/20 rounded-full blur-3xl opacity-60 group-hover:opacity-100 transition duration-700" />
-                <div className="relative w-64 h-64 lg:w-[420px] lg:h-[420px] rounded-2xl overflow-hidden border border-orange-500/20 shadow-2xl animate-float">
-                  <Image 
-                    src="/images/profile.jpg" 
-                    alt="احسان صالحی" 
-                    width={420} 
-                    height={420} 
-                    className="w-full h-full object-cover hover:scale-105 transition duration-1000" 
-                    priority 
-                  />
-                  <div className="absolute bottom-4 right-4 glass-dark rounded-full px-4 py-1.5 text-xs border border-orange-500/30">
-                    <span className="text-orange-400">✦</span> ۲۰ سال تجربه
-                  </div>
-                </div>
-              </div>
-              {/* بخش اسلایدشو اخبار داغ در کنار پروفایل */}
-              <HeroNewsSlideshow />
+              {/* کارت ترکیبی بسیار شیک و منظم: عکس احسان + اسلایدشو اخبار داغ */}
+              <HeroProfileNewsCard />
             </motion.div>
 
             <motion.div 
