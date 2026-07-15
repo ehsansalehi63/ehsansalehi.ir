@@ -46,13 +46,13 @@ export async function sendToTelegram(
     const imageBuffer = Buffer.from(await imageRes.arrayBuffer());
     const watermarkedBuffer = await addWatermarkToImage(imageBuffer, title);
 
-    const caption = `🔥 *${title}*\n\n📰 ${summary}\n\n🏷️ منبع: ${sourceName}\n🔗 [مطالعه کامل خبر و تحلیل AI](${link})\n\n──────────────────\n👨‍💻 *احسان صالحی* | متخصص IT، معمار شبکه و امنیت با ۲۰ سال سابقه\n🌐 ehsansalehi.ir | ⚡ @ehsansalehi_tech`;
+    const caption = `🔥 <b>${title}</b>\n\n📰 ${summary}\n\n🏷️ منبع: ${sourceName}\n🔗 <a href="${link}">مطالعه کامل خبر و تحلیل هوش مصنوعی روی سایت احسان صالحی</a>\n🌐 لینک مستقیم: ${link}\n\n──────────────────\n👨‍💻 <b>احسان صالحی</b> | متخصص IT، معمار شبکه و امنیت با ۲۰ سال سابقه\n🌐 ehsansalehi.ir | ⚡ @ehsansalehi_tech`;
     const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`;
 
     const formData = new FormData();
     formData.append('chat_id', TELEGRAM_CHANNEL_ID);
     formData.append('caption', caption);
-    formData.append('parse_mode', 'Markdown');
+    formData.append('parse_mode', 'HTML');
     formData.append('photo', new Blob([new Uint8Array(watermarkedBuffer)], { type: 'image/png' }), 'cover.png');
 
     const response = await fetch(url, { method: 'POST', body: formData });
@@ -85,7 +85,7 @@ export async function sendToBale(
     const imageBuffer = Buffer.from(await imageRes.arrayBuffer());
     const watermarkedBuffer = await addWatermarkToImage(imageBuffer, title);
 
-    const caption = `🔥 ${title}\n\n📰 ${summary}\n\n🔗 مطالعه کامل در: ${link}`;
+    const caption = `🔥 ${title}\n\n📰 ${summary}\n\n🔗 مطالعه کامل خبر روی سایت:\n🌐 ${link}\n\n──────────────────\n👨‍💻 احسان صالحی | متخصص IT، معمار شبکه و امنیت با ۲۰ سال سابقه\n🌐 ehsansalehi.ir | ⚡ @ehsansalehi_tech`;
     
     const baleDomains = ['https://tapi.bale.ai', 'https://api.bale.ai', 'https://tumbleweed.bale.ai'];
     let lastErr = '';
@@ -133,7 +133,7 @@ export async function sendToEitaa(
     const imageBuffer = Buffer.from(await imageRes.arrayBuffer());
     const watermarkedBuffer = await addWatermarkToImage(imageBuffer, title);
 
-    const caption = `🔥 ${title}\n\n📰 ${summary}\n\n🔗 مطالعه کامل در: ${link}`;
+    const caption = `🔥 ${title}\n\n📰 ${summary}\n\n🔗 مطالعه کامل خبر روی سایت:\n🌐 ${link}\n\n──────────────────\n👨‍💻 احسان صالحی | متخصص IT، معمار شبکه و امنیت با ۲۰ سال سابقه\n🌐 ehsansalehi.ir | ⚡ @ehsansalehi_tech`;
     const url = `https://eitaayar.ir/api/${EITAA_BOT_TOKEN}/sendFile`;
 
     const formData = new FormData();
@@ -166,7 +166,7 @@ export async function sendToRubika(
   }
 
   try {
-    const plainText = `🔥 ${title}\n\n📰 ${summary}\n\n🔗 مطالعه کامل در: ${link}`;
+    const plainText = `🔥 ${title}\n\n📰 ${summary}\n\n🔗 مطالعه کامل خبر روی سایت:\n🌐 ${link}\n\n──────────────────\n👨‍💻 احسان صالحی | متخصص IT، معمار شبکه و امنیت با ۲۰ سال سابقه\n🌐 ehsansalehi.ir | ⚡ @ehsansalehi_tech`;
     const cleanId = RUBIKA_CHAT_ID.trim().replace(/^@/, '');
     const idVariants = cleanId.match(/^[a-zA-Z0-9]{32}$/) || cleanId.startsWith('c0') || cleanId.startsWith('s0')
       ? [cleanId]
