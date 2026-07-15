@@ -22,15 +22,12 @@ export async function GET(request: NextRequest) {
     }
 
     const limit = parseInt(request.nextUrl.searchParams.get('limit') || '10', 10);
+    const unpostedOnly = request.nextUrl.searchParams.has('unposted') || request.nextUrl.searchParams.has('unposted_only');
+    const sqlQuery = unpostedOnly
+      ? `SELECT id, title, summary, image_url, source_name FROM news_posts WHERE is_published = TRUE AND (posted_to_social IS NULL OR posted_to_social = '' OR posted_to_social NOT LIKE '%"telegram":true%' OR posted_to_social NOT LIKE '%"linkedin":true%' OR posted_to_social NOT LIKE '%"eitaa":true%' OR posted_to_social NOT LIKE '%"bale":true%') ORDER BY published_at DESC LIMIT ?`
+      : `SELECT id, title, summary, image_url, source_name FROM news_posts WHERE is_published = TRUE ORDER BY published_at DESC LIMIT ?`;
 
-    const [rows] = await pool.execute(
-      `SELECT id, title, summary, image_url, source_name 
-       FROM news_posts 
-       WHERE is_published = TRUE 
-       ORDER BY published_at DESC 
-       LIMIT ?`,
-       [limit]
-    );
+    const [rows] = await pool.execute(sqlQuery, [limit]);
 
     const newsList = rows as any[];
     if (!newsList || newsList.length === 0) {

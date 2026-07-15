@@ -5,6 +5,7 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { analyzeAndTranslateNews } from '../../../lib/translateWithGPT';
 import { verifyCron } from '../../../lib/auth';
+import { postNewsToAllChannels } from '../../../lib/socialPoster';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -164,7 +165,7 @@ export async function GET(request: NextRequest) {
       bestNews.source_name
     );
 
-    await pool.execute(
+    const [insertResult] = await pool.execute(
       `INSERT INTO news_posts 
        (title, content, summary, image_url, source_name, source_url, original_url, published_at, is_published, category)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -182,11 +183,27 @@ export async function GET(request: NextRequest) {
       ]
     );
 
+    const newId = (insertResult as any)?.insertId;
+    let socialResults = null;
+    if (newId) {
+      const link = `https://ehsansalehi.ir/news/${newId}`;
+      console.log(`🚀 خبر جدید (ID: ${newId}) ذخیره شد، شروع انتشار فوری روی تمام شبکه‌های اجتماعی...`);
+      socialResults = await postNewsToAllChannels(
+        newId,
+        translated.title || bestNews.title,
+        translated.summary || bestNews.content.slice(0, 200),
+        bestNews.image,
+        link,
+        bestNews.source_name || 'فناوری و رمزارز'
+      );
+    }
+
     return NextResponse.json({
       success: true,
-      message: 'یک خبر جدید ذخیره شد',
+      message: 'یک خبر جدید ذخیره و به صورت در لحظه روی شبکه‌های اجتماعی منتشر شد',
       title: translated.title,
       category,
+      socialResults,
     });
   } catch (error: any) {
     console.error('❌ خطا در کرون‌جاب:', error);
