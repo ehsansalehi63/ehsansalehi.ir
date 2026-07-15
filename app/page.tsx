@@ -25,7 +25,7 @@ import SocialLinks from './components/SocialLinks';
 import CustomCursor from './components/CustomCursor';
 import BreakingNews from './components/BreakingNews';
 import SocialCallout from './components/SocialCallout';
-import HeroProfileNewsCard from './components/HeroProfileNewsCard';
+import UnifiedHeroCard from './components/UnifiedHeroCard';
 
 export default function Home() {
   const [text, setText] = useState('');
@@ -380,57 +380,14 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-br from-indigo-950/40 via-purple-900/20 to-black" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%, rgba(255,107,0,0.04), transparent)]" />
 
-          <div className="relative z-10 max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 items-center w-full py-8">
+          <div className="relative z-10 max-w-7xl mx-auto w-full py-6">
             <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1, ease: 'easeInOut' }}
-              className="flex justify-center lg:justify-end order-2 lg:order-1 w-full"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.9, ease: 'easeInOut' }}
             >
-              {/* کارت ترکیبی بسیار شیک و منظم: عکس احسان + اسلایدشو اخبار داغ */}
-              <HeroProfileNewsCard />
-            </motion.div>
-
-            <motion.div 
-              initial="hidden"
-              animate="visible"
-              variants={stagger}
-              className="text-center lg:text-right order-1 lg:order-2"
-            >
-              <motion.div variants={fadeUp} className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5 mb-5">
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 glass-dark rounded-full text-xs tracking-wider border border-white/10">
-                  <span className="text-orange-400">✦</span>
-                  <span className="text-zinc-200 font-bold">مشاور و مجری پروژه‌های IT</span>
-                </div>
-                <Link href="/news" className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-gradient-to-r from-orange-500/15 to-amber-500/15 border border-orange-500/40 text-orange-300 hover:text-white transition text-xs font-bold shadow-lg shadow-orange-500/10">
-                  <span>📰 پایگاه اخبار فوری فناوری، هوش مصنوعی و رمزارز</span>
-                  <span className="text-amber-400 font-extrabold">←</span>
-                </Link>
-              </motion.div>
-              <motion.h1 variants={fadeUp} className="text-4xl lg:text-6xl font-bold mb-4 leading-tight">
-                <span className="bg-gradient-to-r from-orange-400 to-blue-400 bg-clip-text text-transparent">
-                  احسان صالحی
-                </span>
-                <span className="block text-white/80 text-xl lg:text-2xl mt-2 font-light">
-                  {text || 'مشکلات فنی را ساده می‌کنم'}
-                </span>
-              </motion.h1>
-              <motion.p variants={fadeUp} className="text-base lg:text-lg text-zinc-300 mb-4 max-w-xl mx-auto lg:mx-0 leading-relaxed font-light">
-                از راه‌اندازی شبکه تا طراحی وب‌سایت، بدون دردسر و با کیفیت
-              </motion.p>
-              <motion.p variants={fadeUp} className="text-sm text-zinc-400 mb-8 max-w-lg mx-auto lg:mx-0 font-light">
-                اگر به‌دنبال یک متخصص هستید که کار رو درست و به‌موقع تحویل بده، جای درستی آمدید.
-              </motion.p>
-              <motion.div variants={fadeUp} className="flex flex-wrap gap-3 justify-center lg:justify-start">
-                <a href="#services" className="btn-primary flex items-center gap-2 hover-target">
-                  <span>چطور می‌تونم کمک کنم؟</span>
-                  <ArrowRight className="w-5 h-5" />
-                </a>
-                <Link href="/projects" className="btn-outline hover-target">نمونه کارها</Link>
-              </motion.div>
-              <motion.div variants={fadeUp} className="mt-6">
-                <SocialLinks size="lg" />
-              </motion.div>
+              {/* کارت جامع، عریض و یکپارچه هیرو: پروفایل مهندس احسان صالحی + اسلایدشو آنلاین اخبار فناوری */}
+              <UnifiedHeroCard />
             </motion.div>
           </div>
           <motion.div 
