@@ -62,7 +62,7 @@ const AdminLogin = ({ onLogin }: { onLogin: () => void }) => {
     <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] text-white font-vazir">
       <form onSubmit={handleSubmit} className="bg-[#18181b] p-10 rounded-2xl w-full max-w-md shadow-2xl border border-white/10">
         <h1 className="text-3xl font-bold text-center mb-2">پنل مدیریت</h1>
-        <p className="text-zinc-500 text-center mb-8">احسان صالحی رباطی</p>
+        <p className="text-zinc-500 text-center mb-8">احسان صالحی</p>
         <div className="space-y-4">
           <input
             type="text"

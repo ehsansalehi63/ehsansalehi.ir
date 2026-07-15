@@ -132,7 +132,7 @@ export async function GET(request: NextRequest) {
         },
         {
           title: 'پلتفرم جامع خدمات مشاوره فناوری اطلاعات',
-          desc: 'وب‌سایت رسمی احسان صالحی رباطی با معماری سرورلس، سیستم بلاگ پویا، یکپارچه‌سازی با هوش مصنوعی و بهینه‌سازی کامل سئو.',
+          desc: 'وب‌سایت رسمی احسان صالحی با معماری سرورلس، سیستم بلاگ پویا، یکپارچه‌سازی با هوش مصنوعی و بهینه‌سازی کامل سئو.',
           tech: 'Next.js 16, Tailwind CSS, MySQL, Vercel, OpenAI',
           link: 'https://ehsansalehi.ir',
           image_url: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80'

@@ -110,7 +110,14 @@ export async function sendToLinkedIn(
         return { success: false, error: `آپلود بافر تصویر روی (${targetUrn}): HTTP ${uploadImageRes.status} - ${errorText}` };
       }
 
-      const text = `📰 ${title}\n\n${summary}\n\n🔗 مطالعه کامل در پایگاه اخبار و فناوری احسان صالحی: ${link}\n\n#فناوری #هوش_مصنوعی #رمزارز #امنیت_سایبری #IT #Nextjs #بلاکچین`;
+      const text = `🚀 تحلیل فوری فناوری و بازارهای مالی | گزارش اختصاصی\n\n` +
+                   `📌 ${title}\n\n` +
+                   `💡 خلاصه‌تحلیل و نکات کلیدی:\n${summary}\n\n` +
+                   `📊 مطالعه کامل خبر، نمودارها و تحلیل AI در پایگاه تخصصی مهندس احسان صالحی:\n🔗 ${link}\n\n` +
+                   `___________________________________\n` +
+                   `👨‍💻 احسان صالحی | متخصص IT، معمار شبکه، امنیت سایبری و توسعه‌دهنده ارشد وب با ۲۰ سال سابقه کار درخشان\n` +
+                   `🌐 وب‌سایت: ehsansalehi.ir | کانال تخصصی تلگرام: @ehsansalehi_tech\n\n` +
+                   `#فناوری_اطلاعات #هوش_مصنوعی #بیت_کوین #رمزارز #امنیت_سایبری #شبکه #توسعه_نرم_افزار #TechNews #AI #Crypto #EhsanSalehi`;
       const postUrl = 'https://api.linkedin.com/v2/ugcPosts';
       const postRes = await fetch(postUrl, {
         method: 'POST',

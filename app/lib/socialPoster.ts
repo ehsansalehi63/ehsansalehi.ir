@@ -46,7 +46,7 @@ export async function sendToTelegram(
     const imageBuffer = Buffer.from(await imageRes.arrayBuffer());
     const watermarkedBuffer = await addWatermarkToImage(imageBuffer, title);
 
-    const caption = `🔥 *${title}*\n\n📰 ${summary}\n\n🏷️ منبع: ${sourceName}\n🔗 [مطالعه خبر در پایگاه احسان صالحی](${link})`;
+    const caption = `🔥 *${title}*\n\n📰 ${summary}\n\n🏷️ منبع: ${sourceName}\n🔗 [مطالعه کامل خبر و تحلیل AI](${link})\n\n──────────────────\n👨‍💻 *احسان صالحی* | متخصص IT، معمار شبکه و امنیت با ۲۰ سال سابقه\n🌐 ehsansalehi.ir | ⚡ @ehsansalehi_tech`;
     const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`;
 
     const formData = new FormData();

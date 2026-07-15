@@ -25,6 +25,7 @@ import SocialLinks from './components/SocialLinks';
 import CustomCursor from './components/CustomCursor';
 import BreakingNews from './components/BreakingNews';
 import SocialCallout from './components/SocialCallout';
+import HeroNewsSlideshow from './components/HeroNewsSlideshow';
 
 export default function Home() {
   const [text, setText] = useState('');
@@ -32,7 +33,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const fullText = 'احسان صالحی رباطی';
+  const fullText = 'احسان صالحی';
   const formRef = useRef<HTMLFormElement>(null);
   
   const { scrollYProgress } = useScroll();
@@ -384,7 +385,7 @@ export default function Home() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 1, ease: 'easeInOut' }}
-              className="flex justify-center lg:justify-end order-2 lg:order-1"
+              className="flex flex-col items-center lg:items-end order-2 lg:order-1 w-full"
             >
               <div className="relative group">
                 <div className="absolute -inset-8 bg-gradient-to-r from-orange-500/20 to-blue-600/20 rounded-full blur-3xl opacity-60 group-hover:opacity-100 transition duration-700" />
@@ -398,10 +399,12 @@ export default function Home() {
                     priority 
                   />
                   <div className="absolute bottom-4 right-4 glass-dark rounded-full px-4 py-1.5 text-xs border border-orange-500/30">
-                    <span className="text-orange-400">✦</span> ۱۶ سال تجربه
+                    <span className="text-orange-400">✦</span> ۲۰ سال تجربه
                   </div>
                 </div>
               </div>
+              {/* بخش اسلایدشو اخبار داغ در کنار پروفایل */}
+              <HeroNewsSlideshow />
             </motion.div>
 
             <motion.div 
@@ -556,7 +559,7 @@ export default function Home() {
                 className="grid grid-cols-3 gap-6 mt-10"
               >
                 <div className="glass p-6 rounded-xl">
-                  <div className="text-4xl font-bold text-orange-400">۱۶+</div>
+                  <div className="text-4xl font-bold text-orange-400">۲۰+</div>
                   <div className="text-xs text-zinc-400 mt-1 font-light">سال تجربه</div>
                 </div>
                 <div className="glass p-6 rounded-xl">
