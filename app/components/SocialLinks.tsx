@@ -1,9 +1,14 @@
+'use client';
 import React from 'react';
+import { useI18n } from './I18nProvider';
 
 export default function SocialLinks({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
+  const { lang } = useI18n();
+  const isEn = lang === 'en';
+
   const links = [
     { 
-      name: 'تلگرام', 
+      name: isEn ? 'Telegram' : 'تلگرام', 
       url: 'https://t.me/ehsansalehi_tech', 
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400">
@@ -12,7 +17,7 @@ export default function SocialLinks({ size = 'md' }: { size?: 'sm' | 'md' | 'lg'
       )
     },
     { 
-      name: 'واتساپ', 
+      name: isEn ? 'WhatsApp' : 'واتساپ', 
       url: 'https://wa.me/989108308799', 
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-400">
@@ -21,7 +26,7 @@ export default function SocialLinks({ size = 'md' }: { size?: 'sm' | 'md' | 'lg'
       )
     },
     { 
-      name: 'لینکدین', 
+      name: isEn ? 'LinkedIn' : 'لینکدین', 
       url: 'https://www.linkedin.com/company/ehsansalehi-ir', 
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-sky-400">
@@ -30,7 +35,7 @@ export default function SocialLinks({ size = 'md' }: { size?: 'sm' | 'md' | 'lg'
       )
     },
     { 
-      name: 'گیت‌هاب', 
+      name: isEn ? 'GitHub' : 'گیت‌هاب', 
       url: 'https://github.com/ehsansalehi63', 
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-400">
@@ -39,7 +44,7 @@ export default function SocialLinks({ size = 'md' }: { size?: 'sm' | 'md' | 'lg'
       )
     },
     { 
-      name: 'ایمیل', 
+      name: isEn ? 'Email' : 'ایمیل', 
       url: 'mailto:info@ehsansalehi.ir', 
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-rose-400">
@@ -50,7 +55,7 @@ export default function SocialLinks({ size = 'md' }: { size?: 'sm' | 'md' | 'lg'
   ];
 
   return (
-    <div className="flex flex-wrap gap-3 justify-center lg:justify-start mt-6">
+    <div className="flex flex-wrap gap-3 justify-center lg:justify-start mt-6 font-vazir" dir={isEn ? 'ltr' : 'rtl'}>
       {links.map((link) => (
         <a
           key={link.name}

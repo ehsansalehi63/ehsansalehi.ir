@@ -532,8 +532,8 @@ export default function Home() {
         <section id="skills" className="py-24 px-4 glass border-y border-white/5 section-hidden">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
-              <span className="text-orange-400 text-sm font-medium tracking-wider">مهارت‌ها</span>
-              <h2 className="text-4xl md:text-5xl font-bold mt-2 bg-gradient-to-r from-orange-400 to-blue-500 bg-clip-text text-transparent">تخصص‌های فنی</h2>
+              <span className="text-orange-400 text-sm font-medium tracking-wider">{t.skillsTitle}</span>
+              <h2 className="text-4xl md:text-5xl font-bold mt-2 bg-gradient-to-r from-orange-400 to-blue-500 bg-clip-text text-transparent">{t.skillsSubtitle}</h2>
             </div>
             <div className="space-y-6">
               {[

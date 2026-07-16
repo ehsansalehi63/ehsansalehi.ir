@@ -7,6 +7,9 @@ import { useI18n } from './I18nProvider';
 
 export default function UnifiedHeroCard() {
   const { t, lang } = useI18n();
+  const isEn = lang === 'en';
+  const isRtl = !isEn;
+
   const [newsList, setNewsList] = useState<any[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -32,11 +35,34 @@ export default function UnifiedHeroCard() {
   }, [newsList]);
 
   const currentNews = newsList[currentIndex] || null;
-  const categoryBadge = currentNews?.category || (lang === 'en' ? 'IT & Crypto News' : 'فناوری و رمزارز');
+
+  // اگر خبر جاری در حالت انگلیسی است ولی title_en ندارد یا فارسی است، درخواست ترجمه آنی بفرستیم
+  useEffect(() => {
+    if (isEn && currentNews && (!currentNews.title_en || /[آ-ی]/.test(currentNews.title_en))) {
+      fetch(`/api/news/translate-item?id=${currentNews.id}`)
+        .then(r => r.json())
+        .then(d => {
+          if (d.success && d.title_en) {
+            setNewsList(prev => prev.map(item => item.id === currentNews.id ? { ...item, title_en: d.title_en, summary_en: d.summary_en } : item));
+          }
+        })
+        .catch(() => {});
+    }
+  }, [isEn, currentNews]);
+
+  let categoryBadge = currentNews?.category || (isEn ? 'Tech & Crypto News' : 'فناوری و رمزارز');
+  if (isEn) {
+    if (categoryBadge === 'رمزارز و بلاکچین') categoryBadge = 'Crypto & Blockchain 🪙';
+    else if (categoryBadge === 'هوش مصنوعی') categoryBadge = 'Artificial Intelligence 🤖';
+    else if (categoryBadge === 'امنیت سایبری') categoryBadge = 'Cyber Security 🔒';
+    else if (categoryBadge === 'سخت‌افزار و گجت') categoryBadge = 'Hardware & Gadgets 📱';
+    else if (categoryBadge === 'فناوری و رمزارز') categoryBadge = 'Tech & Crypto News 💻';
+    else categoryBadge = 'Global Tech News';
+  }
 
   const socialLinks = [
     { 
-      name: lang === 'en' ? 'Telegram' : 'تلگرام', 
+      name: isEn ? 'Telegram' : 'تلگرام', 
       url: 'https://t.me/ehsansalehi_tech', 
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400">
@@ -45,7 +71,7 @@ export default function UnifiedHeroCard() {
       )
     },
     { 
-      name: lang === 'en' ? 'WhatsApp' : 'واتساپ', 
+      name: isEn ? 'WhatsApp' : 'واتساپ', 
       url: 'https://wa.me/989108308799', 
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-400">
@@ -54,7 +80,7 @@ export default function UnifiedHeroCard() {
       )
     },
     { 
-      name: lang === 'en' ? 'LinkedIn' : 'لینکدین', 
+      name: isEn ? 'LinkedIn' : 'لینکدین', 
       url: 'https://www.linkedin.com/company/ehsansalehi-ir', 
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-sky-400">
@@ -63,7 +89,7 @@ export default function UnifiedHeroCard() {
       )
     },
     { 
-      name: lang === 'en' ? 'GitHub' : 'گیت‌هاب', 
+      name: isEn ? 'GitHub' : 'گیت‌هاب', 
       url: 'https://github.com/ehsansalehi63', 
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-400">
@@ -72,7 +98,7 @@ export default function UnifiedHeroCard() {
       )
     },
     { 
-      name: lang === 'en' ? 'Email' : 'ایمیل', 
+      name: isEn ? 'Email' : 'ایمیل', 
       url: 'mailto:info@ehsansalehi.ir', 
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-rose-400">
@@ -82,7 +108,13 @@ export default function UnifiedHeroCard() {
     },
   ];
 
-  const isRtl = lang === 'fa';
+  const titleText = isEn 
+    ? (currentNews?.title_en || (/[آ-ی]/.test(currentNews?.title || '') ? `Global Breaking Report: ${currentNews?.source_name || 'Tech News'}` : currentNews?.title))
+    : currentNews?.title;
+
+  const summaryText = isEn
+    ? (currentNews?.summary_en || (/[آ-ی]/.test(currentNews?.summary || '') ? 'Translating full executive summary into English via AI translator right now...' : currentNews?.summary))
+    : currentNews?.summary;
 
   return (
     <div className="w-full max-w-7xl mx-auto bg-gradient-to-b from-[#151824]/95 via-[#0e1017]/95 to-[#0b0c12]/95 backdrop-blur-3xl rounded-[42px] p-6 sm:p-8 md:p-12 border border-orange-500/35 shadow-[0_25px_100px_rgba(255,107,0,0.18)] relative overflow-hidden group font-vazir" dir={isRtl ? 'rtl' : 'ltr'}>
@@ -217,7 +249,7 @@ export default function UnifiedHeroCard() {
                   {currentNews.image_url && !currentNews.image_url.includes('placehold') ? (
                     <img 
                       src={currentNews.image_url} 
-                      alt={currentNews.title} 
+                      alt={titleText} 
                       className="w-full h-full object-cover group-hover/news:scale-105 transition-transform duration-700" 
                       loading="lazy"
                     />
@@ -234,27 +266,27 @@ export default function UnifiedHeroCard() {
 
                   {currentNews.source_name && (
                     <span className={`absolute bottom-3.5 ${isRtl ? 'left-3.5' : 'right-3.5'} bg-white/15 backdrop-blur-md text-white/90 text-[11px] px-3 py-0.5 rounded-lg border border-white/10 font-bold`}>
-                      {lang === 'fa' ? 'منبع:' : 'Source:'} {currentNews.source_name}
+                      {isEn ? 'Source:' : 'منبع:'} {currentNews.source_name}
                     </span>
                   )}
 
                   <div className={`absolute bottom-3.5 ${isRtl ? 'right-3.5' : 'left-3.5'} flex items-center gap-1.5 text-xs text-zinc-300 bg-black/70 px-2.5 py-1 rounded-lg font-medium`}>
-                    <Clock size={13} className="text-amber-400" /> {lang === 'fa' ? '۲ دقیقه مطالعه' : '2 Min Read'}
+                    <Clock size={13} className="text-amber-400" /> {isEn ? '2 Min Read' : '۲ دقیقه مطالعه'}
                   </div>
                 </div>
 
                 <div className="px-1 space-y-2">
                   <h3 className="text-base sm:text-lg font-extrabold text-white leading-snug line-clamp-2 group-hover/news:text-orange-400 transition-colors">
-                    {currentNews.title}
+                    {titleText}
                   </h3>
                   <p className="text-zinc-300 text-xs sm:text-sm line-clamp-3 font-light leading-relaxed">
-                    {currentNews.summary}
+                    {summaryText}
                   </p>
                 </div>
               </Link>
             ) : (
               <div className="h-72 rounded-2xl bg-zinc-800/40 animate-pulse flex items-center justify-center text-zinc-400 text-sm">
-                {lang === 'fa' ? 'در حال دریافت آخرین اخبار فوری از سرور...' : 'Loading latest breaking news...'}
+                {isEn ? 'Loading latest breaking news...' : 'در حال دریافت آخرین اخبار فوری از سرور...'}
               </div>
             )}
 
