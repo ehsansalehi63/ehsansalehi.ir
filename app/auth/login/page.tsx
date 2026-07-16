@@ -1,177 +1,117 @@
 'use client';
-
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Toaster, toast } from 'sonner';
+import { toast } from 'sonner';
+import { useI18n } from '../../components/I18nProvider';
 
 export default function LoginPage() {
+  const { lang } = useI18n();
+  const isEn = lang === 'en';
+  const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
-
-  // بررسی توکن در ابتدای کار
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    const user = localStorage.getItem('user');
-    if (token && user) {
-      try {
-        const userData = JSON.parse(user);
-        if (userData.isAdmin) {
-          window.location.href = '/admin';
-        } else {
-          window.location.href = '/dashboard';
-        }
-      } catch (e) {
-        // ignore
-      }
-    }
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
-      if (res.ok) {
-        toast.success('ورود موفق ✅');
+      if (res.ok && data.success) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
-
-        // ✅ هدایت با window.location.href (مطمئن‌ترین روش)
-        setTimeout(() => {
-          if (data.user.isAdmin) {
-            window.location.href = '/admin';
-          } else {
-            window.location.href = '/dashboard';
-          }
-        }, 200);
+        if (data.user?.isAdmin) {
+          localStorage.setItem('admin_token', data.token);
+          localStorage.setItem('admin_user', JSON.stringify(data.user));
+        }
+        toast.success(isEn ? 'Login successful! ✅' : 'ورود موفق ✅');
+        router.push('/dashboard');
       } else {
-        toast.error(data.error || 'خطا در ورود');
+        toast.error(data.error || (isEn ? 'Invalid email or password' : 'ایمیل یا رمز عبور اشتباه است'));
       }
-    } catch (error) {
-      console.error('❌ خطا در لاگین:', error);
-      toast.error('خطا در ارتباط با سرور');
+    } catch {
+      toast.error(isEn ? 'Connection error' : 'خطا در ارتباط با سرور');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: '#0a0a0a',
-      color: 'white',
-      fontFamily: 'Vazirmatn, sans-serif',
-      padding: '20px',
-      direction: 'rtl',
-    }}>
-      <div style={{
-        backgroundColor: '#18181b',
-        padding: '40px',
-        borderRadius: '16px',
-        width: '100%',
-        maxWidth: '400px',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
-      }}>
-        <h1 style={{ textAlign: 'center', fontSize: '24px', marginBottom: '8px' }}>ورود</h1>
-        <p style={{ textAlign: 'center', color: '#a3a3a3', marginBottom: '24px', fontSize: '14px' }}>
-          وارد حساب کاربری خود شوید
-        </p>
-        
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <input
-            type="email"
-            placeholder="آدرس ایمیل"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            style={{
-              padding: '12px 16px',
-              backgroundColor: '#27272a',
-              border: '1px solid #3f3f46',
-              borderRadius: '8px',
-              color: 'white',
-              fontSize: '16px',
-              outline: 'none',
-              transition: 'border-color 0.2s',
-            }}
-            onFocus={(e) => e.currentTarget.style.borderColor = '#3b82f6'}
-            onBlur={(e) => e.currentTarget.style.borderColor = '#3f3f46'}
-            required
-          />
-          <input
-            type="password"
-            placeholder="رمز عبور"
-            value={formData.password}
-            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-            style={{
-              padding: '12px 16px',
-              backgroundColor: '#27272a',
-              border: '1px solid #3f3f46',
-              borderRadius: '8px',
-              color: 'white',
-              fontSize: '16px',
-              outline: 'none',
-              transition: 'border-color 0.2s',
-            }}
-            onFocus={(e) => e.currentTarget.style.borderColor = '#3b82f6'}
-            onBlur={(e) => e.currentTarget.style.borderColor = '#3f3f46'}
-            required
-          />
+    <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center p-4 font-vazir" dir={isEn ? 'ltr' : 'rtl'}>
+      <div className="max-w-md w-full glass rounded-3xl p-8 border border-white/10 shadow-2xl">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-black bg-gradient-to-r from-orange-400 to-blue-500 bg-clip-text text-transparent mb-2">
+            {isEn ? 'Login to Account' : 'ورود به حساب کاربری'}
+          </h1>
+          <p className="text-zinc-400 text-sm">
+            {isEn ? 'Welcome back! Enter your credentials to access your dashboard.' : 'خوش آمدید! برای ورود اطلاعات خود را وارد کنید.'}
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label className="block text-xs font-bold text-zinc-300 mb-2">
+              {isEn ? 'Email Address' : 'آدرس ایمیل'}
+            </label>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder={isEn ? 'name@example.com' : 'name@example.com'}
+              className="w-full px-4 py-3 bg-black/50 border border-white/10 rounded-2xl text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-orange-500/60 transition"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-zinc-300 mb-2">
+              {isEn ? 'Password' : 'رمز عبور'}
+            </label>
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              className="w-full px-4 py-3 bg-black/50 border border-white/10 rounded-2xl text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-orange-500/60 transition"
+            />
+          </div>
+
+          <div className="flex justify-between items-center text-xs">
+            <Link href="/auth/forgot-password" className="text-orange-400 hover:underline">
+              {isEn ? 'Forgot password?' : 'رمز عبور را فراموش کرده‌اید؟'}
+            </Link>
+          </div>
+
           <button
             type="submit"
             disabled={loading}
-            style={{
-              padding: '12px',
-              backgroundColor: '#2563eb',
-              borderRadius: '8px',
-              border: 'none',
-              color: 'white',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              opacity: loading ? 0.6 : 1,
-              transition: 'background 0.2s',
-            }}
-            onMouseEnter={(e) => !loading && (e.currentTarget.style.background = '#1d4ed8')}
-            onMouseLeave={(e) => !loading && (e.currentTarget.style.background = '#2563eb')}
+            className="w-full py-3.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-black font-extrabold text-sm rounded-2xl shadow-lg shadow-orange-500/20 transition disabled:opacity-50"
           >
-            {loading ? 'در حال ورود...' : 'ورود'}
+            {loading ? (isEn ? 'Signing in...' : 'در حال ورود...') : (isEn ? 'Sign In 🚀' : 'ورود به حساب 🚀')}
           </button>
         </form>
-        
-        <div style={{ textAlign: 'center', marginTop: '16px' }}>
-          <Link
-            href="/auth/forgot-password"
-            style={{
-              color: '#60a5fa',
-              textDecoration: 'none',
-              fontSize: '14px',
-              transition: 'color 0.2s',
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.color = '#93c5fd'}
-            onMouseLeave={(e) => e.currentTarget.style.color = '#60a5fa'}
-          >
-            🔑 فراموشی رمز عبور؟
+
+        <div className="mt-8 pt-6 border-t border-white/10 text-center text-xs text-zinc-400">
+          {isEn ? 'Don’t have an account?' : 'حساب کاربری ندارید؟'}{' '}
+          <Link href="/auth/register" className="text-orange-400 font-bold hover:underline">
+            {isEn ? 'Register Now' : 'ثبت نام کنید'}
           </Link>
         </div>
-        
-        <p style={{ textAlign: 'center', marginTop: '16px', color: '#a3a3a3', fontSize: '14px' }}>
-          ثبت نام نکرده‌اید؟{' '}
-          <Link href="/auth/register" style={{ color: '#60a5fa', textDecoration: 'none' }}>
-            ثبت نام
+
+        <div className="mt-4 text-center">
+          <Link href="/" className="text-xs text-zinc-500 hover:text-white transition">
+            {isEn ? '← Back to Homepage' : '← بازگشت به صفحه اصلی'}
           </Link>
-        </p>
+        </div>
       </div>
-      <Toaster position="top-center" richColors />
     </div>
   );
 }
