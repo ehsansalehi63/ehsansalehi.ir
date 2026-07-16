@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { useI18n } from './I18nProvider';
+import { MessageSquare, Send, User, Clock, CheckCircle } from 'lucide-react';
 
 interface Comment {
   id: number;
@@ -15,140 +17,179 @@ interface NewsCommentsProps {
 }
 
 export default function NewsComments({ newsId }: NewsCommentsProps) {
+  const { lang } = useI18n();
+  const isEn = lang === 'en';
+
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', content: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // دریافت نظرات
   useEffect(() => {
     fetch(`/api/news/comments?newsId=${newsId}`)
       .then(res => res.json())
       .then(data => {
-        if (data.success) setComments(data.comments);
+        if (data.success) setComments(data.comments || []);
         setLoading(false);
       })
       .catch(() => setLoading(false));
   }, [newsId]);
 
-  // ولیدیشن
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    if (!form.name.trim() || form.name.length < 2) newErrors.name = 'نام حداقل ۲ کاراکتر';
-    if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) newErrors.email = 'ایمیل معتبر نیست';
-    if (!form.content.trim() || form.content.length < 3) newErrors.content = 'متن نظر حداقل ۳ کاراکتر';
+    if (!form.name.trim() || form.name.length < 2) newErrors.name = isEn ? 'Name must be at least 2 characters' : 'نام حداقل ۲ کاراکتر';
+    if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) newErrors.email = isEn ? 'Valid email is required' : 'ایمیل معتبر نیست';
+    if (!form.content.trim() || form.content.length < 3) newErrors.content = isEn ? 'Comment must be at least 3 characters' : 'متن نظر حداقل ۳ کاراکتر';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validate()) return;
+    if (!validate() || submitting) return;
 
     setSubmitting(true);
     try {
       const res = await fetch('/api/news/comments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newsId, ...form }),
+        body: JSON.stringify({ ...form, newsId }),
       });
       const data = await res.json();
-      if (data.success) {
-        toast.success('نظر شما ثبت شد و پس از تأیید نمایش داده می‌شود ✅');
+      if (res.ok && data.success) {
+        toast.success(isEn ? 'Comment posted successfully! ✅' : 'نظر شما با موفقیت ثبت شد ✅');
         setForm({ name: '', email: '', content: '' });
-        // بارگذاری مجدد نظرات
-        const reload = await fetch(`/api/news/comments?newsId=${newsId}`);
-        const reloadData = await reload.json();
-        if (reloadData.success) setComments(reloadData.comments);
+        setErrors({});
+        fetch(`/api/news/comments?newsId=${newsId}`)
+          .then(r => r.json())
+          .then(d => { if (d.success) setComments(d.comments || []); });
       } else {
-        toast.error(data.error || 'خطا در ثبت نظر');
+        toast.error(data.error || (isEn ? 'Error submitting comment' : 'خطا در ثبت نظر'));
       }
     } catch {
-      toast.error('خطا در ارتباط با سرور');
-    } finally {
-      setSubmitting(false);
+      toast.error(isEn ? 'Network error' : 'خطا در ارتباط با سرور');
     }
+    setSubmitting(false);
   };
 
   const formatDate = (date: string) => {
     const d = new Date(date);
-    return d.toLocaleDateString('fa-IR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    return isEn
+      ? d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+      : d.toLocaleDateString('fa-IR', { year: 'numeric', month: 'long', day: 'numeric' });
   };
 
-  if (loading) return <div className="text-center text-zinc-400 py-8">در حال بارگذاری نظرات...</div>;
-
   return (
-    <div className="mt-10 pt-6 border-t border-white/10">
-      <h3 className="text-xl font-bold mb-6">💬 نظرات ({comments.length})</h3>
-      
-      {/* لیست نظرات */}
-      {comments.length === 0 ? (
-        <p className="text-zinc-400 text-sm">هنوز نظری ثبت نشده است. اولین نفر باشید!</p>
-      ) : (
-        <div className="space-y-4 mb-8">
-          {comments.map((comment) => (
-            <div key={comment.id} className="glass p-4 rounded-xl border border-white/5">
-              <div className="flex items-center gap-3 mb-2">
-                <span className="text-lg font-bold text-orange-400">{comment.name}</span>
-                <span className="text-xs text-zinc-500">{formatDate(comment.created_at)}</span>
-              </div>
-              <p className="text-zinc-300 text-sm leading-relaxed">{comment.content}</p>
-            </div>
-          ))}
-        </div>
-      )}
+    <div className="space-y-12 font-vazir" dir={isEn ? 'ltr' : 'rtl'}>
+      {/* Comments Form Box */}
+      <div className="bg-gradient-to-b from-[#161924] to-[#0e1017] rounded-3xl p-6 sm:p-8 border border-white/10 shadow-2xl">
+        <h4 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+          <MessageSquare size={20} className="text-orange-400" />
+          <span>{isEn ? 'Leave a Technical Comment or Question' : 'ثبت دیدگاه یا پرسش فنی'}</span>
+        </h4>
+        <p className="text-zinc-400 text-xs sm:text-sm mb-6 font-light">
+          {isEn ? 'Share your thoughts, insights, or technical questions regarding this article.' : 'نظرات، تحلیل‌ها یا پرسش‌های تخصصی خود را پیرامون این مقاله با ما و دیگر متخصصان در میان بگذارید.'}
+        </p>
 
-      {/* فرم ثبت نظر */}
-      <form onSubmit={handleSubmit} className="space-y-4 max-w-2xl">
-        <h4 className="font-bold text-lg text-orange-400">نظر خود را بنویسید</h4>
-        <div className="grid md:grid-cols-2 gap-4">
-          <div>
-            <input
-              type="text"
-              placeholder="نام و نام خانوادگی"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="w-full px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-zinc-500 focus:border-orange-500/50 outline-none transition-colors text-sm"
-            />
-            {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name}</p>}
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="grid sm:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-xs font-bold text-zinc-300 mb-2">
+                {isEn ? 'Full Name' : 'نام و نام خانوادگی'} <span className="text-red-400">*</span>
+              </label>
+              <input
+                type="text"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                placeholder={isEn ? 'e.g. John Doe' : 'مثلاً مهندس رضایی'}
+                className="w-full bg-black/50 border border-white/10 rounded-2xl px-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-orange-500/60 transition"
+              />
+              {errors.name && <span className="text-red-400 text-[11px] mt-1 block font-bold">{errors.name}</span>}
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-zinc-300 mb-2">
+                {isEn ? 'Email Address' : 'آدرس ایمیل'} <span className="text-red-400">*</span>
+              </label>
+              <input
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                placeholder={isEn ? 'name@company.com' : 'example@domain.com'}
+                className="w-full bg-black/50 border border-white/10 rounded-2xl px-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-orange-500/60 transition"
+              />
+              {errors.email && <span className="text-red-400 text-[11px] mt-1 block font-bold">{errors.email}</span>}
+            </div>
           </div>
+
           <div>
-            <input
-              type="email"
-              placeholder="آدرس ایمیل"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="w-full px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-zinc-500 focus:border-orange-500/50 outline-none transition-colors text-sm"
+            <label className="block text-xs font-bold text-zinc-300 mb-2">
+              {isEn ? 'Comment Content' : 'متن دیدگاه شما'} <span className="text-red-400">*</span>
+            </label>
+            <textarea
+              rows={4}
+              value={form.content}
+              onChange={(e) => setForm({ ...form, content: e.target.value })}
+              placeholder={isEn ? 'Write your analysis or question here...' : 'متن دیدگاه یا تحلیل تخصصی خود را بنویسید...'}
+              className="w-full bg-black/50 border border-white/10 rounded-2xl p-4 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-orange-500/60 transition resize-y"
             />
-            {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
+            {errors.content && <span className="text-red-400 text-[11px] mt-1 block font-bold">{errors.content}</span>}
           </div>
-        </div>
-        <div>
-          <textarea
-            rows={4}
-            placeholder="متن نظر شما..."
-            value={form.content}
-            onChange={(e) => setForm({ ...form, content: e.target.value })}
-            className="w-full px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-zinc-500 focus:border-orange-500/50 outline-none transition-colors resize-none text-sm"
-          />
-          {errors.content && <p className="text-red-400 text-xs mt-1">{errors.content}</p>}
-        </div>
-        <button
-          type="submit"
-          disabled={submitting}
-          className="px-6 py-2 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-colors disabled:opacity-50 text-sm"
-        >
-          {submitting ? 'در حال ثبت...' : 'ارسال نظر'}
-        </button>
-        <p className="text-xs text-zinc-500">* نظر شما پس از تأیید نمایش داده می‌شود.</p>
-      </form>
+
+          <button
+            type="submit"
+            disabled={submitting}
+            className="px-8 py-3.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-black font-extrabold text-xs sm:text-sm transition-all duration-300 shadow-lg shadow-orange-500/20 disabled:opacity-50 flex items-center gap-2 shrink-0"
+          >
+            <Send size={15} className={isEn ? 'rotate-0' : '-rotate-90'} />
+            <span>{submitting ? (isEn ? 'Posting Comment...' : 'در حال ثبت دیدگاه...') : (isEn ? 'Post Comment 🚀' : 'ثبت و انتشار دیدگاه 🚀')}</span>
+          </button>
+        </form>
+      </div>
+
+      {/* Comments List */}
+      <div className="space-y-4">
+        <h4 className="text-lg font-extrabold text-white flex items-center gap-2">
+          <span>{isEn ? `Published Comments (${comments.length})` : `دیدگاه‌های منتشرشده (${comments.length})`}</span>
+        </h4>
+
+        {loading ? (
+          <div className="h-40 bg-zinc-800/40 rounded-3xl animate-pulse flex items-center justify-center text-zinc-500 text-sm">
+            {isEn ? 'Loading comments...' : 'در حال بارگذاری دیدگاه‌ها...'}
+          </div>
+        ) : comments.length === 0 ? (
+          <div className="bg-black/40 border border-white/5 rounded-3xl p-8 text-center text-zinc-500 text-sm font-light">
+            {isEn ? 'No comments published yet. Be the first to share your thoughts!' : 'هنوز دیدگاهی برای این مقاله ثبت نشده است. اولین نفری باشید که نظر خود را به اشتراک می‌گذارید!'}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {comments.map((comment) => (
+              <div key={comment.id} className="bg-black/50 border border-white/10 rounded-2xl p-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center text-orange-400">
+                      <User size={16} />
+                    </div>
+                    <div>
+                      <h5 className="text-sm font-bold text-white">{comment.name}</h5>
+                      <span className="text-[11px] text-zinc-500 flex items-center gap-1">
+                        <Clock size={11} /> {formatDate(comment.created_at)}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    {isEn ? 'Verified Member' : 'کاربر تأییدشده'}
+                  </span>
+                </div>
+                <p className="text-zinc-300 text-xs sm:text-sm leading-relaxed font-light pl-11">
+                  {comment.content}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

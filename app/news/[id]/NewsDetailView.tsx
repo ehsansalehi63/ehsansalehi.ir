@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useI18n } from '../../components/I18nProvider';
 import NewsComments from '../../components/NewsComments';
@@ -9,6 +9,29 @@ export default function NewsDetailView({ news, newsId }: { news: any; newsId: nu
   const { lang } = useI18n();
   const isEn = lang === 'en';
 
+  const [translatedNews, setTranslatedNews] = useState<{ title_en?: string; summary_en?: string; content_en?: string }>({
+    title_en: news.title_en,
+    summary_en: news.summary_en,
+    content_en: news.content_en,
+  });
+
+  useEffect(() => {
+    if (isEn && (!translatedNews.title_en || /[آ-ی]/.test(translatedNews.title_en || ''))) {
+      fetch(`/api/news/translate-item?id=${newsId}`)
+        .then(r => r.json())
+        .then(d => {
+          if (d.success) {
+            setTranslatedNews({
+              title_en: d.title_en,
+              summary_en: d.summary_en,
+              content_en: d.content_en,
+            });
+          }
+        })
+        .catch(() => {});
+    }
+  }, [isEn, newsId]);
+
   const formatDate = (date: string) => {
     const d = new Date(date);
     return isEn 
@@ -16,9 +39,10 @@ export default function NewsDetailView({ news, newsId }: { news: any; newsId: nu
       : d.toLocaleDateString('fa-IR', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   };
 
-  const title = isEn ? (news.title_en || news.title) : news.title;
-  const summary = isEn ? (news.summary_en || news.summary) : news.summary;
-  const content = isEn ? (news.content_en || news.content) : news.content;
+  const title = isEn ? (translatedNews.title_en || news.title_en || news.title) : news.title;
+  const summary = isEn ? (translatedNews.summary_en || news.summary_en || news.summary) : news.summary;
+  const content = isEn ? (translatedNews.content_en || news.content_en || news.content) : news.content;
+  
   const category = isEn 
     ? (news.category === 'رمزارز و بلاکچین' ? 'Crypto & Blockchain 🪙' : news.category === 'هوش مصنوعی' ? 'Artificial Intelligence 🤖' : news.category === 'امنیت سایبری' ? 'Cyber Security 🔒' : news.category === 'سخت‌افزار و گجت' ? 'Hardware & Gadgets 📱' : 'Tech & IT News 💻')
     : (news.category || 'فناوری و رمزارز');

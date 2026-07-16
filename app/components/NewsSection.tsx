@@ -1,38 +1,53 @@
 'use client';
-
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Flame, Sparkles, Clock } from 'lucide-react';
+import { useI18n } from './I18nProvider';
 
 interface NewsItem {
   id: number;
   title: string;
+  title_en?: string;
   summary: string;
+  summary_en?: string;
   image_url: string;
   source_name: string;
   published_at: string;
   category?: string;
 }
 
-function getOrDetectCategory(item: NewsItem): string {
-  if (item.category && item.category !== '') return item.category;
-  const text = (item.title + ' ' + (item.summary || '') + ' ' + (item.source_name || '')).toLowerCase();
-  if (text.includes('crypto') || text.includes('bitcoin') || text.includes('ethereum') || text.includes('coin') || text.includes('token') || text.includes('solana') || text.includes('binance') || text.includes('بیت کوین') || text.includes('رمز ارز') || text.includes('ارز دیجیتال') || text.includes('بلاکچین') || text.includes('coindesk')) {
-    return 'رمزارز و بلاکچین';
+function getOrDetectCategory(item: NewsItem, isEn: boolean): string {
+  let cat = item.category || '';
+  if (!cat) {
+    const text = ((item.title_en || item.title) + ' ' + (item.summary_en || item.summary || '') + ' ' + (item.source_name || '')).toLowerCase();
+    if (text.includes('crypto') || text.includes('bitcoin') || text.includes('ethereum') || text.includes('coin') || text.includes('token') || text.includes('solana') || text.includes('binance') || text.includes('بیت کوین') || text.includes('رمز ارز') || text.includes('ارز دیجیتال') || text.includes('بلاکچین') || text.includes('coindesk')) {
+      cat = 'رمزارز و بلاکچین';
+    } else if (text.includes('ai ') || text.includes('chatgpt') || text.includes('openai') || text.includes('llm') || text.includes('gemini') || text.includes('claude') || text.includes('هوش مصنوعی') || text.includes('یادگیری ماشین')) {
+      cat = 'هوش مصنوعی';
+    } else if (text.includes('security') || text.includes('cyber') || text.includes('hack') || text.includes('malware') || text.includes('امنیت') || text.includes('هک') || text.includes('سایبری')) {
+      cat = 'امنیت سایبری';
+    } else if (text.includes('apple') || text.includes('samsung') || text.includes('phone') || text.includes('android') || text.includes('gpu') || text.includes('cpu') || text.includes('intel') || text.includes('nvidia') || text.includes('اپل') || text.includes('سامسونگ') || text.includes('موبایل') || text.includes('سخت افزار')) {
+      cat = 'سخت‌افزار و گجت';
+    } else {
+      cat = 'فناوری و رمزارز';
+    }
   }
-  if (text.includes('ai ') || text.includes('chatgpt') || text.includes('openai') || text.includes('llm') || text.includes('gemini') || text.includes('claude') || text.includes('هوش مصنوعی') || text.includes('یادگیری ماشین')) {
-    return 'هوش مصنوعی';
+
+  if (isEn) {
+    if (cat === 'رمزارز و بلاکچین') return 'Crypto & Blockchain 🪙';
+    if (cat === 'هوش مصنوعی') return 'Artificial Intelligence 🤖';
+    if (cat === 'امنیت سایبری') return 'Cyber Security 🔒';
+    if (cat === 'سخت‌افزار و گجت') return 'Hardware & Gadgets 📱';
+    if (cat === 'فناوری و رمزارز') return 'Tech & Crypto News 💻';
+    return 'IT & Tech News';
   }
-  if (text.includes('security') || text.includes('cyber') || text.includes('hack') || text.includes('malware') || text.includes('امنیت') || text.includes('هک') || text.includes('سایبری')) {
-    return 'امنیت سایبری';
-  }
-  if (text.includes('apple') || text.includes('samsung') || text.includes('phone') || text.includes('android') || text.includes('gpu') || text.includes('cpu') || text.includes('intel') || text.includes('nvidia') || text.includes('اپل') || text.includes('سامسونگ') || text.includes('موبایل') || text.includes('سخت افزار')) {
-    return 'سخت‌افزار و گجت';
-  }
-  return 'فناوری و رمزارز';
+  return cat;
 }
 
 export default function NewsSection() {
+  const { lang } = useI18n();
+  const isEn = lang === 'en';
+
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -44,21 +59,17 @@ export default function NewsSection() {
       .then(res => res.json())
       .then(data => {
         if (data.success) {
-          const processed = (data.news || []).map((item: NewsItem) => ({
-            ...item,
-            category: getOrDetectCategory(item)
-          }));
-          setNews(processed);
+          setNews(data.news || []);
         } else {
-          setError('خطا در دریافت اخبار');
+          setError(isEn ? 'Error fetching latest news' : 'خطا در دریافت اخبار');
         }
         setLoading(false);
       })
       .catch(() => {
-        setError('خطا در ارتباط با سرور');
+        setError(isEn ? 'Server connection error' : 'خطا در ارتباط با سرور');
         setLoading(false);
       });
-  }, []);
+  }, [isEn]);
 
   const loadMore = () => setDisplayCount(prev => prev + increment);
   const visibleNews = news.slice(0, displayCount);
@@ -82,46 +93,44 @@ export default function NewsSection() {
   }
 
   if (news.length === 0) {
-    return <div className="text-center text-zinc-400 py-8">هنوز خبری منتشر نشده است.</div>;
+    return <div className="text-center text-zinc-400 py-8">{isEn ? 'No news articles published yet.' : 'هنوز خبری منتشر نشده است.'}</div>;
   }
 
   const featured = visibleNews[0];
   const rest = visibleNews.slice(1);
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-12" dir={isEn ? 'ltr' : 'rtl'}>
       {/* Header section inside Homepage News */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-white/10 pb-6">
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/30 text-orange-400 text-xs font-bold mb-2">
-            <Flame size={14} /> تحلیل هوش مصنوعی از اخبار جهان
+            <Flame size={14} /> {isEn ? 'AI-Driven Global Breaking News & Analysis' : 'تحلیل هوش مصنوعی از اخبار جهان'}
           </div>
           <h2 className="text-3xl md:text-4xl font-black text-white">
-            اخبار فوری <span className="bg-gradient-to-r from-orange-400 to-amber-300 bg-clip-text text-transparent">فناوری و رمزارز</span>
+            {isEn ? 'Breaking' : 'اخبار فوری'} <span className="bg-gradient-to-r from-orange-400 to-amber-300 bg-clip-text text-transparent">{isEn ? 'Tech & Crypto News' : 'فناوری و رمزارز'}</span>
           </h2>
         </div>
         <Link 
           href="/news" 
           className="btn-outline text-xs flex items-center gap-2 hover:border-orange-500"
         >
-          <span>مشاهده پایگاه کامل اخبار و دسته‌بندی‌ها</span>
-          <ArrowRight className="w-4 h-4 rotate-180" />
+          <span>{isEn ? 'View Complete News Portal & Categories' : 'مشاهده پایگاه کامل اخبار و دسته‌بندی‌ها'}</span>
+          <ArrowRight className={`w-4 h-4 ${!isEn ? 'rotate-180' : ''}`} />
         </Link>
       </div>
 
-      {/* ====== خبر ویژه (Featured Card) ====== */}
+      {/* ====== Featured Card ====== */}
       {featured && (
         <div className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#161821] to-[#0d0f17] border border-white/10 hover:border-orange-500/40 transition-all duration-500 shadow-2xl">
           <Link href={`/news/${featured.id}`} className="block">
             <div className="relative h-[440px] w-full">
-              {/* لایه شیشه‌ای روی تصویر */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent z-10" />
               
-              {/* تصویر */}
               {featured.image_url && !featured.image_url.includes('placehold') ? (
                 <img 
                   src={featured.image_url} 
-                  alt={featured.title} 
+                  alt={isEn ? (featured.title_en || featured.title) : featured.title} 
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
               ) : (
@@ -130,34 +139,32 @@ export default function NewsSection() {
                 </div>
               )}
 
-              {/* محتوای خبر ویژه */}
               <div className="absolute inset-0 flex items-end p-8 md:p-12 z-20">
                 <div className="max-w-3xl">
                   <div className="flex flex-wrap items-center gap-2 mb-4">
                     <span className="bg-gradient-to-r from-orange-500 to-amber-500 text-black text-xs font-black px-3 py-1 rounded-full shadow-lg">
-                      {featured.category || 'فناوری و رمزارز'}
+                      {getOrDetectCategory(featured, isEn)}
                     </span>
                     {featured.source_name && (
                       <span className="bg-black/60 backdrop-blur-md text-white/90 border border-white/10 text-xs font-bold px-3 py-1 rounded-full">
-                        منبع: {featured.source_name}
+                        {isEn ? 'Source:' : 'منبع:'} {featured.source_name}
                       </span>
                     )}
                   </div>
                   <h3 className="text-2xl md:text-4xl lg:text-5xl font-extrabold text-white mb-4 leading-tight group-hover:text-orange-400 transition-colors">
-                    {featured.title}
+                    {isEn ? (featured.title_en || featured.title) : featured.title}
                   </h3>
-                  {featured.summary && (
+                  {(featured.summary || featured.summary_en) && (
                     <p className="text-zinc-300 text-sm md:text-base line-clamp-3 mb-6 font-light leading-relaxed">
-                      {featured.summary}
+                      {isEn ? (featured.summary_en || featured.summary) : featured.summary}
                     </p>
                   )}
                   <span className="inline-flex items-center gap-2 text-amber-400 font-bold text-sm bg-black/50 backdrop-blur-md px-5 py-2.5 rounded-xl border border-white/10 group-hover:bg-amber-500 group-hover:text-black transition-all">
-                    ادامه مطلب و مطالعه تحلیل AI <ArrowRight className="w-4 h-4 rotate-180" />
+                    {isEn ? 'Read Full Story & AI Analysis' : 'ادامه مطلب و مطالعه تحلیل AI'} <ArrowRight className={`w-4 h-4 ${!isEn ? 'rotate-180' : ''}`} />
                   </span>
                 </div>
               </div>
 
-              {/* برندینگ بالای عکس */}
               <div className="absolute top-5 left-5 z-30 bg-black/60 backdrop-blur-md px-3.5 py-1 rounded-full border border-white/10">
                 <span className="text-white text-xs font-extrabold flex items-center gap-1.5">
                   <Sparkles size={12} className="text-amber-400" /> ehsansalehi.ir
@@ -168,21 +175,21 @@ export default function NewsSection() {
         </div>
       )}
 
-      {/* ====== بقیه اخبار (کارت‌ها) ====== */}
+      {/* ====== Rest of News Cards ====== */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {rest.map((item) => (
-          <NewsCard key={item.id} item={item} />
+          <NewsCard key={item.id} item={item} isEn={isEn} />
         ))}
       </div>
 
-      {/* ====== دکمه مشاهده بیشتر ====== */}
+      {/* ====== Load More Button ====== */}
       {hasMore && (
         <div className="text-center pt-4">
           <button
             onClick={loadMore}
             className="px-8 py-3.5 border border-orange-500/40 bg-orange-500/10 text-orange-400 rounded-full hover:bg-orange-500/20 transition-all text-sm font-bold shadow-lg shadow-orange-500/10"
           >
-            مشاهده اخبار بیشتر ↓
+            {isEn ? 'Load More News ↓' : 'مشاهده اخبار بیشتر ↓'}
           </button>
         </div>
       )}
@@ -190,20 +197,20 @@ export default function NewsSection() {
   );
 }
 
-function NewsCard({ item }: { item: NewsItem }) {
+function NewsCard({ item, isEn }: { item: NewsItem; isEn: boolean }) {
   const [imgError, setImgError] = useState(false);
 
   const formatDate = (date: string) => {
     const d = new Date(date);
-    return d.toLocaleDateString('fa-IR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
+    return isEn
+      ? d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+      : d.toLocaleDateString('fa-IR', { year: 'numeric', month: 'long', day: 'numeric' });
   };
 
   const isPlaceholder = item.image_url?.includes('placehold');
-  const readingTime = Math.max(1, Math.ceil(((item.summary || '').length) / 300));
+  const summaryText = isEn ? (item.summary_en || item.summary || '') : (item.summary || '');
+  const titleText = isEn ? (item.title_en || item.title) : item.title;
+  const readingTime = Math.max(1, Math.ceil(summaryText.length / 300));
 
   return (
     <div className="group relative rounded-3xl bg-gradient-to-b from-[#161821] to-[#0f1118] border border-white/10 hover:border-orange-500/40 transition-all duration-500 flex flex-col h-full hover:-translate-y-2 hover:shadow-2xl overflow-hidden">
@@ -211,7 +218,7 @@ function NewsCard({ item }: { item: NewsItem }) {
         {item.image_url && !imgError && !isPlaceholder ? (
           <img
             src={item.image_url}
-            alt={item.title}
+            alt={titleText}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
             onError={() => setImgError(true)}
             loading="lazy"
@@ -223,14 +230,12 @@ function NewsCard({ item }: { item: NewsItem }) {
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-[#161821] via-transparent to-transparent opacity-90" />
 
-        {/* Category Badge */}
-        <span className="absolute top-3 right-3 bg-black/80 backdrop-blur-md text-orange-400 border border-orange-500/30 text-[11px] font-extrabold px-3 py-1 rounded-full shadow-lg">
-          {item.category || 'فناوری و رمزارز'}
+        <span className={`absolute top-3 ${isEn ? 'right-3' : 'left-3'} bg-black/80 backdrop-blur-md text-orange-400 border border-orange-500/30 text-[11px] font-extrabold px-3 py-1 rounded-full shadow-lg`}>
+          {getOrDetectCategory(item, isEn)}
         </span>
 
-        {/* Source */}
         {item.source_name && (
-          <span className="absolute bottom-3 left-3 bg-white/10 backdrop-blur-md text-white/90 text-[11px] px-2 py-0.5 rounded-md border border-white/10">
+          <span className={`absolute bottom-3 ${isEn ? 'left-3' : 'right-3'} bg-white/10 backdrop-blur-md text-white/90 text-[11px] px-2 py-0.5 rounded-md border border-white/10`}>
             {item.source_name}
           </span>
         )}
@@ -239,18 +244,18 @@ function NewsCard({ item }: { item: NewsItem }) {
       <div className="p-5 flex flex-col flex-grow">
         <div className="flex items-center justify-between text-[11px] text-zinc-400 mb-2 font-medium">
           <span>📅 {formatDate(item.published_at)}</span>
-          <span className="flex items-center gap-1"><Clock size={11} className="text-amber-400" /> {readingTime} دقیقه مطالعه</span>
+          <span className="flex items-center gap-1"><Clock size={11} className="text-amber-400" /> {readingTime} {isEn ? 'Min Read' : 'دقیقه مطالعه'}</span>
         </div>
 
         <h4 className="text-base font-bold text-white leading-snug line-clamp-2 mb-2 group-hover:text-orange-400 transition-colors">
           <Link href={`/news/${item.id}`}>
-            {item.title}
+            {titleText}
           </Link>
         </h4>
 
-        {item.summary && (
+        {summaryText && (
           <p className="text-zinc-300 text-xs leading-relaxed line-clamp-2 flex-grow mb-4 font-light">
-            {item.summary}
+            {summaryText}
           </p>
         )}
 
@@ -259,7 +264,7 @@ function NewsCard({ item }: { item: NewsItem }) {
             href={`/news/${item.id}`}
             className="inline-flex items-center gap-1 text-orange-400 font-bold text-xs group-hover:text-amber-300 transition-colors"
           >
-            ادامه مطلب <ArrowRight size={13} className="rotate-180 transform group-hover:-translate-x-1 transition-transform" />
+            {isEn ? 'Read Full AI Analysis' : 'ادامه مطلب'} <ArrowRight size={13} className={`${!isEn ? 'rotate-180 transform group-hover:-translate-x-1' : 'transform group-hover:translate-x-1'} transition-transform`} />
           </Link>
           <span className="text-[10px] text-zinc-500">ehsansalehi.ir</span>
         </div>

@@ -415,15 +415,15 @@ export default function Home() {
               transition={{ duration: 0.8, ease: 'easeInOut' }}
               className="text-center mb-16"
             >
-              <span className="text-orange-400 text-sm font-medium tracking-wider">خدمات من</span>
-              <h2 className="text-4xl md:text-5xl font-bold mt-2 bg-gradient-to-r from-orange-400 to-blue-500 bg-clip-text text-transparent">چطور می‌تونم به شما کمک کنم؟</h2>
-              <p className="text-zinc-400 text-sm mt-2 font-light">راه‌حل‌های ساده و عملی برای نیازهای شما</p>
+              <span className="text-orange-400 text-sm font-medium tracking-wider">{t.servicesTitle}</span>
+              <h2 className="text-4xl md:text-5xl font-bold mt-2 bg-gradient-to-r from-orange-400 to-blue-500 bg-clip-text text-transparent">{t.servicesSubtitle}</h2>
+              <p className="text-zinc-400 text-sm mt-2 font-light">{lang === 'en' ? 'Practical, high-speed, and secure digital architectures' : 'راه‌حل‌های ساده و عملی برای نیازهای شما'}</p>
             </motion.div>
             <div className="grid md:grid-cols-3 gap-8">
               {[
-                { icon: <Globe className="w-10 h-10 text-orange-400" />, title: 'وب‌سایت و فروشگاه', desc: 'سایت حرفه‌ای با وردپرس، بدون نیاز به برنامه‌نویسی' },
-                { icon: <Shield className="w-10 h-10 text-orange-400" />, title: 'شبکه و امنیت', desc: 'راه‌اندازی شبکه سازمانی، فایروال و پشتیبانی' },
-                { icon: <Cpu className="w-10 h-10 text-orange-400" />, title: 'اتوماسیون و هوش مصنوعی', desc: 'ربات‌های مکالمه، تحلیل داده و سیستم‌های هوشمند' }
+                { icon: <Globe className="w-10 h-10 text-orange-400" />, title: t.service1Title, desc: t.service1Desc },
+                { icon: <Shield className="w-10 h-10 text-orange-400" />, title: t.service2Title, desc: t.service2Desc },
+                { icon: <Cpu className="w-10 h-10 text-orange-400" />, title: t.service4Title, desc: t.service4Desc }
               ].map((s, i) => (
                 <motion.div 
                   key={i}
@@ -447,18 +447,18 @@ export default function Home() {
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center justify-between mb-12">
               <div>
-                <span className="text-orange-400 text-sm font-medium tracking-wider">نمونه کارها</span>
-                <h2 className="text-4xl md:text-5xl font-bold mt-2 bg-gradient-to-r from-orange-400 to-blue-500 bg-clip-text text-transparent">پروژه‌های اخیر</h2>
+                <span className="text-orange-400 text-sm font-medium tracking-wider">{t.projectsTitle}</span>
+                <h2 className="text-4xl md:text-5xl font-bold mt-2 bg-gradient-to-r from-orange-400 to-blue-500 bg-clip-text text-transparent">{t.projectsSubtitle}</h2>
               </div>
               <Link href="/projects" className="text-orange-400 hover:text-orange-300 transition-colors text-sm inline-flex items-center gap-1 font-medium">
-                همه پروژه‌ها <ArrowRight className="w-4 h-4" />
+                {t.projectsViewAll} <ArrowRight className={`w-4 h-4 ${lang === 'en' ? 'rotate-180' : ''}`} />
               </Link>
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {loading ? (
-                <p className="text-zinc-500 col-span-full text-center py-12">در حال بارگذاری...</p>
+                <p className="text-zinc-500 col-span-full text-center py-12">{lang === 'en' ? 'Loading projects...' : 'در حال بارگذاری...'}</p>
               ) : projects.length === 0 ? (
-                <p className="text-zinc-500 col-span-full text-center py-12">هیچ پروژه‌ای یافت نشد</p>
+                <p className="text-zinc-500 col-span-full text-center py-12">{t.projectsNoData}</p>
               ) : (
                 projects.slice(0, 3).map((project: any, idx) => (
                   <motion.div 
@@ -471,16 +471,16 @@ export default function Home() {
                   >
                     <div className="project-image">
                       {project.image_url ? (
-                        <img src={project.image_url} alt={project.title} />
+                        <img src={project.image_url} alt={lang === 'en' ? (project.title_en || project.title) : project.title} />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-6xl opacity-30">💼</div>
                       )}
                     </div>
-                    <div className="p-6 text-right">
-                      <h3 className="text-xl font-bold mb-1 group-hover:text-orange-400 transition-colors">{project.title}</h3>
-                      <p className="text-zinc-400 text-sm mb-3 line-clamp-2 font-light">{project.desc}</p>
+                    <div className="p-6 text-right" dir={lang === 'en' ? 'ltr' : 'rtl'}>
+                      <h3 className="text-xl font-bold mb-1 group-hover:text-orange-400 transition-colors">{lang === 'en' ? (project.title_en || project.title) : project.title}</h3>
+                      <p className="text-zinc-400 text-sm mb-3 line-clamp-2 font-light">{lang === 'en' ? (project.desc_en || project.desc) : project.desc}</p>
                       <Link href={`/projects/${project.id}`} className="text-orange-400 hover:text-orange-300 transition-colors inline-flex items-center gap-1 text-sm font-medium">
-                        جزئیات <ArrowRight className="w-4 h-4" />
+                        {lang === 'en' ? 'Details' : 'جزئیات'} <ArrowRight className={`w-4 h-4 ${lang === 'en' ? 'rotate-180' : ''}`} />
                       </Link>
                     </div>
                   </motion.div>
@@ -493,11 +493,11 @@ export default function Home() {
         {/* ====== ABOUT ====== */}
         <section id="about" className="py-24 px-4 section-hidden">
           <div className="max-w-4xl mx-auto text-center">
-            <span className="text-orange-400 text-sm font-medium tracking-wider">درباره من</span>
-            <h2 className="text-4xl md:text-5xl font-bold mt-2 bg-gradient-to-r from-orange-400 to-blue-500 bg-clip-text text-transparent">چرا من؟</h2>
+            <span className="text-orange-400 text-sm font-medium tracking-wider">{t.aboutTitle}</span>
+            <h2 className="text-4xl md:text-5xl font-bold mt-2 bg-gradient-to-r from-orange-400 to-blue-500 bg-clip-text text-transparent">{t.aboutSubtitle}</h2>
             <div className="mt-8 space-y-5 text-zinc-300 text-base leading-relaxed font-light">
-              <p>من احسان هستم. از سال ۱۳۸۸ در حوزه IT فعالیت می‌کنم و با سازمان‌های دولتی، هلدینگ‌های خصوصی و شرکت‌های دانش‌بنیان همکاری داشته‌ام.</p>
-              <p>کار من این است که مشکلات فنی را به‌زبانی ساده حل کنم. نیازی نیست شما متخصص باشید، من هستم که کارها را برایتان ساده می‌کنم.</p>
+              <p>{t.aboutDesc1}</p>
+              <p>{t.aboutDesc2}</p>
               <motion.div 
                 initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
@@ -506,16 +506,16 @@ export default function Home() {
                 className="grid grid-cols-3 gap-6 mt-10"
               >
                 <div className="glass p-6 rounded-xl">
-                  <div className="text-4xl font-bold text-orange-400">۲۰+</div>
-                  <div className="text-xs text-zinc-400 mt-1 font-light">سال تجربه</div>
+                  <div className="text-4xl font-bold text-orange-400">{t.aboutExpYears}</div>
+                  <div className="text-xs text-zinc-400 mt-1 font-light">{t.aboutExpLabel}</div>
                 </div>
                 <div className="glass p-6 rounded-xl">
-                  <div className="text-4xl font-bold text-orange-400">۵۰+</div>
-                  <div className="text-xs text-zinc-400 mt-1 font-light">پروژه موفق</div>
+                  <div className="text-4xl font-bold text-orange-400">{t.aboutProjectsCount}</div>
+                  <div className="text-xs text-zinc-400 mt-1 font-light">{t.aboutProjectsLabel}</div>
                 </div>
                 <div className="glass p-6 rounded-xl">
-                  <div className="text-4xl font-bold text-orange-400">۱۰۰٪</div>
-                  <div className="text-xs text-zinc-400 mt-1 font-light">رضایت مشتری</div>
+                  <div className="text-4xl font-bold text-orange-400">{t.aboutClientsCount}</div>
+                  <div className="text-xs text-zinc-400 mt-1 font-light">{t.aboutClientsLabel}</div>
                 </div>
               </motion.div>
             </div>
@@ -537,11 +537,11 @@ export default function Home() {
             </div>
             <div className="space-y-6">
               {[
-                { name: 'وردپرس و طراحی سایت', level: 95 },
-                { name: 'شبکه و امنیت', level: 92 },
-                { name: 'مجازی‌سازی (ESXI, Vcenter)', level: 88 },
-                { name: 'Next.js و توسعه وب', level: 90 },
-                { name: 'مدیریت و پشتیبانی IT', level: 95 },
+                { name: lang === 'en' ? 'WordPress & CMS Architecture' : 'وردپرس و طراحی سایت', level: 95 },
+                { name: lang === 'en' ? 'Network Architecture & Cyber Security' : 'شبکه و امنیت', level: 92 },
+                { name: lang === 'en' ? 'Virtualization & Cloud Infrastructure (ESXi, vCenter)' : 'مجازی‌سازی (ESXI, Vcenter)', level: 88 },
+                { name: lang === 'en' ? 'Next.js 16 Full-Stack Cloud Development' : 'Next.js و توسعه وب', level: 90 },
+                { name: lang === 'en' ? 'Enterprise IT Management & Consulting' : 'مدیریت و پشتیبانی IT', level: 95 },
               ].map((skill, idx) => (
                 <motion.div 
                   key={idx}
@@ -568,11 +568,11 @@ export default function Home() {
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center justify-between mb-10">
               <div>
-                <span className="text-orange-400 text-sm font-medium tracking-wider">اخبار</span>
-                <h2 className="text-4xl md:text-5xl font-bold mt-2 bg-gradient-to-r from-orange-400 to-blue-500 bg-clip-text text-transparent">📰 آخرین اخبار تکنولوژی</h2>
+                <span className="text-orange-400 text-sm font-medium tracking-wider">{lang === 'en' ? 'News & Insights' : 'اخبار'}</span>
+                <h2 className="text-4xl md:text-5xl font-bold mt-2 bg-gradient-to-r from-orange-400 to-blue-500 bg-clip-text text-transparent">{lang === 'en' ? '📰 Latest Tech & Crypto Insights' : '📰 آخرین اخبار تکنولوژی'}</h2>
               </div>
               <Link href="/news" className="text-orange-400 hover:text-orange-300 transition-colors text-sm inline-flex items-center gap-1 font-medium">
-                همه اخبار <ArrowRight className="w-4 h-4" />
+                {lang === 'en' ? 'All News' : 'همه اخبار'} <ArrowRight className={`w-4 h-4 ${lang === 'en' ? 'rotate-180' : ''}`} />
               </Link>
             </div>
             <NewsSection />
@@ -585,23 +585,23 @@ export default function Home() {
         {/* ====== CONTACT ====== */}
         <section id="contact" className="py-24 px-4 glass border-t border-white/5 section-hidden">
           <div className="max-w-3xl mx-auto text-center">
-            <span className="text-orange-400 text-sm font-medium tracking-wider">تماس با من</span>
-            <h2 className="text-4xl md:text-5xl font-bold mt-2 bg-gradient-to-r from-orange-400 to-blue-500 bg-clip-text text-transparent">بیایید با هم کار کنیم</h2>
-            <p className="text-zinc-400 text-sm mt-2 mb-10 font-light">سوالی دارید؟ خوشحال می‌شم کمک کنم</p>
-            <form ref={formRef} onSubmit={handleSubmit} className="max-w-lg mx-auto space-y-5 text-right">
-              <input type="text" name="name" required className="input-glass w-full px-5 py-3 rounded-xl text-white placeholder:text-zinc-500 focus:border-orange-500/50 outline-none transition-colors text-sm" placeholder="نام و نام خانوادگی" />
-              <input type="email" name="email" required className="input-glass w-full px-5 py-3 rounded-xl text-white placeholder:text-zinc-500 focus:border-orange-500/50 outline-none transition-colors text-sm" placeholder="آدرس ایمیل" />
-              <textarea name="message" required rows={5} className="input-glass w-full px-5 py-3 rounded-xl text-white placeholder:text-zinc-500 focus:border-orange-500/50 outline-none transition-colors resize-none text-sm" placeholder="پیام خود را بنویسید..."></textarea>
+            <span className="text-orange-400 text-sm font-medium tracking-wider">{t.contactTitle}</span>
+            <h2 className="text-4xl md:text-5xl font-bold mt-2 bg-gradient-to-r from-orange-400 to-blue-500 bg-clip-text text-transparent">{t.contactSubtitle}</h2>
+            <p className="text-zinc-400 text-sm mt-2 mb-10 font-light">{lang === 'en' ? 'Have a project or technical challenge? Let’s connect.' : 'سوالی دارید؟ خوشحال می‌شم کمک کنم'}</p>
+            <form ref={formRef} onSubmit={handleSubmit} className={`max-w-lg mx-auto space-y-5 ${lang === 'en' ? 'text-left' : 'text-right'}`}>
+              <input type="text" name="name" required className="input-glass w-full px-5 py-3 rounded-xl text-white placeholder:text-zinc-500 focus:border-orange-500/50 outline-none transition-colors text-sm" placeholder={t.contactFormName} />
+              <input type="email" name="email" required className="input-glass w-full px-5 py-3 rounded-xl text-white placeholder:text-zinc-500 focus:border-orange-500/50 outline-none transition-colors text-sm" placeholder={t.contactFormEmail} />
+              <textarea name="message" required rows={5} className="input-glass w-full px-5 py-3 rounded-xl text-white placeholder:text-zinc-500 focus:border-orange-500/50 outline-none transition-colors resize-none text-sm" placeholder={t.contactFormMessage}></textarea>
               <button type="submit" className="btn-primary w-full flex items-center justify-center gap-2">
-                <span>ارسال پیام</span>
-                <Send className="w-5 h-5" />
+                <span>{t.contactFormSubmit}</span>
+                <Send className={`w-5 h-5 ${lang === 'en' ? 'rotate-0' : '-rotate-90'}`} />
               </button>
             </form>
             <div className="grid sm:grid-cols-3 gap-4 mt-12">
               {[
                 { icon: <Phone className="w-6 h-6" />, text: '۰۹۱۳۳۲۸۷۹۸۴', sub: '۰۹۱۰۸۳۰۸۷۹۹' },
                 { icon: <Mail className="w-6 h-6" />, text: 'info@ehsansalehi.ir' },
-                { icon: <MapPin className="w-6 h-6" />, text: 'اصفهان، ایران' }
+                { icon: <MapPin className="w-6 h-6" />, text: t.contactLocationVal }
               ].map((item, i) => (
                 <div key={i} className="flex flex-col items-center gap-2 p-5 glass rounded-xl">
                   <div className="text-orange-400">{item.icon}</div>
@@ -616,7 +616,7 @@ export default function Home() {
         {/* ====== FOOTER ====== */}
         <footer className="py-10 text-center border-t border-white/5 px-4">
           <div className="max-w-4xl mx-auto">
-            <p className="text-zinc-500 text-xs font-light">© ۱۴۰۴ احسان صالحی – تمامی حقوق محفوظ است</p>
+            <p className="text-zinc-500 text-xs font-light">{t.footerRights}</p>
             <SocialLinks />
           </div>
         </footer>
