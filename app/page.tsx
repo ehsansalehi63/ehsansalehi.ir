@@ -342,13 +342,13 @@ export default function Home() {
               ))}
               {user ? (
                 <>
-                  <a href="/dashboard" className="nav-link px-4 py-2 text-sm font-medium text-blue-400">داشبورد</a>
-                  <button onClick={handleLogout} className="nav-link px-4 py-2 text-sm font-medium text-red-400 hover:text-red-300">خروج</button>
+                  <a href="/dashboard" className="nav-link px-4 py-2 text-sm font-medium text-blue-400">{t.navDashboard}</a>
+                  <button onClick={handleLogout} className="nav-link px-4 py-2 text-sm font-medium text-red-400 hover:text-red-300">{t.navLogout}</button>
                 </>
               ) : (
                 <>
-                  <a href="/auth/login" className="nav-link px-4 py-2 text-sm font-medium text-blue-400">ورود</a>
-                  <a href="/auth/register" className="px-4 py-2 text-sm font-medium bg-blue-500/20 text-blue-400 rounded-full hover:bg-blue-500/30 transition-colors">ثبت نام</a>
+                  <a href="/auth/login" className="nav-link px-4 py-2 text-sm font-medium text-blue-400">{t.navLogin}</a>
+                  <a href="/auth/register" className="px-4 py-2 text-sm font-medium bg-blue-500/20 text-blue-400 rounded-full hover:bg-blue-500/30 transition-colors">{t.navRegister}</a>
                 </>
               )}
             </nav>
@@ -368,13 +368,13 @@ export default function Home() {
               ))}
               {user ? (
                 <>
-                  <a href="/dashboard" className="px-4 py-2 text-blue-400">داشبورد</a>
-                  <button onClick={handleLogout} className="px-4 py-2 text-red-400 text-right">خروج</button>
+                  <a href="/dashboard" className="px-4 py-2 text-blue-400">{t.navDashboard}</a>
+                  <button onClick={handleLogout} className={`px-4 py-2 text-red-400 ${lang === 'en' ? 'text-left' : 'text-right'}`}>{t.navLogout}</button>
                 </>
               ) : (
                 <>
-                  <a href="/auth/login" className="px-4 py-2 text-blue-400">ورود</a>
-                  <a href="/auth/register" className="px-4 py-2 bg-blue-500/20 text-blue-400 rounded-lg">ثبت نام</a>
+                  <a href="/auth/login" className="px-4 py-2 text-blue-400">{t.navLogin}</a>
+                  <a href="/auth/register" className="px-4 py-2 bg-blue-500/20 text-blue-400 rounded-lg">{t.navRegister}</a>
                 </>
               )}
             </div>

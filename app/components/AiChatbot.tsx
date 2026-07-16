@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Sparkles, Bot, User, CornerDownLeft } from 'lucide-react';
+import { MessageCircle, X, Send, Sparkles, User } from 'lucide-react';
 import { useI18n } from './I18nProvider';
 
 interface ChatMessage {
@@ -17,21 +17,43 @@ export default function AiChatbot() {
     {
       role: 'assistant',
       content: isEn 
-        ? 'Hello and welcome! 🚀😎 I am Ehsan Salehi\'s cute & smart 3D AI assistant! How can I help you? Want to hear about Ehsan\'s 20 years of IT experience or request a project consultation? 🍕'
-        : 'سلام و درود! 🚀😎 من آدمک و دستیار هوشمند بامزه مهندس احسان صالحی هستم! چه کمکی از دست من برمیاد؟ می‌خوای درباره ۲۰ سال تجربه احسان برات بگم یا دنبال سفارش پروژه و مشاوره هستی؟ 🍕'
+        ? 'Hello and welcome! 🚀😎 I am Ehsan Salehi\'s 3D animated humanoid AI character! How can I help you? Want to hear about Ehsan\'s 20 years of IT experience or request a project consultation? 🍕'
+        : 'سلام و درود! 🚀😎 من آدمک و دستیار هوشمند ۳بعدی مهندس احسان صالحی هستم! چه کمکی از دست من برمیاد؟ می‌خوای درباره ۲۰ سال تجربه احسان برات بگم یا دنبال سفارش پروژه و مشاوره هستی؟ 🍕'
     }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isBlinking, setIsBlinking] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // چشمک زدن و صحبت کردن تصادفی آدمک ۳ بعدی
+  useEffect(() => {
+    const blinkInterval = setInterval(() => {
+      setIsBlinking(true);
+      setTimeout(() => setIsBlinking(false), 200);
+    }, 3500);
+
+    const speakInterval = setInterval(() => {
+      if (!isOpen) {
+        setIsSpeaking(true);
+        setTimeout(() => setIsSpeaking(false), 1200);
+      }
+    }, 6000);
+
+    return () => {
+      clearInterval(blinkInterval);
+      clearInterval(speakInterval);
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     setMessages([
       {
         role: 'assistant',
         content: isEn 
-          ? 'Hello and welcome! 🚀😎 I am Ehsan Salehi\'s cute & smart 3D AI assistant! How can I help you? Want to hear about Ehsan\'s 20 years of IT experience or request a project consultation? 🍕'
-          : 'سلام و درود! 🚀😎 من آدمک و دستیار هوشمند بامزه مهندس احسان صالحی هستم! چه کمکی از دست من برمیاد؟ می‌خوای درباره ۲۰ سال تجربه احسان برات بگم یا دنبال سفارش پروژه و مشاوره هستی؟ 🍕'
+          ? 'Hello and welcome! 🚀😎 I am Ehsan Salehi\'s 3D animated humanoid AI character! How can I help you? Want to hear about Ehsan\'s 20 years of IT experience or request a project consultation? 🍕'
+          : 'سلام و درود! 🚀😎 من آدمک و دستیار هوشمند ۳بعدی مهندس احسان صالحی هستم! چه کمکی از دست من برمیاد؟ می‌خوای درباره ۲۰ سال تجربه احسان برات بگم یا دنبال سفارش پروژه و مشاوره هستی؟ 🍕'
       }
     ]);
   }, [isEn]);
@@ -69,6 +91,7 @@ export default function AiChatbot() {
     setMessages(newMessages);
     if (!textToSend) setInput('');
     setLoading(true);
+    setIsSpeaking(true);
 
     try {
       const res = await fetch('/api/chat', {
@@ -92,45 +115,80 @@ export default function AiChatbot() {
       ]);
     } finally {
       setLoading(false);
+      setIsSpeaking(false);
     }
+  };
+
+  // کامپوننت سر ۳بعدی آدمک (3D Humanoid Robot Head)
+  const RobotAvatar3D = ({ size = 'lg' }: { size?: 'sm' | 'lg' }) => {
+    const sizeClasses = size === 'lg' ? 'w-14 h-14 rounded-3xl' : 'w-10 h-10 rounded-2xl';
+    return (
+      <div className={`relative ${sizeClasses} bg-gradient-to-b from-amber-300 via-orange-500 to-amber-700 border-2 border-white/60 shadow-[0_10px_25px_rgba(255,107,0,0.5),inset_0_2px_6px_rgba(255,255,255,0.8)] flex flex-col items-center justify-center shrink-0 overflow-hidden`}>
+        {/* نور شیشه‌ای کلاه ایمنی ربات (Visor Glint) */}
+        <div className="absolute top-1 left-1.5 right-1.5 h-3 bg-gradient-to-b from-white/70 to-transparent rounded-t-xl pointer-events-none" />
+        
+        {/* چشم‌های دیجیتالی درخشان آدمک */}
+        <div className="flex items-center justify-center gap-2 mt-1">
+          <div className={`w-2.5 h-2.5 rounded-full bg-cyan-200 border border-cyan-400 shadow-[0_0_8px_#22d3ee] transition-all duration-150 ${isBlinking ? 'scale-y-10 opacity-20' : 'scale-y-100 opacity-100 animate-pulse'}`} />
+          <div className={`w-2.5 h-2.5 rounded-full bg-cyan-200 border border-cyan-400 shadow-[0_0_8px_#22d3ee] transition-all duration-150 ${isBlinking ? 'scale-y-10 opacity-20' : 'scale-y-100 opacity-100 animate-pulse'}`} />
+        </div>
+
+        {/* دهان متحرک و هوشمند آدمک هنگام صحبت */}
+        <div className="mt-1.5 flex items-center justify-center gap-0.5 h-2">
+          {loading || isSpeaking ? (
+            <>
+              <span className="w-1 bg-white rounded-full h-2 animate-bounce [animation-delay:0.1s]" />
+              <span className="w-1.5 bg-white rounded-full h-3 animate-bounce [animation-delay:0.2s]" />
+              <span className="w-1 bg-white rounded-full h-2 animate-bounce [animation-delay:0.3s]" />
+            </>
+          ) : (
+            <div className="w-5 h-1 bg-white/90 rounded-full shadow-[0_0_5px_#fff]" />
+          )}
+        </div>
+
+        {/* آنتن روی سر ربات */}
+        <div className="absolute -top-1.5 w-2 h-2 rounded-full bg-red-400 border border-white animate-ping" />
+      </div>
+    );
   };
 
   return (
     <div className={`fixed bottom-6 ${isEn ? 'right-6' : 'left-6'} z-50 font-vazir`} dir={isEn ? 'ltr' : 'rtl'}>
-      {/* 3D-Like Cute Robotic Floating Toggle Button */}
+      {/* Floating 3D Humanoid Toggle Button */}
       {!isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="group relative flex items-center gap-3.5 px-5 py-4 rounded-[28px] bg-gradient-to-r from-orange-500 via-amber-400 to-blue-500 text-black font-extrabold shadow-[0_15px_35px_rgba(255,107,0,0.45)] hover:scale-110 hover:-translate-y-1.5 transition-all duration-300 border-2 border-white/40 animate-bounce"
-          aria-label={isEn ? 'Open AI Smart Assistant' : 'باز کردن چت‌بات هوشمند'}
-        >
-          {/* 3D Cute Robot Icon Container */}
-          <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-tr from-zinc-900 via-[#1e2336] to-black border-2 border-orange-400/80 shadow-[inset_0_4px_10px_rgba(255,255,255,0.3)] flex items-center justify-center transform group-hover:rotate-12 transition-transform">
-            <span className="text-2xl filter drop-shadow-[0_4px_8px_rgba(255,165,0,0.8)] animate-pulse">🤖</span>
-            <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-black animate-ping" />
-          </div>
-          <div className="flex flex-col text-right">
-            <span className="text-xs font-black tracking-wider uppercase text-black/80">{isEn ? 'AI Assistant' : 'رفیق هوشمند شما'}</span>
-            <span className="text-sm font-extrabold text-black drop-shadow-sm">{isEn ? 'Talk with Ehsan AI 🚀' : 'چت با آدمک هوشمند 🚀'}</span>
-          </div>
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setIsOpen(true)}
+            className="group relative flex items-center gap-3.5 px-5 py-3.5 rounded-[32px] bg-gradient-to-r from-orange-500 via-amber-400 to-blue-600 text-black font-extrabold shadow-[0_15px_35px_rgba(255,107,0,0.5)] hover:scale-105 transition-all duration-300 border-2 border-white/50 animate-bounce"
+            aria-label={isEn ? 'Open 3D AI Smart Assistant' : 'باز کردن آدمک هوشمند'}
+          >
+            <RobotAvatar3D size="lg" />
+            <div className="flex flex-col text-right">
+              <span className="text-[11px] font-black tracking-wider uppercase text-black/80 flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-emerald-950 inline-block animate-ping" />
+                {isEn ? '3D Animated AI' : 'آدمک ۳بعدی متحرک'}
+              </span>
+              <span className="text-sm font-black text-black drop-shadow-sm">
+                {isEn ? 'Talk with Ehsan AI 🚀' : 'چت با آدمک هوشمند 🚀'}
+              </span>
+            </div>
+          </button>
+        </div>
       )}
 
       {/* Chat Window Modal */}
       {isOpen && (
         <div className="w-[350px] sm:w-[400px] md:w-[430px] h-[560px] max-h-[85vh] rounded-[32px] bg-[#10121a]/95 backdrop-blur-2xl border border-white/20 shadow-[0_25px_80px_rgba(0,0,0,0.85)] flex flex-col overflow-hidden transition-all duration-300 animate-in fade-in slide-in-from-bottom-5">
-          {/* 3D Cute Robot Header */}
+          {/* Header with 3D Robot */}
           <div className="bg-gradient-to-r from-orange-600/40 via-[#181b26] to-blue-600/40 p-4 border-b border-white/10 flex items-center justify-between shrink-0">
-            <div className="flex items-center gap-3.5">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-orange-500 via-amber-300 to-blue-500 border-2 border-white/30 shadow-[0_6px_16px_rgba(255,107,0,0.35)] flex items-center justify-center text-2xl filter drop-shadow transform -rotate-6 animate-pulse">
-                🤖
-              </div>
+            <div className="flex items-center gap-3">
+              <RobotAvatar3D size="sm" />
               <div>
                 <h4 className="text-sm font-extrabold text-white flex items-center gap-1.5">
-                  {isEn ? 'Ehsan AI Cute 3D Assistant' : 'آدمک و دستیار بامزه احسان'} <Sparkles size={14} className="text-amber-400 animate-pulse" />
+                  {isEn ? 'Ehsan 3D Humanoid Assistant' : 'آدمک و دستیار ۳بعدی احسان'} <Sparkles size={14} className="text-amber-400 animate-pulse" />
                 </h4>
                 <p className="text-[11px] text-zinc-300 flex items-center gap-1.5 font-medium">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-ping" /> {isEn ? 'Online & Ready to Help' : 'آنلاین و آماده گفتگو با شما'}
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-ping" /> {isEn ? 'Online & Speaking' : 'آنلاین و آماده گفتگو با شما'}
                 </p>
               </div>
             </div>
@@ -165,9 +223,7 @@ export default function AiChatbot() {
                 className={`flex gap-2.5 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 {msg.role === 'assistant' && (
-                  <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-orange-500/20 to-blue-500/20 border border-orange-500/30 flex items-center justify-center text-lg shrink-0 shadow-sm">
-                    🤖
-                  </div>
+                  <RobotAvatar3D size="sm" />
                 )}
                 <div
                   className={`max-w-[80%] rounded-2xl p-4 text-xs md:text-sm leading-relaxed whitespace-pre-wrap ${
@@ -187,11 +243,9 @@ export default function AiChatbot() {
             ))}
             {loading && (
               <div className="flex gap-2.5 items-center justify-start">
-                <div className="w-9 h-9 rounded-2xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center text-lg shrink-0">
-                  🤖
-                </div>
+                <RobotAvatar3D size="sm" />
                 <div className="bg-white/10 text-zinc-300 rounded-2xl rounded-tr-none px-4 py-3.5 text-xs border border-white/10 flex items-center gap-2 font-medium">
-                  <span>{isEn ? 'Thinking and typing response...' : 'آدمک در حال فکر کردن و نوشتن...'}</span>
+                  <span>{isEn ? '3D Robot is speaking and typing...' : 'آدمک ۳بعدی در حال صحبت و نوشتن...'}</span>
                   <span className="flex gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-bounce" />
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-bounce [animation-delay:0.2s]" />

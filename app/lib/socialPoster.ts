@@ -14,6 +14,16 @@ const EITAA_CHAT_ID = process.env.EITAA_CHANNEL_ID || process.env.EITAA_CHAT_ID 
 const RUBIKA_BOT_TOKEN = process.env.RUBIKA_BOT_TOKEN || '';
 const RUBIKA_CHAT_ID = process.env.RUBIKA_CHANNEL_ID || process.env.RUBIKA_CHAT_ID || '';
 
+const FB_PAGE_ACCESS_TOKEN = process.env.FB_PAGE_ACCESS_TOKEN || '';
+const FB_PAGE_ID = process.env.FB_PAGE_ID || '';
+
+const WHATSAPP_ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN || '';
+const WHATSAPP_PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID || '';
+const WHATSAPP_RECIPIENT_ID = process.env.WHATSAPP_RECIPIENT_ID || process.env.WHATSAPP_CHANNEL_ID || '';
+
+const INSTAGRAM_ACCESS_TOKEN = process.env.INSTAGRAM_ACCESS_TOKEN || process.env.FB_PAGE_ACCESS_TOKEN || '';
+const INSTAGRAM_ACCOUNT_ID = process.env.INSTAGRAM_ACCOUNT_ID || '';
+
 const DEFAULT_IMAGE = 'https://ehsansalehi.ir/images/og-image.jpg';
 
 function resolveImageUrl(url: string | null): string {
@@ -175,42 +185,139 @@ export async function sendToRubika(
     let lastError = '';
 
     for (const targetId of idVariants) {
-      // 1. تلاش با متد متنی sendMessage (بدون عکس جهت تضمین ارسال پیام)
       try {
         const urlMessage = `https://botapi.rubika.ir/v3/${RUBIKA_BOT_TOKEN}/sendMessage`;
-        // تست ارسال با chat_id
-        const resMsg1 = await fetch(urlMessage, {
+        const resMsg = await fetch(urlMessage, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ chat_id: targetId, text: plainText }),
+          body: JSON.stringify({ chat_id: targetId, object_guid: targetId, text: plainText }),
         });
-        const resultMsg1 = await resMsg1.json();
-        if (resultMsg1.ok || resultMsg1.status === 'OK' || resultMsg1.status === 200 || (resultMsg1.data && resultMsg1.data.message_id)) {
+        const resultMsg = await resMsg.json();
+        if (resultMsg.ok || resultMsg.status === 'OK' || resultMsg.status === 200 || (resultMsg.data && resultMsg.data.message_id)) {
           return { success: true };
         } else {
-          lastError = `sendMessage(chat_id: ${targetId}): ${JSON.stringify(resultMsg1)}`;
-        }
-
-        // تست ارسال با object_guid
-        const resMsg2 = await fetch(urlMessage, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ object_guid: targetId, text: plainText }),
-        });
-        const resultMsg2 = await resMsg2.json();
-        if (resultMsg2.ok || resultMsg2.status === 'OK' || resultMsg2.status === 200 || (resultMsg2.data && resultMsg2.data.message_id)) {
-          return { success: true };
-        } else {
-          lastError = `sendMessage(object_guid: ${targetId}): ${JSON.stringify(resultMsg2)}`;
+          lastError = `sendMessage (${targetId}): ${JSON.stringify(resultMsg)}`;
         }
       } catch (err: any) {
-        lastError = `sendMessage exception: ${err?.message || err}`;
+        lastError = `sendMessage (${targetId}) exception: ${err?.message || err}`;
       }
     }
 
     return { success: false, error: lastError || 'روبیکا: ارسال پیام ناموفق بود' };
   } catch (error: any) {
     return { success: false, error: `روبیکا Exception: ${error?.message || error}` };
+  }
+}
+
+export async function sendToFacebook(
+  title: string,
+  summary: string,
+  imageUrl: string | null,
+  link: string
+): Promise<{ success: boolean; error?: string }> {
+  if (!FB_PAGE_ACCESS_TOKEN || !FB_PAGE_ID) {
+    return { success: false, error: 'توکن FB_PAGE_ACCESS_TOKEN یا FB_PAGE_ID تنظیم نشده است' };
+  }
+
+  try {
+    const fullImageUrl = resolveImageUrl(imageUrl);
+    const caption = `🔥 ${title}\n\n📰 ${summary}\n\n🔗 مطالعه کامل در پایگاه اخبار و فناوری: ${link}\n\n#فناوری #هوش_مصنوعی #رمزارز #IT #EhsanSalehi`;
+    const url = `https://graph.facebook.com/v19.0/${FB_PAGE_ID}/photos`;
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url: fullImageUrl,
+        caption: caption,
+        access_token: FB_PAGE_ACCESS_TOKEN,
+      }),
+    });
+    const result = await res.json();
+    if (res.ok && result.id) {
+      console.log('✅ فیس‌بوک: پست با موفقیت منتشر شد (ID:', result.id, ')');
+      return { success: true };
+    }
+    return { success: false, error: `فیس‌بوک API Error: ${JSON.stringify(result)}` };
+  } catch (error: any) {
+    return { success: false, error: `فیس‌بوک Exception: ${error?.message || error}` };
+  }
+}
+
+export async function sendToWhatsAppChannel(
+  title: string,
+  summary: string,
+  link: string
+): Promise<{ success: boolean; error?: string }> {
+  if (!WHATSAPP_ACCESS_TOKEN || !WHATSAPP_PHONE_NUMBER_ID || !WHATSAPP_RECIPIENT_ID) {
+    return { success: false, error: 'متغیرهای WHATSAPP_ACCESS_TOKEN، PHONE_NUMBER_ID یا RECIPIENT_ID تنظیم نشده‌اند' };
+  }
+
+  try {
+    const caption = `🔥 *${title}*\n\n📰 ${summary}\n\n🔗 مطالعه کامل در: ${link}`;
+    const url = `https://graph.facebook.com/v19.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`;
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${WHATSAPP_ACCESS_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        to: WHATSAPP_RECIPIENT_ID,
+        type: 'text',
+        text: { body: caption },
+      }),
+    });
+    const result = await res.json();
+    if (res.ok && result.messages) {
+      console.log('✅ واتساپ: پیام با موفقیت ارسال شد');
+      return { success: true };
+    }
+    return { success: false, error: `واتساپ API Error: ${JSON.stringify(result)}` };
+  } catch (error: any) {
+    return { success: false, error: `واتساپ Exception: ${error?.message || error}` };
+  }
+}
+
+export async function sendToInstagram(
+  title: string,
+  summary: string,
+  imageUrl: string | null,
+  link: string
+): Promise<{ success: boolean; error?: string }> {
+  if (!INSTAGRAM_ACCESS_TOKEN || !INSTAGRAM_ACCOUNT_ID) {
+    return { success: false, error: 'توکن INSTAGRAM_ACCESS_TOKEN یا INSTAGRAM_ACCOUNT_ID تنظیم نشده است' };
+  }
+
+  try {
+    const fullImageUrl = resolveImageUrl(imageUrl);
+    const caption = `🔥 ${title}\n\n📰 ${summary}\n\n🔗 لینک در بیو یا سایت ehsansalehi.ir\n\n#TechNews #AI #Crypto #EhsanSalehi #فناوری #رمزارز #هوش_مصنوعی`;
+
+    // مرحله ۱: ایجاد کانتینر تصویر در اینستاگرام
+    const createUrl = `https://graph.facebook.com/v19.0/${INSTAGRAM_ACCOUNT_ID}/media?image_url=${encodeURIComponent(fullImageUrl)}&caption=${encodeURIComponent(caption)}&access_token=${INSTAGRAM_ACCESS_TOKEN}`;
+    const createRes = await fetch(createUrl, { method: 'POST' });
+    const createData = await createRes.json();
+
+    if (!createRes.ok || !createData.id) {
+      return { success: false, error: `اینستاگرام ساخت مدیا: ${JSON.stringify(createData)}` };
+    }
+
+    const creationId = createData.id;
+
+    // مرحله ۲: انتشار کانتینر
+    const publishUrl = `https://graph.facebook.com/v19.0/${INSTAGRAM_ACCOUNT_ID}/media_publish?creation_id=${creationId}&access_token=${INSTAGRAM_ACCESS_TOKEN}`;
+    const publishRes = await fetch(publishUrl, { method: 'POST' });
+    const publishData = await publishRes.json();
+
+    if (publishRes.ok && publishData.id) {
+      console.log('✅ اینستاگرام: پست با موفقیت منتشر شد (ID:', publishData.id, ')');
+      return { success: true };
+    }
+    return { success: false, error: `اینستاگرام انتشار مدیا: ${JSON.stringify(publishData)}` };
+  } catch (error: any) {
+    return { success: false, error: `اینستاگرام Exception: ${error?.message || error}` };
   }
 }
 
@@ -222,12 +329,15 @@ export async function postNewsToAllChannels(
   link: string,
   sourceName: string = 'پایگاه اخبار فناوری'
 ): Promise<{ success: boolean; results: Record<string, boolean>; errors: Record<string, string> }> {
-  const [tg, li, bl, et, rb] = await Promise.all([
+  const [tg, li, bl, et, rb, fb, wa, ig] = await Promise.all([
     sendToTelegram(title, summary, imageUrl, link, sourceName),
     sendToLinkedIn(title, summary, imageUrl, link),
     sendToBale(title, summary, imageUrl, link, sourceName),
     sendToEitaa(title, summary, imageUrl, link, sourceName),
     sendToRubika(title, summary, imageUrl, link, sourceName),
+    sendToFacebook(title, summary, imageUrl, link),
+    sendToWhatsAppChannel(title, summary, link),
+    sendToInstagram(title, summary, imageUrl, link),
   ]);
 
   const results: Record<string, boolean> = {
@@ -236,6 +346,9 @@ export async function postNewsToAllChannels(
     bale: bl.success,
     eitaa: et.success,
     rubika: rb.success,
+    facebook: fb.success,
+    whatsapp: wa.success,
+    instagram: ig.success,
   };
 
   const errors: Record<string, string> = {};
@@ -244,6 +357,9 @@ export async function postNewsToAllChannels(
   if (!bl.success && bl.error) errors.bale = bl.error;
   if (!et.success && et.error) errors.eitaa = et.error;
   if (!rb.success && rb.error) errors.rubika = rb.error;
+  if (!fb.success && fb.error) errors.facebook = fb.error;
+  if (!wa.success && wa.error) errors.whatsapp = wa.error;
+  if (!ig.success && ig.error) errors.instagram = ig.error;
 
   const success = Object.values(results).some((val) => val === true);
 
