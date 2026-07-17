@@ -6,6 +6,7 @@ import Script from 'next/script';
 import AiChatbot from './components/AiChatbot';
 import VisitTracker from './components/VisitTracker';
 import { I18nProvider } from './components/I18nProvider';
+import LiveChatWidget from './components/LiveChatWidget';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://ehsansalehi.ir'),
@@ -111,6 +112,7 @@ export default function RootLayout({
           <VisitTracker />
           {children}
           <AiChatbot />
+          <LiveChatWidget />
           <Toaster position="top-center" richColors theme="dark" />
         </I18nProvider>
       </body>
