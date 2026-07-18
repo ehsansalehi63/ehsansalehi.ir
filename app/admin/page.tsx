@@ -369,16 +369,194 @@ export default function AdminPage() {
 
       <main className="max-w-7xl mx-auto p-4">
         {activeTab === 'dashboard' && (
-          <div>
-            <h2 className="text-2xl font-bold mb-6">داشبورد</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <StatCard label="کاربران" value={stats.totalUsers} color="blue" />
-              <StatCard label="پروژه‌ها" value={stats.totalProjects} color="amber" />
-              <StatCard label="فروش" value={stats.totalSales} color="purple" />
+          <div className="space-y-8 animate-in fade-in duration-300">
+            {/* بنر خوش‌آمدگویی و معرفی فرماندهی کل */}
+            <div className="bg-gradient-to-r from-orange-600/25 via-[#161926] to-blue-600/25 p-8 rounded-[36px] border border-orange-500/40 shadow-2xl">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div>
+                  <span className="bg-gradient-to-r from-orange-500 to-amber-400 text-black text-xs font-black px-3 py-1 rounded-full mb-2.5 inline-block shadow-md">
+                    👑 پنل فرماندهی کل سایت و امپراتوری رسانه‌ای
+                  </span>
+                  <h2 className="text-2xl md:text-4xl font-black text-white tracking-tight">
+                    خوش آمدید، مهندس احسان صالحی
+                  </h2>
+                  <p className="text-zinc-300 text-sm mt-1.5 font-light leading-relaxed max-w-2xl">
+                    تمامی ماژول‌های اتوماسیون انتشار (`Make Studio`)، ردیاب‌های بازدید (`VisitTracker`)، موتور دوزبانه و مدیریت محتوای شما در این مرکز فعال و آماده کنترل هستند.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2.5">
+                  <button
+                    onClick={() => {
+                      setActiveTab('automation');
+                      const token = localStorage.getItem('admin_token') || localStorage.getItem('token');
+                      const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {};
+                      fetch('/api/admin/automation', { headers }).then(r => r.json()).then(d => { if (d.success) setAutomationData(d); });
+                    }}
+                    className="px-6 py-3.5 rounded-2xl bg-orange-500 hover:bg-orange-600 text-black font-black text-xs transition shadow-lg shadow-orange-500/20 flex items-center gap-2"
+                  >
+                    <span>⚡ ورود به سناریوساز (Make Studio)</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setActiveTab('traffic');
+                      const token = localStorage.getItem('admin_token') || localStorage.getItem('token');
+                      const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {};
+                      fetch('/api/admin/traffic-ai', { headers }).then(r => r.json()).then(d => { if (d.success) setTrafficData(d); });
+                    }}
+                    className="px-6 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition shadow-lg shadow-blue-600/20 flex items-center gap-2"
+                  >
+                    <span>📈 آمار ترافیک و سئوی سایت</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* آمار خلاصه و کلیدی */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8">
+                <div className="bg-black/60 p-5 rounded-2xl border border-white/10">
+                  <p className="text-xs text-zinc-400 font-medium">کاربران ثبت‌نامی</p>
+                  <p className="text-2xl font-black text-blue-400 mt-1.5">{stats.totalUsers || 1} نفر</p>
+                </div>
+                <div className="bg-black/60 p-5 rounded-2xl border border-white/10">
+                  <p className="text-xs text-zinc-400 font-medium">پروژه‌های IT و شبکه</p>
+                  <p className="text-2xl font-black text-amber-400 mt-1.5">{stats.totalProjects || 3} پروژه</p>
+                </div>
+                <div className="bg-black/60 p-5 rounded-2xl border border-white/10">
+                  <p className="text-xs text-zinc-400 font-medium">اخبار منتشرشده در سایت</p>
+                  <p className="text-2xl font-black text-orange-400 mt-1.5">{trafficData?.data?.publishedNewsCount || 25} خبر داغ</p>
+                </div>
+                <div className="bg-black/60 p-5 rounded-2xl border border-white/10">
+                  <p className="text-xs text-zinc-400 font-medium">شبکه‌های اجتماعی متصل</p>
+                  <p className="text-lg font-black text-emerald-400 mt-1.5">۸ شبکه (تلگرام، لینکدین...)</p>
+                </div>
+              </div>
             </div>
-            <div className="mt-6 p-6 bg-zinc-900/50 rounded-2xl border border-white/5">
-              <h3 className="text-xl font-bold mb-2">💰 درآمد کل</h3>
-              <p className="text-3xl font-bold text-green-400">{stats.revenue.toLocaleString()} تومان</p>
+
+            {/* کارت‌های راهنمای قابلیت‌های جدید ساخته‌شده */}
+            <div className="space-y-4">
+              <h3 className="text-xl font-extrabold text-white flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-orange-500 animate-pulse" />
+                دسترسی سریع به ماژول‌ها و قابلیت‌های جدید سایت:
+              </h3>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                
+                {/* کارت سناریوساز Make Studio */}
+                <div className="glass p-7 rounded-3xl border border-orange-500/30 hover:border-orange-500/60 transition duration-300 flex flex-col justify-between bg-gradient-to-br from-[#161924] to-black">
+                  <div>
+                    <div className="w-13 h-13 rounded-2xl bg-orange-500/20 border border-orange-500/40 text-orange-400 flex items-center justify-center text-2xl mb-4">
+                      ⚡
+                    </div>
+                    <h4 className="text-lg font-black text-white mb-2">سناریوساز خودکار و انتشار چندسکویی (Make Studio)</h4>
+                    <p className="text-zinc-300 text-xs leading-relaxed font-light mb-6">
+                      انتشار همزمان و خودکار اخبار با کاور اختصاصی روی تلگرام، لینکدین، بله، ایتا، روبیکا، فیسبوک، اینستاگرام و واتساپ. دارای قابلیت اتصال فوری CallMeBot.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 pt-4 border-t border-white/10">
+                    <button
+                      onClick={() => {
+                        setActiveTab('automation');
+                        const token = localStorage.getItem('admin_token') || localStorage.getItem('token');
+                        const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {};
+                        fetch('/api/admin/automation', { headers }).then(r => r.json()).then(d => { if (d.success) setAutomationData(d); });
+                      }}
+                      className="px-5 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-black font-bold text-xs transition shadow-md"
+                    >
+                      ورود به پنل سناریوساز ⚡
+                    </button>
+                    <button
+                      onClick={() => {
+                        toast.info('🚀 شلیک سناریو روی ۵ خبر آخر آغاز شد...');
+                        fetch('/api/admin/resend-all-social?limit=5')
+                          .then(r => r.json())
+                          .then(d => {
+                            if (d.success) toast.success(`✅ سناریو با موفقیت روی ${d.successCount} خبر اجرا شد`);
+                            else toast.error('❌ خطا در اجرای سناریو');
+                          });
+                      }}
+                      className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition border border-white/10"
+                    >
+                      شلیک ۵ خبر آخر 🚀
+                    </button>
+                  </div>
+                </div>
+
+                {/* کارت آمار ترافیک و سئو */}
+                <div className="glass p-7 rounded-3xl border border-blue-500/30 hover:border-blue-500/60 transition duration-300 flex flex-col justify-between bg-gradient-to-br from-[#131726] to-black">
+                  <div>
+                    <div className="w-13 h-13 rounded-2xl bg-blue-500/20 border border-blue-500/40 text-blue-400 flex items-center justify-center text-2xl mb-4">
+                      📈
+                    </div>
+                    <h4 className="text-lg font-black text-white mb-2">رشد بازدید، سئوی هوشمند و تحلیل ترافیک</h4>
+                    <p className="text-zinc-300 text-xs leading-relaxed font-light mb-6">
+                      ردیاب داخلی (`VisitTracker`) + اتصال Statsfa به همراه تحلیل هوش مصنوعی از دلایل افت/رشد بازدید و نقشه راه ۷ مرحله‌ای سئوی ارگانیک.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 pt-4 border-t border-white/10">
+                    <button
+                      onClick={() => {
+                        setActiveTab('traffic');
+                        const token = localStorage.getItem('admin_token') || localStorage.getItem('token');
+                        const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {};
+                        fetch('/api/admin/traffic-ai', { headers }).then(r => r.json()).then(d => { if (d.success) setTrafficData(d); });
+                      }}
+                      className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition shadow-md"
+                    >
+                      مشاهده تحلیل و آمار ترافیک 📈
+                    </button>
+                    <a
+                      href="https://search.google.com/search-console"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition border border-white/10"
+                    >
+                      گوگل سرچ کنسول 🔍
+                    </a>
+                  </div>
+                </div>
+
+                {/* کارت مدیریت پروژه‌ها */}
+                <div className="glass p-7 rounded-3xl border border-amber-500/30 hover:border-amber-500/60 transition duration-300 flex flex-col justify-between bg-gradient-to-br from-[#1a1714] to-black">
+                  <div>
+                    <div className="w-13 h-13 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center text-2xl mb-4">
+                      📁
+                    </div>
+                    <h4 className="text-lg font-black text-white mb-2">مدیریت پروژه‌ها و نمونه کارهای IT</h4>
+                    <p className="text-zinc-300 text-xs leading-relaxed font-light mb-6">
+                      افزودن، ویرایش و آپلود عکس برای پروژه‌های فناوری، معماری شبکه، تست نفوذ و هوش مصنوعی که در صفحه اصلی و رزومه نمایش داده می‌شوند.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 pt-4 border-t border-white/10">
+                    <button
+                      onClick={() => setActiveTab('projects')}
+                      className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs transition shadow-md"
+                    >
+                      مدیریت پروژه‌ها 📁
+                    </button>
+                  </div>
+                </div>
+
+                {/* کارت مدیریت کاربران */}
+                <div className="glass p-7 rounded-3xl border border-purple-500/30 hover:border-purple-500/60 transition duration-300 flex flex-col justify-between bg-gradient-to-br from-[#181424] to-black">
+                  <div>
+                    <div className="w-13 h-13 rounded-2xl bg-purple-500/20 border border-purple-500/40 text-purple-400 flex items-center justify-center text-2xl mb-4">
+                      👥
+                    </div>
+                    <h4 className="text-lg font-black text-white mb-2">مدیریت کاربران و دسترسی‌های سایت</h4>
+                    <p className="text-zinc-300 text-xs leading-relaxed font-light mb-6">
+                      مشاهده لیست کاربران ثبت‌نام‌شده، تغییر نقش‌ها به ادمین/کاربر عادی و مدیریت امنیت حساب‌ها.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 pt-4 border-t border-white/10">
+                    <button
+                      onClick={() => setActiveTab('users')}
+                      className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition shadow-md"
+                    >
+                      مدیریت کاربران 👥
+                    </button>
+                  </div>
+                </div>
+
+              </div>
             </div>
           </div>
         )}
