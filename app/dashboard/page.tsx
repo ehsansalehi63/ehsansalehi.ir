@@ -43,25 +43,30 @@ export default function DashboardPage() {
         const userRes = await fetch('/api/auth/me', {
           headers: { 'Authorization': `Bearer ${token}` },
         });
-        const userData = await userRes.json();
-        if (!userData.success) {
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          router.push('/auth/login');
-          return;
+        if (userRes.ok) {
+          const userData = await userRes.json();
+          if (!userData.success) {
+            localStorage.removeItem('admin_token');
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            router.push('/auth/login');
+            return;
+          }
+          setUser(userData.user);
         }
-        setUser(userData.user);
 
-        // دریافت دوره‌های خریداری شده
+        // دریافت دوره‌های خریداری شده یا تخصصی
         const purchasesRes = await fetch('/api/user/purchases', {
           headers: { 'Authorization': `Bearer ${token}` },
         });
-        const purchasesData = await purchasesRes.json();
-        if (purchasesData.success) {
-          setPurchases(purchasesData.data);
+        if (purchasesRes.ok) {
+          const purchasesData = await purchasesRes.json();
+          if (purchasesData.success) {
+            setPurchases(purchasesData.data || []);
+          }
         }
       } catch (error) {
-        toast.error('خطا در دریافت اطلاعات');
+        console.warn('⚠️ وقفه در دریافت اطلاعات داشبورد:', error);
       } finally {
         setLoading(false);
       }
