@@ -119,6 +119,36 @@ export default function DashboardPage() {
       </header>
 
       <main className="max-w-7xl mx-auto p-4">
+        {/* بنر بزرگ و درخشان انتقال سریع ادمین به پنل مدیریت و سناریوساز */}
+        {user.isAdmin && (
+          <div className="mb-8 p-6 md:p-8 bg-gradient-to-r from-orange-600/30 via-[#181b26] to-blue-600/30 rounded-[32px] border-2 border-orange-500/50 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6 animate-in fade-in duration-300">
+            <div className="flex items-center gap-5 text-right">
+              <div className="w-16 h-16 rounded-2xl bg-orange-500/20 border border-orange-500/40 flex items-center justify-center text-3xl shrink-0 animate-bounce">
+                ⚡
+              </div>
+              <div>
+                <span className="bg-orange-500 text-black text-xs font-black px-3 py-1 rounded-full inline-block mb-1.5 shadow-md">
+                  دسترسی مدیر کل (Admin VIP)
+                </span>
+                <h3 className="text-xl md:text-2xl font-black text-white">
+                  شما با حساب مدیر سایت (احسان صالحی) وارد شده‌اید
+                </h3>
+                <p className="text-xs md:text-sm text-zinc-300 font-light mt-1">
+                  برای کنترل سناریوساز خودکار (`Make Studio`)، سئوی هوشمند، مدیریت کاربران و پروژه‌ها وارد پنل فرماندهی شوید.
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-3 shrink-0 w-full md:w-auto justify-center">
+              <Link
+                href="/admin"
+                className="w-full md:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-black font-black text-sm transition shadow-lg shadow-orange-500/30 flex items-center justify-center gap-2"
+              >
+                <span>⚡ ورود به پنل مدیریت کل و سناریوساز 👑</span>
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* اطلاعات کاربر */}
         <div className="bg-zinc-900/50 p-6 rounded-2xl border border-white/5 mb-8">
           <div className="flex items-center gap-4">
@@ -133,8 +163,8 @@ export default function DashboardPage() {
                   {user.isVerified ? '✅ تأیید شده' : '⏳ تأیید نشده'}
                 </span>
                 {user.isAdmin && (
-                  <Link href="/admin" className="text-xs text-amber-400 hover:underline">
-                    👑 پنل مدیریت
+                  <Link href="/admin" className="text-xs text-amber-400 hover:underline font-bold">
+                    👑 ورود به پنل مدیریت
                   </Link>
                 )}
               </div>

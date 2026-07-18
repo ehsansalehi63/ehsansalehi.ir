@@ -30,9 +30,12 @@ export default function LoginPage() {
         if (data.user?.isAdmin) {
           localStorage.setItem('admin_token', data.token);
           localStorage.setItem('admin_user', JSON.stringify(data.user));
+          toast.success(isEn ? 'Admin Login successful! Redirecting to Admin Studio... 👑' : 'ورود مدیر کل موفق! انتقال به پنل فرماندهی... 👑');
+          router.push('/admin');
+        } else {
+          toast.success(isEn ? 'Login successful! ✅' : 'ورود موفق ✅');
+          router.push('/dashboard');
         }
-        toast.success(isEn ? 'Login successful! ✅' : 'ورود موفق ✅');
-        router.push('/dashboard');
       } else {
         toast.error(data.error || (isEn ? 'Invalid email or password' : 'ایمیل یا رمز عبور اشتباه است'));
       }
