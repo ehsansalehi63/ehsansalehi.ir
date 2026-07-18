@@ -688,7 +688,23 @@ export default function AdminPage() {
                     تحلیل هوشمند آمار بازدید و نقشه راه رشد
                   </h2>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-2.5">
+                  <button
+                    onClick={() => {
+                      toast.info('🤖 شلیک موتور خودبهبوددهنده سئو و پینگ سرچ کنسول آغاز شد...');
+                      const token = localStorage.getItem('admin_token') || localStorage.getItem('token');
+                      const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {};
+                      fetch('/api/cron/auto-optimize?force=true', { headers })
+                        .then(r => r.json())
+                        .then(d => {
+                          if (d.success) toast.success('✅ نقشه سایت پینگ شد و لینک‌سازی داخلی بروزرسانی گردید');
+                          else toast.error('❌ خطا در بهینه‌ساز سئو');
+                        });
+                    }}
+                    className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-black font-extrabold text-xs transition shadow-lg shadow-emerald-500/20 flex items-center gap-2"
+                  >
+                    <span>🤖 شلیک بهینه‌ساز خودکار سئو و پینگ گوگل</span>
+                  </button>
                   <a
                     href="/api/admin/resend-all-social?limit=15"
                     target="_blank"

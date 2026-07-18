@@ -1,0 +1,16 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/news",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/social/post",
+      "schedule": "15 * * * *"
+    },
+    {
+      "path": "/api/cron/auto-optimize",
+      "schedule": "0 */4 * * *"
+    }
+  ]
+}
