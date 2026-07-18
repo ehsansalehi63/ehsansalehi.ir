@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Toaster, toast } from 'sonner';
 import { 
   Users, FileText, FolderOpen, ShoppingBag, 
-  BarChart3, Plus, Edit, Trash2, Upload, X
+  BarChart3, Plus, Edit, Trash2, Upload, X, Cpu
 } from 'lucide-react';
 
 // ============ TYPES ============
@@ -112,12 +112,14 @@ const StatCard = ({ label, value, color }: { label: string; value: number; color
 // ============ MAIN ADMIN PAGE ============
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'traffic' | 'projects' | 'blog' | 'users' | 'courses'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'automation' | 'traffic' | 'projects' | 'blog' | 'users' | 'courses'>('dashboard');
   const [loading, setLoading] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [stats, setStats] = useState({ totalUsers: 0, totalProjects: 0, totalPosts: 0, totalSales: 0, revenue: 0 });
   const [trafficData, setTrafficData] = useState<any>(null);
+  const [automationData, setAutomationData] = useState<any>(null);
+  const [callMeBotInput, setCallMeBotInput] = useState('');
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [projectForm, setProjectForm] = useState({ title: '', desc: '', tech: '', link: '#', image_url: '' });
   const [uploading, setUploading] = useState(false);
@@ -298,6 +300,7 @@ export default function AdminPage() {
 
   const tabs = [
     { id: 'dashboard', label: 'داشبورد', icon: BarChart3 },
+    { id: 'automation', label: '⚡ سناریوساز (Make Studio)', icon: Cpu },
     { id: 'traffic', label: '🚀 رشد بازدید و سئو', icon: BarChart3 },
     { id: 'projects', label: 'پروژه‌ها', icon: FolderOpen },
     { id: 'blog', label: 'وبلاگ', icon: FileText },
@@ -336,12 +339,18 @@ export default function AdminPage() {
               key={tab.id}
               onClick={() => {
                 setActiveTab(tab.id as any);
+                const token = localStorage.getItem('admin_token') || localStorage.getItem('token');
+                const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {};
                 if (tab.id === 'traffic' && !trafficData) {
-                  const token = localStorage.getItem('admin_token') || localStorage.getItem('token');
-                  const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {};
                   fetch('/api/admin/traffic-ai', { headers })
                     .then(r => r.json())
                     .then(d => { if (d.success) setTrafficData(d); })
+                    .catch(() => {});
+                }
+                if (tab.id === 'automation') {
+                  fetch('/api/admin/automation', { headers })
+                    .then(r => r.json())
+                    .then(d => { if (d.success) { setAutomationData(d); setCallMeBotInput(d.settings?.callmebot_key || ''); } })
                     .catch(() => {});
                 }
               }}
@@ -370,6 +379,121 @@ export default function AdminPage() {
             <div className="mt-6 p-6 bg-zinc-900/50 rounded-2xl border border-white/5">
               <h3 className="text-xl font-bold mb-2">💰 درآمد کل</h3>
               <p className="text-3xl font-bold text-green-400">{stats.revenue.toLocaleString()} تومان</p>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'automation' && (
+          <div className="space-y-8 animate-in fade-in duration-300">
+            {/* عنوان سناریوساز */}
+            <div className="bg-gradient-to-r from-orange-600/20 via-[#161926] to-blue-600/20 p-8 rounded-[36px] border border-orange-500/35 shadow-2xl">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div>
+                  <span className="bg-gradient-to-r from-orange-500 to-amber-400 text-black text-xs font-black px-3 py-1 rounded-full mb-2 inline-block animate-pulse">
+                    ⚡ سناریوساز خودکار و انتشار چندسکویی (Make.com Studio in-a-Box)
+                  </span>
+                  <h2 className="text-2xl md:text-3xl font-extrabold text-white">
+                    موتور اتوماسیون وب‌هوک و انتشار همزمان روی ۸ شبکه اجتماعی
+                  </h2>
+                  <p className="text-zinc-300 text-sm mt-1 font-light">
+                    بدون نیاز به سرویس‌های پولی خارجی؛ سرور شما به محض ورود هر خبر، آن را در کسری از ثانیه روی تمامی شبکه‌های زیر شلیک می‌کند.
+                  </p>
+                </div>
+                <div className="flex gap-2.5">
+                  <button
+                    onClick={() => {
+                      toast.info('🚀 شلیک سناریو روی ۵ خبر آخر آغاز شد...');
+                      fetch('/api/admin/resend-all-social?limit=5')
+                        .then(r => r.json())
+                        .then(d => {
+                          if (d.success) toast.success(`✅ سناریو با موفقیت روی ${d.successCount} خبر اجرا شد`);
+                          else toast.error('❌ خطا در اجرای سناریو');
+                        });
+                    }}
+                    className="px-6 py-3 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-black font-black text-xs transition shadow-lg shadow-orange-500/20 flex items-center gap-2"
+                  >
+                    <span>▶️ اجرای فوری سناریو (۵ خبر آخر)</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* نمودار جریان سناریو (Workflow Diagram) */}
+            <div className="bg-black/50 backdrop-blur-xl p-6 md:p-8 rounded-3xl border border-white/10 space-y-6">
+              <h3 className="text-lg font-bold text-amber-400 flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
+                وضعیت زنده‌ی نودهای سناریو (Active Workflow Nodes)
+              </h3>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 text-center">
+                {[
+                  { name: 'تلگرام', status: automationData?.status?.telegram, desc: '@ehsansalehi_tech', icon: '✈️' },
+                  { name: 'لینکدین', status: automationData?.status?.linkedin, desc: 'Profile/Page', icon: '💼' },
+                  { name: 'واتساپ', status: automationData?.status?.whatsapp, desc: 'CallMeBot/Cloud', icon: '💬' },
+                  { name: 'اینستاگرام', status: automationData?.status?.instagram, desc: 'Instagram Biz', icon: '📸' },
+                  { name: 'فیسبوک', status: automationData?.status?.facebook, desc: 'Official Page', icon: '📘' },
+                  { name: 'بله', status: automationData?.status?.bale, desc: 'Bale Bot', icon: '🟢' },
+                  { name: 'ایتا', status: automationData?.status?.eitaa, desc: 'Eitaa Bot', icon: '🟠' },
+                  { name: 'وب‌هوک داخلی', status: true, desc: 'Make/API Bridge', icon: '📡' },
+                ].map((node, idx) => (
+                  <div key={idx} className="glass p-4 rounded-2xl border border-white/10 flex flex-col items-center justify-between gap-2">
+                    <span className="text-3xl">{node.icon}</span>
+                    <div>
+                      <h4 className="text-xs font-bold text-white">{node.name}</h4>
+                      <p className="text-[10px] text-zinc-400 font-mono mt-0.5 truncate max-w-[100px]">{node.desc}</p>
+                    </div>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${node.status ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}`}>
+                      {node.status ? '🟢 متصل و فعال' : '🔴 نیازمند توکن'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* تنظیم فوری و بدون تحریم واتساپ با CallMeBot */}
+            <div className="glass rounded-3xl p-6 md:p-8 border border-white/10 space-y-5 bg-gradient-to-r from-green-600/10 via-black to-blue-600/10">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-green-500/20 border border-green-500/40 flex items-center justify-center text-2xl">
+                  💬
+                </div>
+                <div>
+                  <h3 className="text-lg font-extrabold text-white">اتصال فوری و ۳۰ ثانیه‌ای واتساپ (CallMeBot API)</h3>
+                  <p className="text-zinc-300 text-xs font-light">
+                    بدون نیاز به پورتال فیسبوک و بدون ارور لوکیشن؛ در واتساپ به شماره <span className="font-mono text-amber-400">+34 644 56 33 19</span> پیام <span className="font-mono bg-white/10 px-2 py-0.5 rounded text-white">I allow callmebot to send me messages</span> را بفرستید و کلید دریافتی را اینجا ثبت کنید:
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 max-w-xl">
+                <input
+                  type="text"
+                  value={callMeBotInput}
+                  onChange={(e) => setCallMeBotInput(e.target.value)}
+                  placeholder="کلید API دریافتی از ربات واتساپ (مثلاً 123456)..."
+                  className="flex-1 bg-black/60 border border-white/15 rounded-2xl px-4 py-3 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-green-500/60 transition font-mono"
+                />
+                <button
+                  onClick={() => {
+                    const token = localStorage.getItem('admin_token') || localStorage.getItem('token');
+                    const headers: Record<string, string> = { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) };
+                    fetch('/api/admin/automation', {
+                      method: 'POST',
+                      headers,
+                      body: JSON.stringify({ callmebot_key: callMeBotInput, whatsapp_phone: '989108308799' }),
+                    })
+                      .then(r => r.json())
+                      .then(d => {
+                        if (d.success) {
+                          toast.success(d.message);
+                          fetch('/api/admin/automation', { headers }).then(r => r.json()).then(data => { if (data.success) setAutomationData(data); });
+                        } else toast.error('❌ خطا در ذخیره کلید');
+                      });
+                  }}
+                  className="px-6 py-3 rounded-2xl bg-green-500 hover:bg-green-600 text-black font-black text-xs transition shadow-lg shadow-green-500/20 shrink-0"
+                >
+                  ذخیره و فعال‌سازی فوری در سرور 🚀
+                </button>
+              </div>
             </div>
           </div>
         )}

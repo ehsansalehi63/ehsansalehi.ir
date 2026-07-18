@@ -26,6 +26,15 @@ const INSTAGRAM_ACCOUNT_ID = process.env.INSTAGRAM_ACCOUNT_ID || '';
 
 const DEFAULT_IMAGE = 'https://ehsansalehi.ir/images/og-image.jpg';
 
+async function getAutomationSetting(key: string): Promise<string> {
+  try {
+    const [rows] = await pool.execute('SELECT setting_value FROM automation_settings WHERE setting_key = ? LIMIT 1', [key]);
+    return (rows as any[])[0]?.setting_value || '';
+  } catch {
+    return '';
+  }
+}
+
 function resolveImageUrl(url: string | null): string {
   if (!url) return DEFAULT_IMAGE;
   if (url.startsWith('http')) return url;
@@ -215,14 +224,17 @@ export async function sendToFacebook(
   imageUrl: string | null,
   link: string
 ): Promise<{ success: boolean; error?: string }> {
-  if (!FB_PAGE_ACCESS_TOKEN || !FB_PAGE_ID) {
+  const fbToken = FB_PAGE_ACCESS_TOKEN || await getAutomationSetting('fb_access_token');
+  const fbPageId = FB_PAGE_ID || await getAutomationSetting('fb_page_id');
+
+  if (!fbToken || !fbPageId) {
     return { success: false, error: 'توکن FB_PAGE_ACCESS_TOKEN یا FB_PAGE_ID تنظیم نشده است' };
   }
 
   try {
     const fullImageUrl = resolveImageUrl(imageUrl);
     const caption = `🔥 ${title}\n\n📰 ${summary}\n\n🔗 مطالعه کامل در پایگاه اخبار و فناوری: ${link}\n\n#فناوری #هوش_مصنوعی #رمزارز #IT #EhsanSalehi`;
-    const url = `https://graph.facebook.com/v19.0/${FB_PAGE_ID}/photos`;
+    const url = `https://graph.facebook.com/v19.0/${fbPageId}/photos`;
 
     const res = await fetch(url, {
       method: 'POST',
@@ -230,7 +242,7 @@ export async function sendToFacebook(
       body: JSON.stringify({
         url: fullImageUrl,
         caption: caption,
-        access_token: FB_PAGE_ACCESS_TOKEN,
+        access_token: fbToken,
       }),
     });
     const result = await res.json();
@@ -249,8 +261,8 @@ export async function sendToWhatsAppChannel(
   summary: string,
   link: string
 ): Promise<{ success: boolean; error?: string }> {
-  const callMeBotKey = process.env.CALLMEBOT_API_KEY || '';
-  const recipientPhone = WHATSAPP_RECIPIENT_ID || '989108308799';
+  const callMeBotKey = process.env.CALLMEBOT_API_KEY || await getAutomationSetting('callmebot_key');
+  const recipientPhone = WHATSAPP_RECIPIENT_ID || await getAutomationSetting('whatsapp_phone') || '989108308799';
 
   if (callMeBotKey) {
     try {
@@ -306,7 +318,10 @@ export async function sendToInstagram(
   imageUrl: string | null,
   link: string
 ): Promise<{ success: boolean; error?: string }> {
-  if (!INSTAGRAM_ACCESS_TOKEN || !INSTAGRAM_ACCOUNT_ID) {
+  const igToken = INSTAGRAM_ACCESS_TOKEN || await getAutomationSetting('instagram_access_token') || await getAutomationSetting('fb_access_token');
+  const igAccount = INSTAGRAM_ACCOUNT_ID || await getAutomationSetting('instagram_account_id');
+
+  if (!igToken || !igAccount) {
     return { success: false, error: 'توکن INSTAGRAM_ACCESS_TOKEN یا INSTAGRAM_ACCOUNT_ID تنظیم نشده است' };
   }
 
@@ -315,7 +330,7 @@ export async function sendToInstagram(
     const caption = `🔥 ${title}\n\n📰 ${summary}\n\n🔗 لینک در بیو یا سایت ehsansalehi.ir\n\n#TechNews #AI #Crypto #EhsanSalehi #فناوری #رمزارز #هوش_مصنوعی`;
 
     // مرحله ۱: ایجاد کانتینر تصویر در اینستاگرام
-    const createUrl = `https://graph.facebook.com/v19.0/${INSTAGRAM_ACCOUNT_ID}/media?image_url=${encodeURIComponent(fullImageUrl)}&caption=${encodeURIComponent(caption)}&access_token=${INSTAGRAM_ACCESS_TOKEN}`;
+    const createUrl = `https://graph.facebook.com/v19.0/${igAccount}/media?image_url=${encodeURIComponent(fullImageUrl)}&caption=${encodeURIComponent(caption)}&access_token=${igToken}`;
     const createRes = await fetch(createUrl, { method: 'POST' });
     const createData = await createRes.json();
 
@@ -326,7 +341,7 @@ export async function sendToInstagram(
     const creationId = createData.id;
 
     // مرحله ۲: انتشار کانتینر
-    const publishUrl = `https://graph.facebook.com/v19.0/${INSTAGRAM_ACCOUNT_ID}/media_publish?creation_id=${creationId}&access_token=${INSTAGRAM_ACCESS_TOKEN}`;
+    const publishUrl = `https://graph.facebook.com/v19.0/${igAccount}/media_publish?creation_id=${creationId}&access_token=${igToken}`;
     const publishRes = await fetch(publishUrl, { method: 'POST' });
     const publishData = await publishRes.json();
 
