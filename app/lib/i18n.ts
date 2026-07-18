@@ -4,6 +4,8 @@ export interface Translations {
   // Navigation
   navHome: string;
   navNews: string;
+  navHardware: string;
+  navAdvertise: string;
   navProjects: string;
   navServices: string;
   navSkills: string;
@@ -84,6 +86,8 @@ export const dictionary: Record<Language, Translations> = {
   fa: {
     navHome: 'خانه',
     navNews: 'اخبار فناوری و رمزارز 🔥',
+    navHardware: 'لپ‌تاپ‌های استوک مهندسی 💻',
+    navAdvertise: 'رپورتاژ و تبلیغات 📢',
     navProjects: 'پروژه‌ها',
     navServices: 'خدمات',
     navSkills: 'مهارت‌ها',
@@ -155,6 +159,8 @@ export const dictionary: Record<Language, Translations> = {
   en: {
     navHome: 'Home',
     navNews: 'Tech & Crypto News 🔥',
+    navHardware: 'Stock Laptops & Gear 💻',
+    navAdvertise: 'PR & Advertising 📢',
     navProjects: 'Projects',
     navServices: 'Services',
     navSkills: 'Skills',

@@ -556,6 +556,52 @@ export default function AdminPage() {
                   </div>
                 </div>
 
+                {/* کارت فروشگاه لپ‌تاپ‌های استوک مهندسی */}
+                <div className="glass p-7 rounded-3xl border border-emerald-500/30 hover:border-emerald-500/60 transition duration-300 flex flex-col justify-between bg-gradient-to-br from-[#122218] to-black">
+                  <div>
+                    <div className="w-13 h-13 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center text-2xl mb-4">
+                      💻
+                    </div>
+                    <h4 className="text-lg font-black text-white mb-2">فروشگاه لپ‌تاپ‌های استوک و سخت‌افزار مهندسی</h4>
+                    <p className="text-zinc-300 text-xs leading-relaxed font-light mb-6">
+                      بخش درآمدزایی ارزی/ریالی از فروش لپ‌تاپ‌های Grade A++ اروپایی (MacBook, ThinkPad, HP ZBook) با مهر تایید و تست ۲۴ ساعته مهندس صالحی.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 pt-4 border-t border-white/10">
+                    <a
+                      href="/hardware"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-md flex items-center gap-1.5"
+                    >
+                      <span>ورود به فروشگاه استوک 💻</span>
+                    </a>
+                  </div>
+                </div>
+
+                {/* کارت رپورتاژ آگهی و تبلیغات */}
+                <div className="glass p-7 rounded-3xl border border-blue-400/30 hover:border-blue-400/60 transition duration-300 flex flex-col justify-between bg-gradient-to-br from-[#121c2e] to-black">
+                  <div>
+                    <div className="w-13 h-13 rounded-2xl bg-blue-500/20 border border-blue-500/40 text-blue-400 flex items-center justify-center text-2xl mb-4">
+                      📢
+                    </div>
+                    <h4 className="text-lg font-black text-white mb-2">تعرفه رپورتاژ آگهی، بک‌لینک و اسپانسرشیپ</h4>
+                    <p className="text-zinc-300 text-xs leading-relaxed font-light mb-6">
+                      مدیریت و مشاهده پکیج‌های تبلیغاتی (رپورتاژ فالو دائم + بازنشر در لینکدین و تلگرام مهندس صالحی) و درآمد مستقیم از ترافیک و سئوی سایت.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 pt-4 border-t border-white/10">
+                    <a
+                      href="/advertise"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition shadow-md flex items-center gap-1.5"
+                    >
+                      <span>مشاهده صفحه تعرفه‌ها 📢</span>
+                    </a>
+                  </div>
+                </div>
+
               </div>
             </div>
           </div>

@@ -178,6 +178,8 @@ export default function Home() {
   const navItems = [
     { name: t.navHome, href: '#' },
     { name: t.navNews, href: '/news' },
+    { name: t.navHardware, href: '/hardware' },
+    { name: t.navAdvertise, href: '/advertise' },
     { name: t.navProjects, href: '/projects' },
     { name: t.navServices, href: '#services' },
     { name: t.navSkills, href: '#skills' },
