@@ -53,8 +53,8 @@ export function verifyToken(request: Request | NextRequest): TokenPayload | null
 export async function verifyAdmin(request: Request | NextRequest): Promise<NextResponse | null> {
   const payload = verifyToken(request);
 
-  // If valid token with isAdmin=true
-  if (payload && payload.isAdmin === true) {
+  // If valid token with isAdmin=true or 1
+  if (payload && (payload.isAdmin === true || (payload as any).isAdmin === 1 || Boolean(payload.isAdmin))) {
     return null; // Authorized
   }
 
@@ -62,7 +62,7 @@ export async function verifyAdmin(request: Request | NextRequest): Promise<NextR
   if (payload && payload.id && payload.id > 0) {
     try {
       const user = await UserModel.getById(payload.id);
-      if (user && user.isAdmin === true) {
+      if (user && (user.isAdmin === true || (user as any).isAdmin === 1 || Boolean(user.isAdmin))) {
         return null; // Authorized from DB
       }
     } catch (e) {

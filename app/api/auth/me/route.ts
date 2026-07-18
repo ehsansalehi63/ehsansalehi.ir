@@ -40,6 +40,7 @@ export async function GET(request: Request) {
     }
 
     const { password, ...safeUser } = user;
+    (safeUser as any).isAdmin = Boolean(safeUser.isAdmin);
 
     return NextResponse.json(
       { success: true, user: safeUser },

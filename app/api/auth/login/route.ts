@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     }
 
     const token = jwt.sign(
-      { id: user.id, email: user.email, name: user.name, isAdmin: user.isAdmin || false },
+      { id: user.id, email: user.email, name: user.name, isAdmin: Boolean(user.isAdmin) },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
