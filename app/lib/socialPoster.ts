@@ -249,8 +249,27 @@ export async function sendToWhatsAppChannel(
   summary: string,
   link: string
 ): Promise<{ success: boolean; error?: string }> {
+  const callMeBotKey = process.env.CALLMEBOT_API_KEY || '';
+  const recipientPhone = WHATSAPP_RECIPIENT_ID || '989108308799';
+
+  if (callMeBotKey) {
+    try {
+      const caption = `🔥 *${title}*\n\n📰 ${summary}\n\n🔗 لینک خبر:\n${link}`;
+      const url = `https://api.callmebot.com/whatsapp.php?phone=${recipientPhone}&text=${encodeURIComponent(caption)}&apikey=${callMeBotKey}`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+      const text = await res.text();
+      if (res.ok && !text.toLowerCase().includes('error')) {
+        console.log('✅ واتساپ (CallMeBot): پیام با موفقیت ارسال شد');
+        return { success: true };
+      }
+      return { success: false, error: `CallMeBot Error: ${text}` };
+    } catch (e: any) {
+      return { success: false, error: `CallMeBot Exception: ${e?.message || e}` };
+    }
+  }
+
   if (!WHATSAPP_ACCESS_TOKEN || !WHATSAPP_PHONE_NUMBER_ID || !WHATSAPP_RECIPIENT_ID) {
-    return { success: false, error: 'متغیرهای WHATSAPP_ACCESS_TOKEN، PHONE_NUMBER_ID یا RECIPIENT_ID تنظیم نشده‌اند' };
+    return { success: false, error: 'متغیرهای CALLMEBOT_API_KEY یا WHATSAPP_ACCESS_TOKEN تنظیم نشده‌اند' };
   }
 
   try {
@@ -272,7 +291,7 @@ export async function sendToWhatsAppChannel(
     });
     const result = await res.json();
     if (res.ok && result.messages) {
-      console.log('✅ واتساپ: پیام با موفقیت ارسال شد');
+      console.log('✅ واتساپ (Cloud API): پیام با موفقیت ارسال شد');
       return { success: true };
     }
     return { success: false, error: `واتساپ API Error: ${JSON.stringify(result)}` };
