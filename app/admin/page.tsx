@@ -724,23 +724,52 @@ export default function AdminPage() {
               </div>
 
               {trafficData?.data ? (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-                  <div className="bg-black/50 p-5 rounded-2xl border border-white/10">
-                    <p className="text-xs text-zinc-400 font-medium">بازدیدکنندگان (۷ روز گذشته)</p>
-                    <p className="text-2xl font-black text-amber-400 mt-2">{trafficData.data.visitorsLast7Days} نفر</p>
+                <div className="space-y-4 mt-6">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    <div className="bg-black/50 p-5 rounded-2xl border border-white/10">
+                      <p className="text-xs text-zinc-400 font-medium">بازدیدکنندگان (۷ روز گذشته)</p>
+                      <p className="text-2xl font-black text-amber-400 mt-2">{trafficData.data.visitorsLast7Days} نفر</p>
+                    </div>
+                    <div className="bg-black/50 p-5 rounded-2xl border border-white/10">
+                      <p className="text-xs text-zinc-400 font-medium">کلیک‌ها و بازدید صفحات</p>
+                      <p className="text-2xl font-black text-blue-400 mt-2">{trafficData.data.pageViewsLast7Days} بازدید</p>
+                    </div>
+                    <div className="bg-black/50 p-5 rounded-2xl border border-blue-500/30 bg-gradient-to-br from-blue-600/10 to-transparent">
+                      <p className="text-xs text-blue-300 font-bold flex items-center gap-1">💼 ورودی مستقیم از لینکدین</p>
+                      <p className="text-2xl font-black text-blue-400 mt-2">{trafficData.data.linkedinClicksLast7Days || 0} کلیک</p>
+                    </div>
+                    <div className="bg-black/50 p-5 rounded-2xl border border-white/10">
+                      <p className="text-xs text-zinc-400 font-medium">ردیاب زنده Statsfa</p>
+                      <p className="text-base font-mono font-bold text-emerald-400 mt-2">{trafficData.data.statsfaSiteId}</p>
+                    </div>
+                    <div className="bg-black/50 p-5 rounded-2xl border border-white/10">
+                      <p className="text-xs text-zinc-400 font-medium">وضعیت VisitTracker</p>
+                      <p className="text-xs font-bold text-emerald-400 mt-2">فعال و ردیابی لحظه‌ای</p>
+                    </div>
                   </div>
-                  <div className="bg-black/50 p-5 rounded-2xl border border-white/10">
-                    <p className="text-xs text-zinc-400 font-medium">تعداد کلیک‌ها و بازدید صفحات</p>
-                    <p className="text-2xl font-black text-blue-400 mt-2">{trafficData.data.pageViewsLast7Days} بازدید</p>
-                  </div>
-                  <div className="bg-black/50 p-5 rounded-2xl border border-white/10">
-                    <p className="text-xs text-zinc-400 font-medium">شناسه ردیاب Statsfa سایت</p>
-                    <p className="text-lg font-mono font-bold text-emerald-400 mt-2">{trafficData.data.statsfaSiteId}</p>
-                  </div>
-                  <div className="bg-black/50 p-5 rounded-2xl border border-white/10">
-                    <p className="text-xs text-zinc-400 font-medium">وضعیت ردیابی VisitTracker</p>
-                    <p className="text-xs font-bold text-emerald-400 mt-2">فعال روی تمام صفحات سایت</p>
-                  </div>
+
+                  {trafficData.data.lastAutoOptimizeReport && (
+                    <div className="p-5 rounded-2xl bg-zinc-900/90 border border-emerald-500/30 space-y-2">
+                      <div className="flex items-center justify-between text-xs font-bold">
+                        <span className="text-emerald-400 flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                          آخرین اجرای موتور خودبهبوددهنده سئو و چرخه لینکدین:
+                        </span>
+                        <span className="text-zinc-400 font-mono">{trafficData.data.lastAutoOptimizeReport.timestamp}</span>
+                      </div>
+                      <div className="space-y-1 pt-1">
+                        {Array.isArray(trafficData.data.lastAutoOptimizeReport.report) ? (
+                          trafficData.data.lastAutoOptimizeReport.report.map((item: string, idx: number) => (
+                            <p key={idx} className="text-xs text-zinc-300 font-light flex items-center gap-1.5">
+                              • {item}
+                            </p>
+                          ))
+                        ) : (
+                          <p className="text-xs text-zinc-300 font-light">سیستم خودکار فعال است و هر ۴ ساعت بهینه‌سازی را انجام می‌دهد.</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <p className="text-zinc-400">در حال دریافت آمار از سرور...</p>

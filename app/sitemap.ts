@@ -7,20 +7,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://ehsansalehi.ir';
   
   const staticPages = [
-    '',
-    '/news',
-    '/auth/login',
-    '/auth/register',
-    '/dashboard',
-    '/projects',
+    { url: `${baseUrl}`, changeFrequency: 'hourly' as const, priority: 1.0 },
+    { url: `${baseUrl}/news`, changeFrequency: 'hourly' as const, priority: 0.95 },
+    { url: `${baseUrl}/dashboard`, changeFrequency: 'daily' as const, priority: 0.8 },
+    { url: `${baseUrl}/projects`, changeFrequency: 'weekly' as const, priority: 0.85 },
+    { url: `${baseUrl}/auth/login`, changeFrequency: 'monthly' as const, priority: 0.5 },
+    { url: `${baseUrl}/auth/register`, changeFrequency: 'monthly' as const, priority: 0.5 },
   ];
   
-  const sitemapEntries: MetadataRoute.Sitemap = staticPages.map((page) => ({
-    url: `${baseUrl}${page}`,
-    lastModified: new Date(),
-    changeFrequency: 'daily' as const,
-    priority: page === '' ? 1.0 : 0.8,
-  }));
+  const sitemapEntries: MetadataRoute.Sitemap = [...staticPages];
   
   // 1. پروژه ها
   try {
@@ -30,7 +25,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         url: `${baseUrl}/projects/${p.id}`,
         lastModified: p.createdAt ? new Date(p.createdAt) : new Date(),
         changeFrequency: 'weekly' as const,
-        priority: 0.8,
+        priority: 0.85,
       }));
       sitemapEntries.push(...projectEntries);
     }
@@ -38,17 +33,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error('Error fetching projects for sitemap:', error);
   }
 
-  // 2. اخبار
+  // 2. اخبار (با اولویت بالا برای ایندکس سریع سرچ کنسول)
   try {
     const newsRows = await query<{ id: number; published_at: string }>(
-      'SELECT id, published_at FROM news_posts WHERE is_published = TRUE ORDER BY published_at DESC LIMIT 100'
+      'SELECT id, published_at FROM news_posts WHERE is_published = TRUE ORDER BY published_at DESC LIMIT 200'
     );
     if (newsRows && newsRows.length > 0) {
       const newsEntries = newsRows.map((news) => ({
         url: `${baseUrl}/news/${news.id}`,
         lastModified: news.published_at ? new Date(news.published_at) : new Date(),
-        changeFrequency: 'daily' as const,
-        priority: 0.6,
+        changeFrequency: 'hourly' as const,
+        priority: 0.9,
       }));
       sitemapEntries.push(...newsEntries);
     }
@@ -65,8 +60,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const blogEntries = blogRows.map((post) => ({
         url: `${baseUrl}/blog/${post.id}`,
         lastModified: post.created_at ? new Date(post.created_at) : new Date(),
-        changeFrequency: 'weekly' as const,
-        priority: 0.7,
+        changeFrequency: 'daily' as const,
+        priority: 0.8,
       }));
       sitemapEntries.push(...blogEntries);
     }

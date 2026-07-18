@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const search = searchParams.get('q') || '';
   const category = searchParams.get('category') || '';
+  const sort = searchParams.get('sort') || '';
   const limit = parseInt(searchParams.get('limit') || '6');
 
   try {
@@ -39,7 +40,38 @@ export async function GET(request: NextRequest) {
       params.push(category);
     }
 
-    query += ' ORDER BY published_at DESC LIMIT ?';
+    if (sort === 'trending') {
+      // اگر درخواست مطالب داغ شده، ابتدا تلاش برای استخراج بر اساس پرکلیک‌ترین بازدیدها از site_visits
+      try {
+        const [topRes] = await pool.execute(
+          `SELECT page, COUNT(*) as clicks FROM site_visits WHERE created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) AND page LIKE "/news/%" GROUP BY page ORDER BY clicks DESC LIMIT ?`,
+          [limit]
+        );
+        const topPageRows = topRes as any[] || [];
+        const newsIds = topPageRows
+          .map(r => {
+            const match = r.page.match(/\/news\/(\d+)/);
+            return match ? parseInt(match[1]) : null;
+          })
+          .filter(Boolean);
+
+        if (newsIds.length > 0) {
+          const placeholders = newsIds.map(() => '?').join(',');
+          const [trendingRows] = await pool.execute(
+            `SELECT id, title, title_en, summary, summary_en, content, content_en, image_url, source_name, published_at, category FROM news_posts WHERE id IN (${placeholders}) AND is_published = TRUE LIMIT ?`,
+            [...newsIds, limit]
+          );
+          if ((trendingRows as any[]).length > 0) {
+            return NextResponse.json({ success: true, news: trendingRows });
+          }
+        }
+      } catch {
+        // fallback if site_visits subquery fails
+      }
+      query += ' ORDER BY id DESC LIMIT ?';
+    } else {
+      query += ' ORDER BY published_at DESC LIMIT ?';
+    }
     params.push(limit);
 
     const [rows] = await pool.execute(query, params);

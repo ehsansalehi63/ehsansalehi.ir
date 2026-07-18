@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import { vazir } from './fonts';
 import './globals.css';
 import { Toaster } from 'sonner';
@@ -108,7 +109,9 @@ export default function RootLayout({
       </head>
       <body className="font-vazir antialiased bg-[#0a0a0a] text-white">
         <I18nProvider>
-          <VisitTracker />
+          <Suspense fallback={null}>
+            <VisitTracker />
+          </Suspense>
           {children}
           <AiChatbot />
           <Toaster position="top-center" richColors theme="dark" />

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useI18n } from '../../components/I18nProvider';
 import NewsComments from '../../components/NewsComments';
+import TrendingArticlesBar from '../../components/TrendingArticlesBar';
 import { ArrowLeft, ArrowRight, Clock, ExternalLink, Share2, ShieldCheck, Flame, Sparkles } from 'lucide-react';
 
 export default function NewsDetailView({ news, newsId }: { news: any; newsId: number }) {
@@ -225,6 +226,9 @@ export default function NewsDetailView({ news, newsId }: { news: any; newsId: nu
             </a>
           </div>
         )}
+
+        {/* Dynamic Trending Articles & Internal Linking Bar */}
+        <TrendingArticlesBar currentNewsId={newsId} />
 
         {/* ====== Comments Section ====== */}
         <div className="mt-16 pt-10 border-t border-white/10">

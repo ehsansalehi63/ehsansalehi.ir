@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowRight, Flame, Sparkles, Clock, Search, Filter } from 'lucide-react';
 import { useI18n } from '../components/I18nProvider';
+import TrendingArticlesBar from '../components/TrendingArticlesBar';
 
 interface NewsItem {
   id: number;
@@ -196,6 +197,8 @@ export default function NewsContent() {
           );
         })}
       </div>
+
+      <TrendingArticlesBar />
 
       {/* Search Input Bar */}
       <div className="max-w-3xl mx-auto mb-12">
