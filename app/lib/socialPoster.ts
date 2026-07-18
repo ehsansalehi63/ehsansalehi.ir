@@ -280,8 +280,32 @@ export async function sendToWhatsAppChannel(
     }
   }
 
+  // بررسی سرویس Green API برای کانال و گروه‌های واتساپ (با اسکن کد QR)
+  const greenInstance = process.env.GREEN_API_INSTANCE_ID || await getAutomationSetting('green_api_instance');
+  const greenToken = process.env.GREEN_API_TOKEN || await getAutomationSetting('green_api_token');
+  if (greenInstance && greenToken) {
+    try {
+      const caption = `🔥 *${title}*\n\n📰 ${summary}\n\n🔗 مطالعه کامل خبر:\n${link}`;
+      const chatId = recipientPhone.includes('@') ? recipientPhone : `${recipientPhone}@c.us`;
+      const url = `https://api.green-api.com/waInstance${greenInstance}/sendMessage/${greenToken}`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chatId, message: caption }),
+      });
+      const data = await res.json();
+      if (res.ok && (data.idMessage || data.id)) {
+        console.log('✅ واتساپ (Green API): پیام با موفقیت به گروه/کانال ارسال شد');
+        return { success: true };
+      }
+      return { success: false, error: `Green API Error: ${JSON.stringify(data)}` };
+    } catch (e: any) {
+      return { success: false, error: `Green API Exception: ${e?.message || e}` };
+    }
+  }
+
   if (!WHATSAPP_ACCESS_TOKEN || !WHATSAPP_PHONE_NUMBER_ID || !WHATSAPP_RECIPIENT_ID) {
-    return { success: false, error: 'متغیرهای CALLMEBOT_API_KEY یا WHATSAPP_ACCESS_TOKEN تنظیم نشده‌اند' };
+    return { success: false, error: 'متغیرهای CALLMEBOT_API_KEY یا GREEN_API یا WHATSAPP_ACCESS_TOKEN تنظیم نشده‌اند' };
   }
 
   try {
