@@ -14,7 +14,27 @@ export async function GET(request: NextRequest) {
     const report: string[] = [];
     console.log('🤖 شروع فرآیند خودبهبوددهنده سئو، ترافیک ارگانیک و چرخه ویروسی لینکدین (Autonomous SEO & LinkedIn Loop)...');
 
-    // 1. پینگ کردن اتوماتیک نقشه سایت به سرورهای گوگل سرچ کنسول (Ping Google Sitemap)
+    // 0. اطمینان از ساختار جداول
+    try {
+      await pool.execute(`CREATE TABLE IF NOT EXISTS site_visits (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        ip VARCHAR(100) NOT NULL,
+        page VARCHAR(255) NOT NULL,
+        user_agent TEXT,
+        referrer VARCHAR(500) DEFAULT NULL,
+        source VARCHAR(50) DEFAULT 'direct',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_created_at (created_at),
+        INDEX idx_page (page),
+        INDEX idx_source (source)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`);
+      try { await pool.execute('ALTER TABLE site_visits ADD COLUMN referrer VARCHAR(500) DEFAULT NULL'); } catch {}
+      try { await pool.execute("ALTER TABLE site_visits ADD COLUMN source VARCHAR(50) DEFAULT 'direct'"); } catch {}
+    } catch {
+      // ignore
+    }
+
+    // 1. پینگ کردن اتوماتیک نقشه سایت به سرورهای گوگل سرچ کنسول
     try {
       const pingUrl = 'https://www.google.com/ping?sitemap=https://ehsansalehi.ir/sitemap.xml';
       const pingRes = await fetch(pingUrl, { signal: AbortSignal.timeout(6000) });
@@ -36,11 +56,15 @@ export async function GET(request: NextRequest) {
       );
       totalLinkedInClicks = (liRes as any[])[0]?.cnt || 0;
       report.push(`📊 مجموع بازدیدهای شناسایی‌شده از سمت لینکدین در ۷ روز گذشته: ${totalLinkedInClicks} بازدید.`);
+    } catch (e: any) {
+      report.push(`⚠️ استخراج کلیک‌های لینکدین: ${e?.message}`);
+    }
 
+    try {
       const [topRes] = await pool.execute(
         `SELECT page, COUNT(*) as clicks FROM site_visits WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) AND page LIKE "/news/%" GROUP BY page ORDER BY clicks DESC LIMIT 5`
       );
-      const topPageRows = topRes as any[] || [];
+      const topPageRows = (topRes as any[]) || [];
       
       const newsIds = topPageRows
         .map(r => {
@@ -55,21 +79,20 @@ export async function GET(request: NextRequest) {
           `SELECT id, title, title_en, summary, image_url, category, published_at FROM news_posts WHERE id IN (${placeholders}) AND is_published = TRUE`,
           newsIds
         );
-        topVisitedArticles = newsData as any[] || [];
+        topVisitedArticles = (newsData as any[]) || [];
       }
 
-      // اگر بازدید کافی ثبت نشده بود، ۳ خبر آخر را به عنوان پیش‌فرض داغ انتخاب کن
       if (topVisitedArticles.length === 0) {
         const [topNewsRes] = await pool.execute(
           'SELECT id, title, title_en, summary, image_url, category, published_at FROM news_posts WHERE is_published = TRUE ORDER BY id DESC LIMIT 3'
         );
-        topVisitedArticles = topNewsRes as any[] || [];
+        topVisitedArticles = (topNewsRes as any[]) || [];
       }
     } catch (e: any) {
-      report.push(`⚠️ خطا در استخراج آمار بازدید: ${e?.message}`);
+      report.push(`⚠️ خطا در استخراج آمار پرکلیک‌ها: ${e?.message}`);
     }
 
-    // 3. بروزرسانی خودکار سیستم لینک‌سازی داخلی هوشمند و بخش مطالب داغ (Internal Linking Optimization)
+    // 3. بروزرسانی خودکار سیستم لینک‌سازی داخلی هوشمند و بخش مطالب داغ
     try {
       if (topVisitedArticles.length > 0) {
         await pool.execute(
@@ -82,7 +105,7 @@ export async function GET(request: NextRequest) {
       // ignore
     }
 
-    // 4. موتور خودکار بازنشر و ایجاد چرخه تعاملی در لینکدین (Autonomous LinkedIn Re-Engagement Booster)
+    // 4. موتور خودکار بازنشر و ایجاد چرخه تعاملی در لینکدین
     try {
       const [lastViralRes] = await pool.execute(
         "SELECT setting_value FROM automation_settings WHERE setting_key = 'last_linkedin_viral_article_id'"
