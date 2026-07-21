@@ -1,4 +1,4 @@
-name: Deploy to Hostinger
+name: Deploy to Mizbanfa cPanel
 
 on:
   push:
@@ -25,19 +25,20 @@ jobs:
         run: npm run build
         env:
           NEXT_PUBLIC_SITE_URL: https://ehsansalehi.ir
-          # در صورت نیاز سایر متغیرهای محیطی که در زمان بیلد لازم هستند را اینجا اضافه کنید
-          # مثل NEXT_PUBLIC_SUPABASE_URL و غیره
-          
+
       - name: Prepare Standalone output for FTP
         run: |
+          # کپی فایل‌های استاتیک به داخل پوشه standalone
           cp -r public .next/standalone/public
           cp -r .next/static .next/standalone/.next/static
           
-      - name: Sync Files via FTP
+      - name: Sync Files via FTP to Mizbanfa
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: /public_html/
+          # مسیر پوشه اپلیکیشن شما در هاست میزبان‌فا
+          server-dir: /ehsansalehi.ir/
+          # آپلود محتویات پوشه standalone
           local-dir: .next/standalone/
