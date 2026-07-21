@@ -1,10 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
+let supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim();
+if (!supabaseUrl.startsWith('http')) {
+  supabaseUrl = 'https://placeholder.supabase.co';
+}
 
-if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-  console.warn('⚠️ Missing Supabase environment variables. Using placeholder for build.');
+let supabaseAnonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim();
+if (!supabaseAnonKey) {
+  supabaseAnonKey = 'placeholder-key';
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);

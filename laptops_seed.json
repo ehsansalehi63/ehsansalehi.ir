@@ -1,0 +1,452 @@
+[
+  {
+    "model": "APPLE IMAC 21.5 2019 OPEN BOX ORGINAL BOX+MOUSE+KEY",
+    "cpu": "i5 3000GHz",
+    "ram": "8 DDR4",
+    "hard": "1TR FUSION",
+    "gpu": "4GB RADEON PRO 560X",
+    "display": "21.5 4K",
+    "base_price": 115000
+  },
+  {
+    "model": "DELL LATITUDE 3310 2 IN 1 TOUCH X360",
+    "cpu": "i5 8365 U",
+    "ram": "8 DDR4",
+    "hard": "256 SSD",
+    "gpu": "INTEL",
+    "display": "13.3 FHD چات",
+    "base_price": 43000
+  },
+  {
+    "model": "DELL LATITUDE 5400",
+    "cpu": "i5 8365 U",
+    "ram": "8 DDR4",
+    "hard": "256 SSD",
+    "gpu": "INTEL",
+    "display": "14 FHD",
+    "base_price": 34500
+  },
+  {
+    "model": "DELL LATITUDE 5400",
+    "cpu": "i5 8365 U",
+    "ram": "16 DDR4",
+    "hard": "256 SSD",
+    "gpu": "INTEL",
+    "display": "14 FHD",
+    "base_price": 37500
+  },
+  {
+    "model": "DELL LATITUDE 5510",
+    "cpu": "i5 10310 U",
+    "ram": "16 DDR4",
+    "hard": "500 SSD",
+    "gpu": "INTEL",
+    "display": "15.6 FHD",
+    "base_price": 52500
+  },
+  {
+    "model": "DELL LATITUDE 5510",
+    "cpu": "i5 10310 U",
+    "ram": "16 DDR4",
+    "hard": "256 SSD",
+    "gpu": "INTEL",
+    "display": "15.6 FHD",
+    "base_price": 49000
+  },
+  {
+    "model": "DELL LATITUDE 5591",
+    "cpu": "i5 8400 H",
+    "ram": "8 DDR4",
+    "hard": "256 SSD",
+    "gpu": "2GB NVIDIA GEFORCE MX130",
+    "display": "15.6 FHD",
+    "base_price": 39500
+  },
+  {
+    "model": "DELL LATITUDE 7420",
+    "cpu": "i7 1185 G7",
+    "ram": "16 DDR4",
+    "hard": "256 SSD",
+    "gpu": "INTEL Iris® Xe",
+    "display": "14 FHD",
+    "base_price": 52500
+  },
+  {
+    "model": "DELL PRECISION 3540",
+    "cpu": "i7 8665 U",
+    "ram": "8 DDR4",
+    "hard": "256 SSD",
+    "gpu": "2GB AMD RADEON PRO WX2100",
+    "display": "15.6 FHD",
+    "base_price": 46000
+  },
+  {
+    "model": "DELL PRECISION 5530",
+    "cpu": "i9 8950 HK",
+    "ram": "16 DDR4",
+    "hard": "512 SSD",
+    "gpu": "4GB NVIDIA QUADRO P2000",
+    "display": "15.6 FHD",
+    "base_price": 79000
+  },
+  {
+    "model": "DELL PRECISION 5540",
+    "cpu": "i9 9980 HK",
+    "ram": "16 DDR4",
+    "hard": "512 SSD",
+    "gpu": "4GB NVIDIA QUADRO T2000",
+    "display": "15.6 FHD",
+    "base_price": 87000
+  },
+  {
+    "model": "DELL PRECISION 5550",
+    "cpu": "i9 10885 H",
+    "ram": "16 DDR4",
+    "hard": "512 SSD",
+    "gpu": "4GB NVIDIA QUADRO T2000 MAX-Q",
+    "display": "15.6 FHD",
+    "base_price": 105000
+  },
+  {
+    "model": "DELL PRECISION 5560",
+    "cpu": "i7 11800 H",
+    "ram": "16 DDR4",
+    "hard": "512 SSD",
+    "gpu": "4GB NVIDIA T1200",
+    "display": "15.6 FHD",
+    "base_price": 105000
+  },
+  {
+    "model": "DELL PRECISION 7760",
+    "cpu": "i9 11950 H",
+    "ram": "32 DDR4",
+    "hard": "1TR SSD",
+    "gpu": "16GB NVIDIA RTX A5000",
+    "display": "17 FHD",
+    "base_price": 185000
+  },
+  {
+    "model": "DELL PRECISION 7760",
+    "cpu": "INTEL XEON W-11855 M",
+    "ram": "32 DDR4",
+    "hard": "512 SSD",
+    "gpu": "8GB NVIDIA RTX A4000",
+    "display": "17 FHD",
+    "base_price": 150000
+  },
+  {
+    "model": "DELL PRECISION 7770",
+    "cpu": "i9 12950 HX",
+    "ram": "64 DDR5",
+    "hard": "1TR SSD",
+    "gpu": "16GB NVIDIA RTX A5500",
+    "display": "17 FHD",
+    "base_price": 243000
+  },
+  {
+    "model": "DELL PRECISION 7770",
+    "cpu": "i7 12850 HX",
+    "ram": "32 DDR5",
+    "hard": "512 SSD",
+    "gpu": "12GB NVIDIA RTX A3000",
+    "display": "17 FHD",
+    "base_price": 163000
+  },
+  {
+    "model": "HP 250R G9 OPEN BOX کیاخ نتراک",
+    "cpu": "i5 1335 U",
+    "ram": "16 DDR4",
+    "hard": "256 SSD",
+    "gpu": "INTEL",
+    "display": "15.6 FHD",
+    "base_price": 74500
+  },
+  {
+    "model": "HP CHROMEBOOK FORTIS G1M 11 OPEN BOX",
+    "cpu": "MediaTek Helio P60T-8186",
+    "ram": "4 DDR4",
+    "hard": "32 SSD",
+    "gpu": "-",
+    "display": "11 HD",
+    "base_price": 15000
+  },
+  {
+    "model": "HP ELITEBOOK 630 G9 TOUCH",
+    "cpu": "i5 1245 U",
+    "ram": "16 DDR4",
+    "hard": "256 SSD",
+    "gpu": "INTEL OR INTEL Iris® Xe",
+    "display": "13.3 FHD چات",
+    "base_price": 65500
+  },
+  {
+    "model": "HP ELITEBOOK 650 G9 TOUCH",
+    "cpu": "i5 1245 U",
+    "ram": "16 DDR4",
+    "hard": "256 SSD",
+    "gpu": "INTEL OR INTEL Iris® Xe",
+    "display": "15.6 FHD چات",
+    "base_price": 71000
+  },
+  {
+    "model": "HP ELITEBOOK 735 G6",
+    "cpu": "RYZEN 7 PRO 3700 UW",
+    "ram": "8 DDR4",
+    "hard": "256 SSD",
+    "gpu": "2GB AMD RADEON VEGA 10",
+    "display": "13 FHD",
+    "base_price": 48500
+  },
+  {
+    "model": "HP ELITEBOOK 840 G11 OPEN BOX کیاخ نتراک",
+    "cpu": "INTEL CORE ULTRA 7 155 U",
+    "ram": "16 DDR5",
+    "hard": "512 SSD",
+    "gpu": "NPU AI BOOST",
+    "display": "14 FHD",
+    "base_price": 112000
+  },
+  {
+    "model": "HP ELITEBOOK 845 G7",
+    "cpu": "RYZEN 5 PRO 4650 U",
+    "ram": "8 DDR4",
+    "hard": "256 SSD",
+    "gpu": "512 MB AMD RADEON",
+    "display": "14 FHD",
+    "base_price": 45500
+  },
+  {
+    "model": "HP ENVY 13 X360 TOUCH کیاخ نتراک",
+    "cpu": "RYZEN 7 3700 U",
+    "ram": "16 DDR4",
+    "hard": "256 SSD",
+    "gpu": "2GB AMD RADEON VEGA 10",
+    "display": "13 FHD چات",
+    "base_price": 68500
+  },
+  {
+    "model": "HP LAPTOP 14 OPEN BOX کیاخ نتراک",
+    "cpu": "i3 1215 U",
+    "ram": "8 DDR4",
+    "hard": "512 SSD",
+    "gpu": "INTEL",
+    "display": "14 FHD",
+    "base_price": 58000
+  },
+  {
+    "model": "HP OMEN TRANSCEND 14 OPEN BOX کیاخ نتراک WHITE",
+    "cpu": "INTEL ULTRA 7 155 H",
+    "ram": "16 DDR5",
+    "hard": "1TR SSD",
+    "gpu": "8GB MVIDIA GEFORCE RTX 4060 + AI BOOST NPU",
+    "display": "14 2K 120 Hz",
+    "base_price": 229000
+  },
+  {
+    "model": "HP OMNIBOOK 5 14 OPEN BOX کیاخ نتراک",
+    "cpu": "SNAPDRAGON XPLUS-X1P422100",
+    "ram": "16 DDR5",
+    "hard": "512 SSD",
+    "gpu": "NPU XPLUS + QULCOM ADRENO X1-45",
+    "display": "14 FHD",
+    "base_price": 99000
+  },
+  {
+    "model": "HP OMNIBOOK 5 16 OPEN BOX کیاخ نتراک",
+    "cpu": "SNAPDRAGON XPLUS-X1P422100",
+    "ram": "32 DDR5",
+    "hard": "512 SSD",
+    "gpu": "NPU XPLUS + QULCOM ADRENO X1-45",
+    "display": "16 FHD",
+    "base_price": 109000
+  },
+  {
+    "model": "HP PAVILION DV7",
+    "cpu": "i7 2630 QM",
+    "ram": "8 DDR3",
+    "hard": "240 SSD",
+    "gpu": "1GB AMD RADEON 7400",
+    "display": "17 HD",
+    "base_price": 27000
+  },
+  {
+    "model": "HP PAVILION X360 14 TOUCH ملق اب کیاخ نتراک",
+    "cpu": "i5 1155 G7",
+    "ram": "8 DDR4",
+    "hard": "512 SSD",
+    "gpu": "INTEL Iris® Xe",
+    "display": "14 FHD چات",
+    "base_price": 72000
+  },
+  {
+    "model": "HP PROBOOK 440 G6",
+    "cpu": "i5 8265 U",
+    "ram": "8 DDR4",
+    "hard": "256 SSD",
+    "gpu": "INTEL",
+    "display": "14 HD",
+    "base_price": 38000
+  },
+  {
+    "model": "HP PROBOOK 440 G6",
+    "cpu": "i5 8265 U",
+    "ram": "8 DDR4",
+    "hard": "256 SSD",
+    "gpu": "INTEL",
+    "display": "14 FHD",
+    "base_price": 39000
+  },
+  {
+    "model": "HP PROBOOK 450 G3",
+    "cpu": "i7 6500 U",
+    "ram": "8 DDR4",
+    "hard": "256 SSD",
+    "gpu": "INTEL",
+    "display": "15.6 FHD",
+    "base_price": 36000
+  },
+  {
+    "model": "HP PROBOOK 450 G4",
+    "cpu": "i5 7200 U",
+    "ram": "8 DDR4",
+    "hard": "512 SSD",
+    "gpu": "INTEL",
+    "display": "15.6 HD",
+    "base_price": 37000
+  },
+  {
+    "model": "HP PROBOOK 450 G5",
+    "cpu": "i5 8250 U",
+    "ram": "8 DDR4",
+    "hard": "256 SSD",
+    "gpu": "INTEL",
+    "display": "15.6 FHD",
+    "base_price": 40000
+  },
+  {
+    "model": "HP PROBOOK 450 G6 i5 8265 U 8 DDR4 256 SSD INTEL 15.6 FHD",
+    "cpu": "",
+    "ram": "",
+    "hard": "",
+    "gpu": "",
+    "display": "",
+    "base_price": 42000
+  },
+  {
+    "model": "HP VICTUS 15 OPEN BOX کیاخ نتراک",
+    "cpu": "I7 13620 H",
+    "ram": "16 DDR5",
+    "hard": "1TR SSD",
+    "gpu": "8GB MVIDIA GEFORCE RTX 5050",
+    "display": "15.6 FHD 144 Hz",
+    "base_price": 183000
+  },
+  {
+    "model": "LENOVO THINKPAD T14",
+    "cpu": "i5 10310 U",
+    "ram": "16 DDR4 256 SSD INTEL",
+    "hard": "",
+    "gpu": "",
+    "display": "14 FHD",
+    "base_price": 46000
+  },
+  {
+    "model": "LENOVO THINKPAD T14S i5 10210 U 8 DDR4 256 SSD INTEL 14 FHD",
+    "cpu": "",
+    "ram": "",
+    "hard": "",
+    "gpu": "",
+    "display": "",
+    "base_price": 37000
+  },
+  {
+    "model": "LENOVO THINKPAD T480 TOUCH",
+    "cpu": "i7 8650 U",
+    "ram": "16 DDR4 512 SSD",
+    "hard": "",
+    "gpu": "INTEL",
+    "display": "14 FHD چات",
+    "base_price": 46000
+  },
+  {
+    "model": "LENOVO THINKPAD T480S TOUCH i7 8650 U 8 DDR4 256 SSD INTEL 14 FHD چات",
+    "cpu": "",
+    "ram": "",
+    "hard": "",
+    "gpu": "",
+    "display": "",
+    "base_price": 38000
+  },
+  {
+    "model": "LENOVO THINKPAD T490",
+    "cpu": "i5 8365 U",
+    "ram": "8 DDR4",
+    "hard": "256 SSD",
+    "gpu": "INTEL",
+    "display": "14 FHD",
+    "base_price": 34000
+  },
+  {
+    "model": "LENOVO THINKPAD T490S",
+    "cpu": "i5 8365 U",
+    "ram": "8 DDR4",
+    "hard": "256 SSD",
+    "gpu": "INTEL",
+    "display": "14 FHD",
+    "base_price": 35000
+  },
+  {
+    "model": "LENOVO THINKPAD T540P",
+    "cpu": "i5 4300 M",
+    "ram": "8 DDR3",
+    "hard": "256 SSD",
+    "gpu": "1GB NVIDIA GEFORCE GT 730M",
+    "display": "15.6 FHD",
+    "base_price": 28000
+  },
+  {
+    "model": "LENOVO THINKPAD X1 CARBON GEN 6",
+    "cpu": "i7 8650 U",
+    "ram": "16 DDR4",
+    "hard": "256 SSD",
+    "gpu": "INTEL",
+    "display": "14 FHD",
+    "base_price": 42000
+  },
+  {
+    "model": "SURFACE LAPTOP 4",
+    "cpu": "i5 1145 G7",
+    "ram": "8 DDR4",
+    "hard": "512 SSD",
+    "gpu": "INTEL Iris® Xe",
+    "display": "13.5 2K چات",
+    "base_price": 63500
+  },
+  {
+    "model": "SURFACE LAPTOP 4",
+    "cpu": "RYZEN 5",
+    "ram": "16 DDR4",
+    "hard": "256 SSD",
+    "gpu": "512 MB AMD RADEON",
+    "display": "13.5 2K چات",
+    "base_price": 57000
+  },
+  {
+    "model": "ن\nلسکیپاگم 4g 4 روخ تراک میس میس بی یدیشروخ یژراش هتسبرادم ی برود",
+    "cpu": "",
+    "ram": "",
+    "hard": "",
+    "gpu": "",
+    "display": "",
+    "base_price": 4000
+  },
+  {
+    "model": "HP ELITE ملق",
+    "cpu": "",
+    "ram": "",
+    "hard": "",
+    "gpu": "",
+    "display": "",
+    "base_price": 3400
+  }
+]
