@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
@@ -16,7 +17,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Install Dependencies
         run: npm ci
@@ -28,7 +29,6 @@ jobs:
 
       - name: Prepare Standalone output for FTP
         run: |
-          # کپی فایل‌های استاتیک به داخل پوشه standalone
           cp -r public .next/standalone/public
           cp -r .next/static .next/standalone/.next/static
           
@@ -38,7 +38,5 @@ jobs:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          # مسیر پوشه اپلیکیشن شما در هاست میزبان‌فا
-          server-dir: /ehsansalehi.ir/
-          # آپلود محتویات پوشه standalone
+          server-dir: ./ehsansalehi.ir/
           local-dir: .next/standalone/
