@@ -4,9 +4,10 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 1. Allow public admin login path, migrate-data, init-db, resend-all-social, traffic-ai, and automation
+  // 1. Allow public admin login path, migrate, migrate-data, init-db, resend-all-social, traffic-ai, and automation
   if (
     pathname === '/api/admin/auth' ||
+    pathname === '/api/admin/migrate' ||
     pathname === '/api/admin/migrate-data' ||
     pathname === '/api/admin/init-db' ||
     pathname === '/api/admin/resend-all-social' ||
