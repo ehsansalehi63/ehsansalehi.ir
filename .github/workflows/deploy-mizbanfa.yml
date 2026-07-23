@@ -42,6 +42,7 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           server-dir: ./ehsansalehi.ir/
           local-dir: .next/standalone/
+          state-name: .sync-state-${{ github.run_id }}.json
 
       - name: Run News Migration from Hostinger DB
         run: |
