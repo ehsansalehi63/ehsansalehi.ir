@@ -31,6 +31,8 @@ jobs:
         run: |
           cp -r public .next/standalone/public
           cp -r .next/static .next/standalone/.next/static
+          mkdir -p .next/standalone/tmp
+          touch .next/standalone/tmp/restart.txt
           
       - name: Sync Files via FTP to Mizbanfa
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -40,3 +42,10 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           server-dir: ./ehsansalehi.ir/
           local-dir: .next/standalone/
+
+      - name: Run News Migration from Hostinger DB
+        run: |
+          echo "Waiting 10 seconds for Passenger to restart..."
+          sleep 10
+          echo "Triggering migration..."
+          curl -s -k -m 30 -X GET "https://ehsansalehi.ir/api/admin/migrate?pass=Ehsansalehi@123" || echo "Migration curl failed, might be geo-blocked"
