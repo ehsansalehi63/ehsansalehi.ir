@@ -11,23 +11,20 @@ export async function GET(request: Request) {
     const pass = url.searchParams.get('pass') || process.env.OLD_DB_PASS;
     
     if (!pass) {
-      return NextResponse.json({ success: false, error: 'Password is required either via ?pass= param or OLD_DB_PASS env var.' });
+      return NextResponse.json({ success: false, error: 'Password is required' });
     }
 
-    console.log("Connecting to old Vercel DB on Hostinger...");
     const oldDb = await mysql.createConnection({
       host: '82.112.229.184',
       user: 'u699154314_ehsansalehi',
       password: pass,
       database: 'u699154314_ehsansalehi',
-      connectTimeout: 10000
+      connectTimeout: 5000
     });
 
-    console.log("Fetching old news...");
     const [oldNews]: any = await oldDb.execute('SELECT * FROM news_posts');
     await oldDb.end();
 
-    console.log(`Found ${oldNews.length} news items. Transferring to new DB...`);
     let count = 0;
     
     for (const news of oldNews) {
@@ -49,7 +46,13 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ success: true, message: `Successfully transferred ${count} news items from Hostinger to Mizbanfa!` });
   } catch (error: any) {
-    console.error('Migration Error:', error);
+    if (error.code === 'ETIMEDOUT') {
+      return NextResponse.json({ 
+        success: false, 
+        error: "ارتباط مسدود است (ETIMEDOUT)", 
+        details: "هاستینگر اتصال به دیتابیس را برای آی‌پی‌های خارج از شبکه خودش (Remote MySQL) مسدود کرده است. میزبان‌فا نمی‌تواند به آن متصل شود." 
+      });
+    }
     return NextResponse.json({ success: false, error: error.message });
   }
 }
