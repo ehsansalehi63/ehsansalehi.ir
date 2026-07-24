@@ -20,8 +20,6 @@ export async function GET(request: NextRequest) {
     const params: any[] = [];
     const conditions: string[] = [];
 
-    // Temporary fix: Ignore is_published filter if we imported raw dumps that might be 0 or null
-    // We just return everything that looks like a valid news item
     conditions.push('(is_published = 1 OR is_published = 0 OR is_published IS NULL)');
 
     if (search) {
@@ -49,14 +47,9 @@ export async function GET(request: NextRequest) {
     const [rows] = await pool.execute(query, params);
     const newsList = rows as any[] || [];
 
-    // Provide default English fallbacks so UI doesn't crash or timeout
     for (const item of newsList) {
-      if (!item.title_en) {
-        item.title_en = item.title || `Tech Update (${item.source_name || 'IT News'})`;
-      }
-      if (!item.summary_en) {
-        item.summary_en = item.summary ? item.summary.slice(0, 150) + '...' : 'Latest technology and cybersecurity updates from Ehsan Salehi.';
-      }
+      if (!item.title_en) item.title_en = item.title || 'News Update';
+      if (!item.summary_en) item.summary_en = item.summary ? item.summary.slice(0, 150) + '...' : 'Latest technology update.';
     }
 
     return NextResponse.json({ success: true, news: newsList });
