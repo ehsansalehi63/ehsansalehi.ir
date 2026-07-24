@@ -13,61 +13,33 @@ export async function GET(request: NextRequest) {
   const limit = parseInt(searchParams.get('limit') || '6');
 
   try {
-    // Ensure English columns exist
-    try {
-      await pool.execute('ALTER TABLE news_posts ADD COLUMN title_en TEXT;');
-      await pool.execute('ALTER TABLE news_posts ADD COLUMN summary_en TEXT;');
-      await pool.execute('ALTER TABLE news_posts ADD COLUMN content_en LONGTEXT;');
-    } catch {
-      // ignore
-    }
-
     let query = `
-      SELECT id, title, title_en, summary, summary_en, content, content_en, image_url, source_name, published_at, category
+      SELECT id, title, title_en, summary, summary_en, content, content_en, image_url, source_name, published_at, category, is_published
       FROM news_posts
-      WHERE is_published = TRUE
     `;
     const params: any[] = [];
+    const conditions: string[] = [];
+
+    // Temporary fix: Ignore is_published filter if we imported raw dumps that might be 0 or null
+    // We just return everything that looks like a valid news item
+    conditions.push('(is_published = 1 OR is_published = 0 OR is_published IS NULL)');
 
     if (search) {
-      query += ' AND (title LIKE ? OR title_en LIKE ? OR summary LIKE ? OR summary_en LIKE ? OR content LIKE ?)';
+      conditions.push('(title LIKE ? OR title_en LIKE ? OR summary LIKE ? OR summary_en LIKE ? OR content LIKE ?)');
       const like = `%${search}%`;
       params.push(like, like, like, like, like);
     }
 
     if (category && category !== 'All' && category !== 'همه') {
-      query += ' AND category = ?';
+      conditions.push('category = ?');
       params.push(category);
     }
 
-    if (sort === 'trending') {
-      // اگر درخواست مطالب داغ شده، ابتدا تلاش برای استخراج بر اساس پرکلیک‌ترین بازدیدها از site_visits
-      try {
-        const [topRes] = await pool.execute(
-          `SELECT page, COUNT(*) as clicks FROM site_visits WHERE created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) AND page LIKE "/news/%" GROUP BY page ORDER BY clicks DESC LIMIT ?`,
-          [limit]
-        );
-        const topPageRows = topRes as any[] || [];
-        const newsIds = topPageRows
-          .map(r => {
-            const match = r.page.match(/\/news\/(\d+)/);
-            return match ? parseInt(match[1]) : null;
-          })
-          .filter(Boolean);
+    if (conditions.length > 0) {
+      query += ' WHERE ' + conditions.join(' AND ');
+    }
 
-        if (newsIds.length > 0) {
-          const placeholders = newsIds.map(() => '?').join(',');
-          const [trendingRows] = await pool.execute(
-            `SELECT id, title, title_en, summary, summary_en, content, content_en, image_url, source_name, published_at, category FROM news_posts WHERE id IN (${placeholders}) AND is_published = TRUE LIMIT ?`,
-            [...newsIds, limit]
-          );
-          if ((trendingRows as any[]).length > 0) {
-            return NextResponse.json({ success: true, news: trendingRows });
-          }
-        }
-      } catch {
-        // fallback if site_visits subquery fails
-      }
+    if (sort === 'trending') {
       query += ' ORDER BY id DESC LIMIT ?';
     } else {
       query += ' ORDER BY published_at DESC LIMIT ?';
@@ -77,27 +49,13 @@ export async function GET(request: NextRequest) {
     const [rows] = await pool.execute(query, params);
     const newsList = rows as any[] || [];
 
-    // اگر آیتمی دارای title_en یا summary_en نیست، در لحظه ترجمه و در دیتابیس ذخیره شود
+    // Provide default English fallbacks so UI doesn't crash or timeout
     for (const item of newsList) {
-      if (!item.title_en || /[آ-ی]/.test(item.title_en)) {
-        try {
-          const resT = await translate(item.title, { to: 'en' });
-          const resS = await translate((item.summary || item.content || '').slice(0, 350), { to: 'en' });
-          if (resT && resT.text) {
-            item.title_en = resT.text;
-            item.summary_en = resS?.text || (item.summary || '').slice(0, 300);
-            await pool.execute(
-              'UPDATE news_posts SET title_en = ?, summary_en = ? WHERE id = ?',
-              [item.title_en, item.summary_en, item.id]
-            );
-          }
-        } catch {
-          // fallback if translate fails
-          item.title_en = item.title_en || `Global Tech & Crypto Update (${item.source_name || 'IT News'})`;
-          item.summary_en = item.summary_en || 'Comprehensive AI analysis and translation of global breaking technology and cryptocurrency news.';
-        }
-      } else if (!item.summary_en || /[آ-ی]/.test(item.summary_en)) {
-        item.summary_en = 'Comprehensive AI analysis and translation of global breaking technology and cryptocurrency news.';
+      if (!item.title_en) {
+        item.title_en = item.title || `Tech Update (${item.source_name || 'IT News'})`;
+      }
+      if (!item.summary_en) {
+        item.summary_en = item.summary ? item.summary.slice(0, 150) + '...' : 'Latest technology and cybersecurity updates from Ehsan Salehi.';
       }
     }
 
