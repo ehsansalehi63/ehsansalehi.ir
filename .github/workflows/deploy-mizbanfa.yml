@@ -18,9 +18,20 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: 'npm' # فعال‌سازی کش برای سرعت ۱۰ برابری نصب
 
       - name: Install Dependencies
         run: npm ci
+
+      - name: Cache Next.js build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            ${{ github.workspace }}/.next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**/*.[jt]s', '**/*.[jt]sx') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-
 
       - name: Build Project
         run: npm run build
@@ -43,10 +54,3 @@ jobs:
           server-dir: ./ehsansalehi.ir/
           local-dir: .next/standalone/
           state-name: .sync-state-${{ github.run_id }}.json
-
-      - name: Run News Migration from Hostinger DB
-        run: |
-          echo "Waiting 10 seconds for Passenger to restart..."
-          sleep 10
-          echo "Triggering migration..."
-          curl -s -k -m 30 -X GET "https://ehsansalehi.ir/api/admin/migrate?pass=Ehsansalehi@123" || echo "Migration curl failed, might be geo-blocked"
