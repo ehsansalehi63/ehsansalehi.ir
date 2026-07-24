@@ -100,14 +100,21 @@ export async function GET(request: NextRequest) {
     const cronError = verifyCron(request);
     if (cronError) return cronError;
 
-    const parser = new Parser();
+    const parser = new Parser({ timeout: 5000, customFields: { item: [["content:encoded", "contentEncoded"]] } });
     let bestNews = null;
     let bestScore = -1;
     let chosenFeed = '';
 
-    for (const feedUrl of RSS_FEEDS) {
+    
+    // Shuffle feeds and pick max 3 to prevent timeouts on cPanel
+    const shuffledFeeds = [...RSS_FEEDS].sort(() => 0.5 - Math.random()).slice(0, 3);
+    for (const feedUrl of shuffledFeeds) {
       try {
-        const feed = await parser.parseURL(feedUrl);
+        
+        const feed = await Promise.race([
+          parser.parseURL(feedUrl),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000))
+        ]) as any;
         const item = feed.items[0];
         if (!item) continue;
         

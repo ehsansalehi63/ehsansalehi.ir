@@ -26,6 +26,7 @@ export async function analyzeAndTranslateNews(
     const openai = new OpenAI({
       apiKey: apiKey,
       baseURL: process.env.OPENAI_BASE_URL || 'https://api.gapgpt.ir/v1',
+      timeout: 15000,
     });
 
     const prompt = `
