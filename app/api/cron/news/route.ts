@@ -11,13 +11,11 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const RSS_FEEDS = [
-  // رمزارز و بلاکچین (Crypto & Blockchain)
   'https://www.coindesk.com/arc/outboundfeeds/rss/',
   'https://cointelegraph.com/rss',
   'https://decrypt.co/feed',
   'https://news.bitcoin.com/feed/',
   'https://cryptoslate.com/feed/',
-  // هوش مصنوعی و فناوری (AI & Tech)
   'https://techcrunch.com/feed/',
   'https://www.theverge.com/rss/index.xml',
   'https://www.wired.com/feed/rss',
@@ -31,30 +29,23 @@ const RSS_FEEDS = [
 
 function detectCategory(title: string, content: string, feedUrl: string): string {
   const text = (title + ' ' + content + ' ' + feedUrl).toLowerCase();
-  if (text.includes('crypto') || text.includes('bitcoin') || text.includes('ethereum') || text.includes('blockchain') || text.includes('coin') || text.includes('token') || text.includes('solana') || text.includes('binance') || text.includes('بیت کوین') || text.includes('رمز ارز') || text.includes('ارز دیجیتال') || text.includes('بلاکچین') || feedUrl.includes('coindesk') || feedUrl.includes('cointelegraph') || feedUrl.includes('decrypt') || feedUrl.includes('bitcoin')) {
-    return 'رمزارز و بلاکچین';
-  }
-  if (text.includes('ai ') || text.includes('artificial intelligence') || text.includes('chatgpt') || text.includes('openai') || text.includes('llm') || text.includes('gemini') || text.includes('claude') || text.includes('machine learning') || text.includes('هوش مصنوعی') || text.includes('یادگیری ماشین')) {
-    return 'هوش مصنوعی';
-  }
-  if (text.includes('security') || text.includes('cyber') || text.includes('hack') || text.includes('vulnerability') || text.includes('malware') || text.includes('امنیت') || text.includes('هک') || text.includes('باگ') || text.includes('سایبری')) {
-    return 'امنیت سایبری';
-  }
-  if (text.includes('apple') || text.includes('samsung') || text.includes('phone') || text.includes('android') || text.includes('gpu') || text.includes('cpu') || text.includes('intel') || text.includes('nvidia') || text.includes('اپل') || text.includes('سامسونگ') || text.includes('موبایل') || text.includes('سخت افزار')) {
-    return 'سخت‌افزار و گجت';
-  }
+  if (text.includes('crypto') || text.includes('bitcoin') || text.includes('ethereum') || text.includes('blockchain') || text.includes('coin')) return 'رمزارز و بلاکچین';
+  if (text.includes('ai ') || text.includes('artificial intelligence') || text.includes('chatgpt') || text.includes('openai') || text.includes('llm') || text.includes('هوش مصنوعی')) return 'هوش مصنوعی';
+  if (text.includes('security') || text.includes('cyber') || text.includes('hack') || text.includes('امنیت') || text.includes('هک') || text.includes('سایبری')) return 'امنیت سایبری';
+  if (text.includes('apple') || text.includes('samsung') || text.includes('phone') || text.includes('موبایل') || text.includes('سخت افزار')) return 'سخت‌افزار و گجت';
   return 'فناوری و نرم‌افزار';
 }
 
 async function extractFullContent(url: string) {
   try {
-    const { data } = await axios.get(url, { timeout: 5000 });
+    const { data } = await axios.get(url, { 
+      timeout: 8000,
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+    });
     const $ = cheerio.load(data);
     $('script, style, nav, header, footer, aside, .ad, .advertisement').remove();
     
-    let image = $('meta[property="og:image"]').attr('content') || 
-                $('meta[name="twitter:image"]').attr('content') || 
-                $('article img').first().attr('src') || null;
+    let image = $('meta[property="og:image"]').attr('content') || $('meta[name="twitter:image"]').attr('content') || $('article img').first().attr('src') || null;
     if (image && !image.startsWith('http')) {
       if (image.startsWith('/')) {
         const baseUrl = new URL(url).origin;
@@ -66,102 +57,82 @@ async function extractFullContent(url: string) {
     image = image || 'https://ehsansalehi.ir/images/og-image.jpg';
     
     let content = '';
-    const selectors = [
-      'article .entry-content',
-      'article .post-content',
-      'article .content',
-      'main article',
-      '.article-content',
-      '.post-content',
-      'article',
-    ];
-    
+    const selectors = ['article .entry-content', 'article .post-content', 'article .content', 'main article', '.article-content', '.post-content', 'article'];
     for (const selector of selectors) {
       const el = $(selector);
-      if (el.length > 0) {
-        content = el.text().trim();
-        break;
-      }
+      if (el.length > 0) { content = el.text().trim(); break; }
     }
-    
-    if (!content) {
-      content = $('body').text().trim();
-    }
-    
+    if (!content) content = $('body').text().trim();
     content = content.replace(/\s+/g, ' ').slice(0, 3000);
     return { content, image };
-  } catch {
+  } catch (err) {
+    console.error(`Failed to extract content from ${url} - likely timeout or blocked`);
     return { content: '', image: 'https://ehsansalehi.ir/images/og-image.jpg' };
   }
 }
+
+// Added timeout wrapper for feed parsing because Iranian internet might block them
+const fetchFeedWithTimeout = async (feedUrl: string, timeoutMs: number) => {
+  const parser = new Parser();
+  return Promise.race([
+    parser.parseURL(feedUrl),
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Feed timeout')), timeoutMs))
+  ]);
+};
 
 export async function GET(request: NextRequest) {
   try {
     const cronError = verifyCron(request);
     if (cronError) return cronError;
 
-    const parser = new Parser({ timeout: 5000, customFields: { item: [["content:encoded", "contentEncoded"]] } });
     let bestNews = null;
     let bestScore = -1;
     let chosenFeed = '';
 
-    
-    // Shuffle feeds and pick max 3 to prevent timeouts on cPanel
-    const shuffledFeeds = [...RSS_FEEDS].sort(() => 0.5 - Math.random()).slice(0, 3);
-    for (const feedUrl of shuffledFeeds) {
+    for (const feedUrl of RSS_FEEDS) {
       try {
-        
-        const feed = await Promise.race([
-          parser.parseURL(feedUrl),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000))
-        ]) as any;
+        const feed: any = await fetchFeedWithTimeout(feedUrl, 6000); // Strict 6 second timeout per feed
         const item = feed.items[0];
         if (!item) continue;
         
         const { content, image } = await extractFullContent(item.link || '');
-        
         let score = 0;
         if (image && !image.includes('og-image.jpg')) score += 20;
         if (content.length > 500) score += 30;
         if (item.pubDate) {
           const hoursAgo = (Date.now() - new Date(item.pubDate).getTime()) / (1000 * 60 * 60);
-          if (hoursAgo < 12) score += 50 - Math.min(hoursAgo * 4, 40);
+          if (hoursAgo < 12) score += 50;
         }
-        
+
         if (score > bestScore) {
           bestScore = score;
-          chosenFeed = feedUrl;
           bestNews = {
             title: item.title || '',
-            content,
-            image,
-            source_name: feed.title || new URL(feedUrl).hostname,
-            source_url: feed.link || feedUrl,
+            content: content || item.contentSnippet || item.content || '',
+            image: image,
+            source_url: item.link || '',
             original_url: item.link || '',
-            published_at: item.pubDate ? new Date(item.pubDate).toISOString().slice(0, 19).replace('T', ' ') : new Date().toISOString().slice(0, 19).replace('T', ' '),
+            source_name: feed.title || new URL(feedUrl).hostname,
+            published_at: item.pubDate ? new Date(item.pubDate) : new Date(),
           };
+          chosenFeed = feedUrl;
         }
-      } catch (err: any) {
-        console.error(`خطا در ${feedUrl}:`, err.message || err);
+      } catch (e: any) {
+        console.error(`Skipping feed ${feedUrl}: ${e.message}`);
       }
     }
 
     if (!bestNews) {
-      return NextResponse.json({ 
-        success: false, 
-        message: 'هیچ خبری یافت نشد' 
-      });
+      return NextResponse.json({ success: false, message: 'هیچ خبر مناسبی یافت نشد یا ارتباط مسدود است.' });
     }
 
-    const [existing] = await pool.execute(
-      'SELECT id FROM news_posts WHERE original_url = ?',
-      [bestNews.original_url]
+    const [existingRows]: any = await pool.execute(
+      'SELECT id FROM news_posts WHERE title = ? OR original_url = ? LIMIT 1',
+      [bestNews.title, bestNews.original_url]
     );
-    if ((existing as any[]).length > 0) {
-      return NextResponse.json({ 
-        success: false, 
-        message: 'خبر تکراری است' 
-      });
+
+    if (existingRows && existingRows.length > 0) {
+      return NextResponse.json({ success: true, message: 'خبر تکراری است' });
     }
 
     const category = detectCategory(bestNews.title, bestNews.content, chosenFeed);
@@ -195,28 +166,27 @@ export async function GET(request: NextRequest) {
     if (newId) {
       const link = `https://ehsansalehi.ir/news/${newId}`;
       console.log(`🚀 خبر جدید (ID: ${newId}) ذخیره شد، شروع انتشار فوری روی تمام شبکه‌های اجتماعی...`);
-      socialResults = await postNewsToAllChannels(
+      // We purposefully don't await the social poster to avoid timing out the web request
+      postNewsToAllChannels(
         newId,
         translated.title || bestNews.title,
         translated.summary || bestNews.content.slice(0, 200),
         bestNews.image,
         link,
         bestNews.source_name || 'فناوری و رمزارز'
-      );
+      ).catch(e => console.error("Social post error:", e));
+      socialResults = "Started in background";
     }
 
     return NextResponse.json({
       success: true,
-      message: 'یک خبر جدید ذخیره و به صورت در لحظه روی شبکه‌های اجتماعی منتشر شد',
+      message: 'یک خبر جدید ذخیره و به صورت در لحظه منتشر شد',
       title: translated.title,
       category,
       socialResults,
     });
   } catch (error: any) {
     console.error('❌ خطا در کرون‌جاب:', error);
-    return NextResponse.json({ 
-      success: false, 
-      error: error.message || 'خطای ناشناخته در کرون' 
-    }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message || 'خطای ناشناخته در کرون' }, { status: 500 });
   }
 }
