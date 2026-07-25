@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, Flame, Sparkles, Clock, ChevronLeft, ChevronRight, ShieldCheck } from 'lucide-react';
 import { useI18n } from './I18nProvider';
+import { fetchLiveNews } from '../lib/fetchLiveNews';
 
 export default function UnifiedHeroCard() {
   const { t, lang } = useI18n();
@@ -15,7 +16,7 @@ export default function UnifiedHeroCard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/news?limit=6')
+    fetchLiveNews({ limit: 6 })
       .then(res => res.json())
       .then(data => {
         if (data.success && data.news && data.news.length > 0) {

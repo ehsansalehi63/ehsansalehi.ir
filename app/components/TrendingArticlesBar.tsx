@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Flame, ArrowRight, Sparkles, TrendingUp } from 'lucide-react';
 import { useI18n } from './I18nProvider';
+import { fetchLiveNews } from '../lib/fetchLiveNews';
 
 interface TrendingItem {
   id: number;
@@ -21,7 +22,7 @@ export default function TrendingArticlesBar({ currentNewsId }: { currentNewsId?:
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/news?limit=4&sort=trending')
+    fetchLiveNews({ limit: 4, sort: 'trending' })
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.news) {

@@ -1,6 +1,9 @@
 import { Suspense } from 'react';
 import NewsContent from './NewsContent';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default function NewsPage() {
   return (
     <main className="min-h-screen bg-[#0a0a0a] text-white py-20 px-4">
