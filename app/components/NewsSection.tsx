@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Flame, Sparkles, Clock } from 'lucide-react';
 import { useI18n } from './I18nProvider';
+import { fetchLiveNews } from '../lib/fetchLiveNews';
 
 interface NewsItem {
   id: number;
@@ -55,7 +56,7 @@ export default function NewsSection() {
   const increment = 6;
 
   useEffect(() => {
-    fetch('/api/news?limit=20')
+    fetchLiveNews({ limit: 20 })
       .then(res => res.json())
       .then(data => {
         if (data.success) {

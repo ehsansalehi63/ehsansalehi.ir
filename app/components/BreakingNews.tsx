@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Flame, Sparkles } from 'lucide-react';
 import { useI18n } from './I18nProvider';
+import { fetchLiveNews } from '../lib/fetchLiveNews';
 
 export default function BreakingNews() {
   const { lang } = useI18n();
@@ -13,7 +14,7 @@ export default function BreakingNews() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/news?limit=5')
+    fetchLiveNews({ limit: 5 })
       .then(res => res.json())
       .then(data => {
         if (data.success && data.news && data.news.length > 0) {

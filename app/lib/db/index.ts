@@ -1,1 +1,1 @@
-export { pool, query } from '../mysql';
+export { getDatabaseEnvDiagnostics, pool, query } from '../mysql';

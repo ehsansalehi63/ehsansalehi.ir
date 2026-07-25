@@ -10,7 +10,7 @@ interface NewsItem {
   id: number;
   title: string;
   title_en?: string;
-  content: string;
+  content?: string;
   content_en?: string;
   summary: string;
   summary_en?: string;
@@ -81,25 +81,42 @@ export default function NewsContent() {
   ];
 
   useEffect(() => {
-    fetch('/api/news?limit=100')
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          const processed = (data.news || []).map((item: NewsItem) => ({
-            ...item,
-            categoryFormatted: getOrDetectCategory(item, isEn)
-          }));
-          setNews(processed);
-          setFilteredNews(processed);
-        } else {
-          setError(isEn ? 'Error fetching news' : 'خطا در دریافت اخبار');
-        }
-        setLoading(false);
+    const controller = new AbortController();
+
+    setLoading(true);
+    setError('');
+
+    // The timestamp also bypasses an incorrectly configured LiteSpeed page cache.
+    fetch(`/api/news?limit=100&_=${Date.now()}`, {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache' },
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok || !data.success) throw new Error(data.error || 'NEWS_API_ERROR');
+        return data;
       })
-      .catch(() => {
-        setError(isEn ? 'Server connection error' : 'خطا در ارتباط با سرور');
-        setLoading(false);
+      .then(data => {
+        const processed = (data.news || []).map((item: NewsItem) => ({
+          ...item,
+          categoryFormatted: getOrDetectCategory(item, isEn)
+        }));
+        setNews(processed);
+        setFilteredNews(processed);
+      })
+      .catch((fetchError: Error) => {
+        if (fetchError.name !== 'AbortError') {
+          setError(fetchError.message === 'NEWS_API_ERROR'
+            ? (isEn ? 'Error fetching news' : 'خطا در دریافت اخبار')
+            : fetchError.message);
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
       });
+
+    return () => controller.abort();
   }, [isEn]);
 
   useEffect(() => {
