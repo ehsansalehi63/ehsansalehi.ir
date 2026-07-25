@@ -6,9 +6,14 @@ on:
       - main
   workflow_dispatch:
 
+concurrency:
+  group: deploy-mizbanfa-cpanel
+  cancel-in-progress: false
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
 
     steps:
       - name: Checkout code
@@ -44,13 +49,29 @@ jobs:
           cp -r .next/static .next/standalone/.next/static
           mkdir -p .next/standalone/tmp
           touch .next/standalone/tmp/restart.txt
-          
+          # بهینه‌سازی آپلود: حذف فایل‌های بزرگ و غیرضروری از output نهایی
+          rm -rf .next/standalone/*.tar.gz .next/standalone/*.tar .next/standalone/*.backup 2>/dev/null || true
+
       - name: Sync Files via FTP to Mizbanfa
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
+          port: 21
+          protocol: ftp
           server-dir: ./ehsansalehi.ir/
           local-dir: .next/standalone/
-          state-name: .sync-state-${{ github.run_id }}.json
+          # State ثابت برای Incremental FTP
+          state-name: .ftp-deploy-sync-state.json
+          # تایم‌اوت طولانی برای رفع Timeout (control socket)
+          timeout: 300000
+          log-level: verbose
+          # بهینه‌سازی آپلود: حذف .git و فایل‌های بزرگ، حفظ node_modules در standalone برای اجرای مستقل
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/*.tar.gz
+            **/*.tar
+            **/*.backup
+            **/*.log
