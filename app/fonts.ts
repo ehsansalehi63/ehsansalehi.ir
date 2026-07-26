@@ -1,8 +1,5 @@
-import { Vazirmatn } from 'next/font/google';
-
-export const vazir = Vazirmatn({
-  subsets: ['arabic'],
-  display: 'swap',
-  variable: '--font-vazir',
-  weight: ['400', '500', '700', '900'],
-});
+// Avoid next/font/google so production builds never depend on outbound access to
+// fonts.googleapis.com. cPanel/GitHub runners can be behind restrictive firewalls.
+export const vazir = {
+  variable: 'font-vazir-variable',
+};

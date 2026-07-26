@@ -2,8 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+.font-vazir-variable {
+  --font-vazir: Vazirmatn, Tahoma, Arial, system-ui, sans-serif;
+}
+
 .font-vazir {
-  font-family: var(--font-vazir), system-ui, sans-serif;
+  font-family: var(--font-vazir, Vazirmatn, Tahoma, Arial, system-ui, sans-serif);
 }
 
 html {

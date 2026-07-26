@@ -38,10 +38,7 @@ async function getAutomationSetting(key: string): Promise<string> {
 function resolveImageUrl(url: string | null): string {
   if (!url) return DEFAULT_IMAGE;
   if (url.startsWith('http')) return url;
-  if (url.startsWith('/api/image-proxy')) {
-    const proxyUrl = new URL(url, 'https://ehsansalehi.ir');
-    return proxyUrl.toString();
-  }
+  if (url.startsWith('/')) return new URL(url, 'https://ehsansalehi.ir').toString();
   return url;
 }
 
@@ -105,7 +102,7 @@ export async function sendToBale(
     const watermarkedBuffer = await addWatermarkToImage(imageBuffer, title);
 
     const caption = `🔥 ${title}\n\n📰 ${summary}\n\n🔗 مطالعه کامل خبر روی سایت:\n🌐 ${link}\n\n──────────────────\n👨‍💻 احسان صالحی | متخصص IT، معمار شبکه و امنیت با ۲۰ سال سابقه\n🌐 ehsansalehi.ir | ⚡ @ehsansalehi_tech`;
-    
+
     const baleDomains = ['https://tapi.bale.ai', 'https://api.bale.ai', 'https://tumbleweed.bale.ai'];
     let lastErr = '';
 
@@ -421,12 +418,19 @@ export async function postNewsToAllChannels(
 
   const success = Object.values(results).some((val) => val === true);
 
-  await pool.execute(
-    `UPDATE news_posts 
-     SET posted_to_social = ? 
-     WHERE id = ?`,
-    [JSON.stringify({ results, errors }), newsId]
-  );
+  try {
+    await pool.execute(
+      `UPDATE news_posts
+       SET posted_to_social = ?
+       WHERE id = ?`,
+      [JSON.stringify({ results, errors }), newsId]
+    );
+  } catch (error: any) {
+    console.error('⚠️ Social posting completed, but DB status update failed:', {
+      newsId,
+      code: typeof error?.code === 'string' ? error.code : 'UNKNOWN_DATABASE_ERROR',
+    });
+  }
 
   return { success, results, errors };
 }

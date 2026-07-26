@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { pool } from '../../lib/db';
+import { getFallbackNewsById } from '../../lib/fallbackNews';
 import NewsDetailView from './NewsDetailView';
 
 interface NewsPageProps {
@@ -16,10 +17,15 @@ async function getNews(id: string) {
       'SELECT * FROM news_posts WHERE id = ?',
       [id]
     );
-    return (rows as any[])[0] || null;
-  } catch {
-    return null;
+    const liveNews = (rows as any[])[0] || null;
+    if (liveNews) return liveNews;
+  } catch (error: any) {
+    console.error('[News detail] database unavailable, trying static fallback', {
+      code: typeof error?.code === 'string' ? error.code : 'UNKNOWN_DATABASE_ERROR',
+    });
   }
+
+  return getFallbackNewsById(id);
 }
 
 export async function generateMetadata({ params }: NewsPageProps): Promise<Metadata> {

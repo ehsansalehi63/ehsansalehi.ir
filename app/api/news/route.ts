@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { pool } from '../../lib/db';
+import { getFallbackNews, isDatabaseAuthError } from '../../lib/fallbackNews';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -117,10 +118,29 @@ export async function GET(request: NextRequest) {
       category: item.category || null,
     }));
 
+    if (newsList.length === 0) {
+      const fallbackNews = getFallbackNews({ limit, search, category, sort, includeContent });
+      return json(
+        {
+          success: true,
+          source: 'static-fallback',
+          warning: 'NEWS_TABLE_EMPTY',
+          count: fallbackNews.length,
+          news: fallbackNews,
+        },
+        200,
+        {
+          'X-News-Source': 'static-fallback',
+          'X-News-Count': String(fallbackNews.length),
+          'X-Database-Status': 'empty',
+        }
+      );
+    }
+
     return json(
-      { success: true, count: newsList.length, news: newsList },
+      { success: true, source: 'mysql-live', count: newsList.length, news: newsList },
       200,
-      { 'X-News-Source': 'mysql-live', 'X-News-Count': String(newsList.length) }
+      { 'X-News-Source': 'mysql-live', 'X-News-Count': String(newsList.length), 'X-Database-Status': 'ok' }
     );
   } catch (error: any) {
     const requestId = randomUUID();
@@ -130,17 +150,39 @@ export async function GET(request: NextRequest) {
     });
 
     const code = errorCode(error);
-    const isAuthenticationError = code === 'ER_ACCESS_DENIED_ERROR';
+    const isAuthenticationError = isDatabaseAuthError(error);
+    const fallbackNews = getFallbackNews({ limit, search, category, sort, includeContent });
+    const debug = searchParams.get('debug') === '1';
+
+    // Public news must keep the site alive even when cPanel MySQL credentials are
+    // temporarily wrong. The authenticated /api/admin/db-test endpoint still reports
+    // the real database failure, but visitors receive the built-in news archive.
     return json(
       {
-        success: false,
-        code: isAuthenticationError ? 'DATABASE_AUTH_FAILED' : 'NEWS_DATABASE_ERROR',
-        error: isAuthenticationError
-          ? 'اتصال دیتابیس برقرار نشد؛ رمز عبور یا دسترسی کاربر MySQL در cPanel صحیح نیست.'
-          : 'خطا در دریافت اخبار از دیتابیس.',
-        requestId,
+        success: true,
+        source: 'static-fallback',
+        warning: isAuthenticationError ? 'DATABASE_AUTH_FAILED' : 'NEWS_DATABASE_ERROR',
+        count: fallbackNews.length,
+        news: fallbackNews,
+        ...(debug
+          ? {
+              diagnostics: {
+                requestId,
+                databaseCode: code || 'UNKNOWN_DATABASE_ERROR',
+                message: isAuthenticationError
+                  ? 'MySQL authentication failed on cPanel. Reset the MySQL user password or fix user privileges.'
+                  : 'MySQL query failed. Check /api/admin/db-test with admin authentication.',
+              },
+            }
+          : {}),
       },
-      503
+      200,
+      {
+        'X-News-Source': 'static-fallback',
+        'X-News-Count': String(fallbackNews.length),
+        'X-Database-Status': isAuthenticationError ? 'auth-failed' : 'error',
+        'X-Request-Id': requestId,
+      }
     );
   }
 }
