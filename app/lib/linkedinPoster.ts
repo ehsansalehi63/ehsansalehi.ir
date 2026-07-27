@@ -1,4 +1,14 @@
+import { pool } from './db';
 import { addWatermarkToImage } from './watermark';
+
+async function getAutomationSetting(key: string): Promise<string> {
+  try {
+    const [rows] = await pool.execute('SELECT setting_value FROM automation_settings WHERE setting_key = ? LIMIT 1', [key]);
+    return (rows as any[])[0]?.setting_value || '';
+  } catch {
+    return '';
+  }
+}
 
 export async function sendToLinkedIn(
   title: string,
@@ -6,8 +16,8 @@ export async function sendToLinkedIn(
   imageUrl: string | null,
   link: string
 ): Promise<{ success: boolean; error?: string }> {
-  const accessToken = process.env.LINKEDIN_ACCESS_TOKEN || '';
-  let authorUrn = (process.env.LINKEDIN_AUTHOR_URN || 'urn:li:person:ZTB9aAQEHQ').trim();
+  const accessToken = process.env.LINKEDIN_ACCESS_TOKEN || await getAutomationSetting('linkedin_access_token') || '';
+  let authorUrn = (process.env.LINKEDIN_AUTHOR_URN || await getAutomationSetting('linkedin_author_urn') || 'urn:li:person:ZTB9aAQEHQ').trim();
 
   if (!accessToken) {
     return { success: false, error: 'توکن LINKEDIN_ACCESS_TOKEN در متغیرهای Vercel یافت نشد یا خالی است.' };

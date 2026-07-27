@@ -32,11 +32,13 @@ export async function GET(request: NextRequest) {
 
     // 2. وضعیت اتصال شبکه‌های اجتماعی (ترکیب متغیرهای Vercel و تنظیمات دیتابیس هاستینگر)
     const status = {
-      telegram: Boolean(process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHANNEL_ID),
-      linkedin: Boolean(process.env.LINKEDIN_ACCESS_TOKEN),
-      bale: Boolean((process.env.BALE_BOT_TOKEN && (process.env.BALE_CHANNEL_ID || process.env.BALE_CHAT_ID)) || dbSettings['bale_token']),
-      eitaa: Boolean((process.env.EITAA_BOT_TOKEN && (process.env.EITAA_CHANNEL_ID || process.env.EITAA_CHAT_ID)) || dbSettings['eitaa_token']),
-      whatsapp: Boolean(process.env.CALLMEBOT_API_KEY || dbSettings['callmebot_key'] || process.env.WHATSAPP_ACCESS_TOKEN),
+      openai: Boolean(process.env.OPENAI_API_KEY || dbSettings['openai_api_key']),
+      telegram: Boolean((process.env.TELEGRAM_BOT_TOKEN || dbSettings['telegram_bot_token']) && (process.env.TELEGRAM_CHANNEL_ID || dbSettings['telegram_channel_id'] || dbSettings['telegram_chat_id'])),
+      linkedin: Boolean(process.env.LINKEDIN_ACCESS_TOKEN || dbSettings['linkedin_access_token']),
+      bale: Boolean((process.env.BALE_BOT_TOKEN || dbSettings['bale_bot_token'] || dbSettings['bale_token']) && (process.env.BALE_CHANNEL_ID || process.env.BALE_CHAT_ID || dbSettings['bale_channel_id'] || dbSettings['bale_chat_id'])),
+      eitaa: Boolean((process.env.EITAA_BOT_TOKEN || dbSettings['eitaa_bot_token'] || dbSettings['eitaa_token']) && (process.env.EITAA_CHANNEL_ID || process.env.EITAA_CHAT_ID || dbSettings['eitaa_channel_id'] || dbSettings['eitaa_chat_id'])),
+      rubika: Boolean((process.env.RUBIKA_BOT_TOKEN || dbSettings['rubika_bot_token'] || dbSettings['rubika_token']) && (process.env.RUBIKA_CHANNEL_ID || process.env.RUBIKA_CHAT_ID || dbSettings['rubika_channel_id'] || dbSettings['rubika_chat_id'])),
+      whatsapp: Boolean(process.env.CALLMEBOT_API_KEY || dbSettings['callmebot_key'] || process.env.WHATSAPP_ACCESS_TOKEN || dbSettings['whatsapp_access_token']),
       facebook: Boolean(process.env.FB_PAGE_ACCESS_TOKEN || dbSettings['fb_access_token']),
       instagram: Boolean(process.env.INSTAGRAM_ACCESS_TOKEN || dbSettings['instagram_access_token'] || process.env.FB_PAGE_ACCESS_TOKEN || dbSettings['fb_access_token']),
       webhook: true, // وب‌هوک داخلی سایت همیشه فعال است
@@ -66,14 +68,37 @@ export async function POST(request: NextRequest) {
 
     // ذخیره‌سازی کلیدها در جدول automation_settings
     const keysToSave = [
+      'openai_api_key',
+      'openai_base_url',
+      'openai_model',
+      'telegram_bot_token',
+      'telegram_channel_id',
+      'telegram_chat_id',
+      'linkedin_access_token',
+      'linkedin_author_urn',
       'callmebot_key',
       'whatsapp_phone',
+      'whatsapp_access_token',
+      'whatsapp_phone_number_id',
+      'whatsapp_recipient_id',
+      'green_api_instance',
+      'green_api_token',
       'fb_access_token',
       'fb_page_id',
       'instagram_access_token',
       'instagram_account_id',
       'bale_token',
+      'bale_bot_token',
+      'bale_channel_id',
+      'bale_chat_id',
       'eitaa_token',
+      'eitaa_bot_token',
+      'eitaa_channel_id',
+      'eitaa_chat_id',
+      'rubika_token',
+      'rubika_bot_token',
+      'rubika_channel_id',
+      'rubika_chat_id',
     ];
 
     for (const key of keysToSave) {

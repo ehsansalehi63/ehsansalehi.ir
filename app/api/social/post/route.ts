@@ -8,6 +8,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
 
+type ColumnRow = { Field: string };
 type SocialNewsRow = {
   id: number;
   title: string;
@@ -16,23 +17,53 @@ type SocialNewsRow = {
   source_name?: string | null;
 };
 
-async function getPendingNewsRows(): Promise<SocialNewsRow[]> {
+async function getPendingNewsRows(limit: number): Promise<SocialNewsRow[]> {
+  const safeLimit = Math.min(Math.max(Number.isFinite(limit) ? Math.floor(limit) : 2, 1), 10);
+  const [columnRows] = await pool.execute('SHOW COLUMNS FROM news_posts');
+  const available = new Set((columnRows as ColumnRow[]).map((column) => column.Field));
+
+  if (!available.has('id') || !available.has('title')) {
+    throw Object.assign(new Error('news_posts is missing required id/title columns'), { code: 'NEWS_SCHEMA_INVALID' });
+  }
+
+  const selectedColumns = ['id', 'title', 'summary', 'image_url', 'source_name']
+    .filter((column) => available.has(column));
+  const conditions: string[] = [];
+
+  if (available.has('is_published')) {
+    conditions.push('`is_published` = TRUE');
+  }
+
+  if (available.has('posted_to_social')) {
+    conditions.push(`(
+      posted_to_social IS NULL
+      OR posted_to_social = ''
+      OR posted_to_social NOT LIKE '%"telegram":true%'
+      OR posted_to_social NOT LIKE '%"linkedin":true%'
+      OR posted_to_social NOT LIKE '%"eitaa":true%'
+      OR posted_to_social NOT LIKE '%"bale":true%'
+    )`);
+  }
+
+  const orderBy = available.has('published_at')
+    ? '`published_at` IS NULL ASC, `published_at` DESC, `id` DESC'
+    : '`id` DESC';
+
   const [rows] = await pool.execute(
-    `SELECT id, title, summary, image_url, source_name
+    `SELECT ${selectedColumns.map((column) => `\`${column}\``).join(', ')}
      FROM news_posts
-     WHERE is_published = TRUE
-       AND (
-         posted_to_social IS NULL
-         OR posted_to_social = ''
-         OR posted_to_social NOT LIKE '%"telegram":true%'
-         OR posted_to_social NOT LIKE '%"linkedin":true%'
-         OR posted_to_social NOT LIKE '%"eitaa":true%'
-         OR posted_to_social NOT LIKE '%"bale":true%'
-       )
-     ORDER BY published_at DESC
-     LIMIT 5`
+     ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
+     ORDER BY ${orderBy}
+     LIMIT ${safeLimit}`
   );
-  return rows as SocialNewsRow[];
+
+  return (rows as any[]).map((row) => ({
+    id: row.id,
+    title: row.title,
+    summary: row.summary || row.title,
+    image_url: row.image_url || null,
+    source_name: row.source_name || 'فناوری و رمزارز',
+  }));
 }
 
 export async function GET(request: NextRequest) {
@@ -42,13 +73,14 @@ export async function GET(request: NextRequest) {
 
     const searchParams = request.nextUrl.searchParams;
     const allowStaticFallback = searchParams.get('fallback') === 'true' || searchParams.get('force') === 'true';
+    const limit = Math.min(Math.max(Number.parseInt(searchParams.get('limit') || '2', 10) || 2, 1), 10);
 
     let rows: SocialNewsRow[] = [];
     let source: 'mysql-live' | 'static-fallback' = 'mysql-live';
     let databaseWarning: string | null = null;
 
     try {
-      rows = await getPendingNewsRows();
+      rows = await getPendingNewsRows(limit);
     } catch (error: any) {
       databaseWarning = typeof error?.code === 'string' ? error.code : 'NEWS_DATABASE_ERROR';
       console.error('[Social post] DB unavailable', { code: databaseWarning });
@@ -64,7 +96,7 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      rows = getFallbackNews({ limit: 3 }).map((item: any) => ({
+      rows = getFallbackNews({ limit }).map((item: any) => ({
         id: item.id,
         title: item.title,
         summary: item.summary,
