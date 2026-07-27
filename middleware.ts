@@ -1,10 +1,29 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+const NO_STORE_HEADERS = {
+  'Cache-Control': 'private, no-store, no-cache, max-age=0, must-revalidate',
+  'CDN-Cache-Control': 'no-store',
+  'Surrogate-Control': 'no-store',
+  Pragma: 'no-cache',
+  Expires: '0',
+};
+
+function applyNoStoreHeaders(response: NextResponse) {
+  for (const [key, value] of Object.entries(NO_STORE_HEADERS)) {
+    response.headers.set(key, value);
+  }
+  return response;
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (
+  // Public endpoints that must bypass auth but still need no-store hardening
+  const publicBypass =
     pathname === '/api/admin/auth' ||
     pathname === '/api/admin/migrate' ||
     pathname === '/api/admin/migrate-data' ||
@@ -13,9 +32,20 @@ export function middleware(request: NextRequest) {
     pathname === '/api/admin/traffic-ai' ||
     pathname === '/api/admin/automation' ||
     pathname === '/api/admin/master-control' ||
-    pathname === '/api/track-visit'
-  ) {
-    return NextResponse.next();
+    pathname === '/api/track-visit' ||
+    pathname.startsWith('/api/news');
+
+  // News delivery and homepage must never be cached - even behind LiteSpeed
+  const needsNoStore =
+    pathname === '/' ||
+    pathname === '/news' ||
+    pathname.startsWith('/news/') ||
+    pathname.startsWith('/api/news');
+
+  if (publicBypass) {
+    const res = NextResponse.next();
+    if (needsNoStore) applyNoStoreHeaders(res);
+    return res;
   }
 
   const tokenCookie = request.cookies.get('admin_token')?.value || request.cookies.get('token')?.value;
@@ -38,9 +68,19 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  return NextResponse.next();
+  const response = NextResponse.next();
+  if (needsNoStore) applyNoStoreHeaders(response);
+  return response;
 }
 
 export const config = {
-  matcher: ['/api/admin/:path*', '/dashboard/:path*'],
+  matcher: [
+    '/',
+    '/news',
+    '/news/:path*',
+    '/api/news',
+    '/api/news/:path*',
+    '/api/admin/:path*',
+    '/dashboard/:path*',
+  ],
 };
