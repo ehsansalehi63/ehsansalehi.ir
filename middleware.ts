@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-
 const NO_STORE_HEADERS = {
   'Cache-Control': 'private, no-store, no-cache, max-age=0, must-revalidate',
   'CDN-Cache-Control': 'no-store',
@@ -22,7 +19,6 @@ function applyNoStoreHeaders(response: NextResponse) {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Public endpoints that must bypass auth but still need no-store hardening
   const publicBypass =
     pathname === '/api/admin/auth' ||
     pathname === '/api/admin/migrate' ||
@@ -35,7 +31,6 @@ export function middleware(request: NextRequest) {
     pathname === '/api/track-visit' ||
     pathname.startsWith('/api/news');
 
-  // News delivery and homepage must never be cached - even behind LiteSpeed
   const needsNoStore =
     pathname === '/' ||
     pathname === '/news' ||
