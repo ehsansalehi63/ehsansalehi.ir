@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postbuild": "node scripts/patch-standalone-hostname.js"
   },
   "dependencies": {
     "autoprefixer": "^10.5.0",
