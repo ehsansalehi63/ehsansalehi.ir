@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "postbuild": "node scripts/patch-standalone-hostname.js"
+    "postbuild": "node scripts/write-build-info.js && node scripts/patch-standalone-hostname.js",
+    "deploy:bundle": "bash scripts/create-mizbanfa-bundle.sh",
+    "prebuild": "node scripts/write-build-info.js"
   },
   "dependencies": {
     "autoprefixer": "^10.5.0",
