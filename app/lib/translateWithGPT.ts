@@ -1,4 +1,14 @@
 import OpenAI from 'openai';
+import { pool } from './db';
+
+async function getAutomationSetting(key: string): Promise<string> {
+  try {
+    const [rows] = await pool.execute('SELECT setting_value FROM automation_settings WHERE setting_key = ? LIMIT 1', [key]);
+    return (rows as any[])[0]?.setting_value || '';
+  } catch {
+    return '';
+  }
+}
 
 export async function analyzeAndTranslateNews(
   title: string,
@@ -13,7 +23,7 @@ export async function analyzeAndTranslateNews(
     };
   }
 
-  const apiKey = (process.env.OPENAI_API_KEY || '').trim();
+  const apiKey = (process.env.OPENAI_API_KEY || await getAutomationSetting('openai_api_key') || '').trim();
   if (!apiKey || apiKey.includes('placeholder')) {
     return {
       title: title,
@@ -25,7 +35,7 @@ export async function analyzeAndTranslateNews(
   try {
     const openai = new OpenAI({
       apiKey: apiKey,
-      baseURL: process.env.OPENAI_BASE_URL || 'https://api.gapgpt.ir/v1',
+      baseURL: process.env.OPENAI_BASE_URL || await getAutomationSetting('openai_base_url') || 'https://api.gapgpt.ir/v1',
       timeout: 15000,
     });
 
@@ -51,7 +61,7 @@ export async function analyzeAndTranslateNews(
     `;
 
     const response = await openai.chat.completions.create({
-      model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+      model: process.env.OPENAI_MODEL || await getAutomationSetting('openai_model') || 'gpt-4o-mini',
       messages: [{ role: 'user', content: prompt }],
       response_format: { type: 'json_object' },
       temperature: 0.7,

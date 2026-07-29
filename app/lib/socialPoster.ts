@@ -49,7 +49,10 @@ export async function sendToTelegram(
   link: string,
   sourceName: string
 ): Promise<{ success: boolean; error?: string }> {
-  if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHANNEL_ID) {
+  const telegramToken = TELEGRAM_BOT_TOKEN || await getAutomationSetting('telegram_bot_token');
+  const telegramChannelId = TELEGRAM_CHANNEL_ID || await getAutomationSetting('telegram_channel_id') || await getAutomationSetting('telegram_chat_id');
+
+  if (!telegramToken || !telegramChannelId) {
     return { success: false, error: 'TELEGRAM_BOT_TOKEN یا TELEGRAM_CHANNEL_ID تنظیم نشده است' };
   }
 
@@ -63,10 +66,10 @@ export async function sendToTelegram(
     const watermarkedBuffer = await addWatermarkToImage(imageBuffer, title);
 
     const caption = `🔥 <b>${title}</b>\n\n📰 ${summary}\n\n🏷️ منبع: ${sourceName}\n🔗 <a href="${link}">مطالعه کامل خبر و تحلیل هوش مصنوعی روی سایت احسان صالحی</a>\n🌐 لینک مستقیم: ${link}\n\n──────────────────\n👨‍💻 <b>احسان صالحی</b> | متخصص IT، معمار شبکه و امنیت با ۲۰ سال سابقه\n🌐 ehsansalehi.ir | ⚡ @ehsansalehi_tech`;
-    const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`;
+    const url = `https://api.telegram.org/bot${telegramToken}/sendPhoto`;
 
     const formData = new FormData();
-    formData.append('chat_id', TELEGRAM_CHANNEL_ID);
+    formData.append('chat_id', telegramChannelId);
     formData.append('caption', caption);
     formData.append('parse_mode', 'HTML');
     formData.append('photo', new Blob([new Uint8Array(watermarkedBuffer)], { type: 'image/png' }), 'cover.png');
@@ -91,7 +94,10 @@ export async function sendToBale(
   link: string,
   sourceName: string
 ): Promise<{ success: boolean; error?: string }> {
-  if (!BALE_BOT_TOKEN || !BALE_CHAT_ID) {
+  const baleToken = BALE_BOT_TOKEN || await getAutomationSetting('bale_bot_token') || await getAutomationSetting('bale_token');
+  const baleChatId = BALE_CHAT_ID || await getAutomationSetting('bale_channel_id') || await getAutomationSetting('bale_chat_id');
+
+  if (!baleToken || !baleChatId) {
     return { success: false, error: 'BALE_BOT_TOKEN یا BALE_CHANNEL_ID تنظیم نشده است' };
   }
 
@@ -108,9 +114,9 @@ export async function sendToBale(
 
     for (const domain of baleDomains) {
       try {
-        const url = `${domain}/bot${BALE_BOT_TOKEN}/sendPhoto`;
+        const url = `${domain}/bot${baleToken}/sendPhoto`;
         const formData = new FormData();
-        formData.append('chat_id', BALE_CHAT_ID);
+        formData.append('chat_id', baleChatId);
         formData.append('caption', caption);
         formData.append('photo', new Blob([new Uint8Array(watermarkedBuffer)], { type: 'image/png' }), 'cover.png');
 
@@ -139,7 +145,10 @@ export async function sendToEitaa(
   link: string,
   sourceName: string
 ): Promise<{ success: boolean; error?: string }> {
-  if (!EITAA_BOT_TOKEN || !EITAA_CHAT_ID) {
+  const eitaaToken = EITAA_BOT_TOKEN || await getAutomationSetting('eitaa_bot_token') || await getAutomationSetting('eitaa_token');
+  const eitaaChatId = EITAA_CHAT_ID || await getAutomationSetting('eitaa_channel_id') || await getAutomationSetting('eitaa_chat_id');
+
+  if (!eitaaToken || !eitaaChatId) {
     return { success: false, error: 'EITAA_BOT_TOKEN یا EITAA_CHANNEL_ID تنظیم نشده است' };
   }
 
@@ -150,10 +159,10 @@ export async function sendToEitaa(
     const watermarkedBuffer = await addWatermarkToImage(imageBuffer, title);
 
     const caption = `🔥 ${title}\n\n📰 ${summary}\n\n🔗 مطالعه کامل خبر روی سایت:\n🌐 ${link}\n\n──────────────────\n👨‍💻 احسان صالحی | متخصص IT، معمار شبکه و امنیت با ۲۰ سال سابقه\n🌐 ehsansalehi.ir | ⚡ @ehsansalehi_tech`;
-    const url = `https://eitaayar.ir/api/${EITAA_BOT_TOKEN}/sendFile`;
+    const url = `https://eitaayar.ir/api/${eitaaToken}/sendFile`;
 
     const formData = new FormData();
-    formData.append('chat_id', EITAA_CHAT_ID);
+    formData.append('chat_id', eitaaChatId);
     formData.append('caption', caption);
     formData.append('file', new Blob([new Uint8Array(watermarkedBuffer)], { type: 'image/png' }), 'cover.png');
 
@@ -177,13 +186,16 @@ export async function sendToRubika(
   link: string,
   sourceName: string
 ): Promise<{ success: boolean; error?: string }> {
-  if (!RUBIKA_BOT_TOKEN || !RUBIKA_CHAT_ID) {
+  const rubikaToken = RUBIKA_BOT_TOKEN || await getAutomationSetting('rubika_bot_token') || await getAutomationSetting('rubika_token');
+  const rubikaChatId = RUBIKA_CHAT_ID || await getAutomationSetting('rubika_channel_id') || await getAutomationSetting('rubika_chat_id');
+
+  if (!rubikaToken || !rubikaChatId) {
     return { success: false, error: 'RUBIKA_BOT_TOKEN یا RUBIKA_CHANNEL_ID تنظیم نشده است' };
   }
 
   try {
     const plainText = `🔥 ${title}\n\n📰 ${summary}\n\n🔗 مطالعه کامل خبر روی سایت:\n🌐 ${link}\n\n──────────────────\n👨‍💻 احسان صالحی | متخصص IT، معمار شبکه و امنیت با ۲۰ سال سابقه\n🌐 ehsansalehi.ir | ⚡ @ehsansalehi_tech`;
-    const cleanId = RUBIKA_CHAT_ID.trim().replace(/^@/, '');
+    const cleanId = rubikaChatId.trim().replace(/^@/, '');
     const idVariants = cleanId.match(/^[a-zA-Z0-9]{32}$/) || cleanId.startsWith('c0') || cleanId.startsWith('s0')
       ? [cleanId]
       : [cleanId, `@${cleanId}`];
@@ -192,7 +204,7 @@ export async function sendToRubika(
 
     for (const targetId of idVariants) {
       try {
-        const urlMessage = `https://botapi.rubika.ir/v3/${RUBIKA_BOT_TOKEN}/sendMessage`;
+        const urlMessage = `https://botapi.rubika.ir/v3/${rubikaToken}/sendMessage`;
         const resMsg = await fetch(urlMessage, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -301,23 +313,27 @@ export async function sendToWhatsAppChannel(
     }
   }
 
-  if (!WHATSAPP_ACCESS_TOKEN || !WHATSAPP_PHONE_NUMBER_ID || !WHATSAPP_RECIPIENT_ID) {
+  const whatsappToken = WHATSAPP_ACCESS_TOKEN || await getAutomationSetting('whatsapp_access_token');
+  const whatsappPhoneNumberId = WHATSAPP_PHONE_NUMBER_ID || await getAutomationSetting('whatsapp_phone_number_id');
+  const whatsappRecipientId = WHATSAPP_RECIPIENT_ID || await getAutomationSetting('whatsapp_recipient_id');
+
+  if (!whatsappToken || !whatsappPhoneNumberId || !whatsappRecipientId) {
     return { success: false, error: 'متغیرهای CALLMEBOT_API_KEY یا GREEN_API یا WHATSAPP_ACCESS_TOKEN تنظیم نشده‌اند' };
   }
 
   try {
     const caption = `🔥 *${title}*\n\n📰 ${summary}\n\n🔗 مطالعه کامل در: ${link}`;
-    const url = `https://graph.facebook.com/v19.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`;
+    const url = `https://graph.facebook.com/v19.0/${whatsappPhoneNumberId}/messages`;
 
     const res = await fetch(url, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${WHATSAPP_ACCESS_TOKEN}`,
+        'Authorization': `Bearer ${whatsappToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         messaging_product: 'whatsapp',
-        to: WHATSAPP_RECIPIENT_ID,
+        to: whatsappRecipientId,
         type: 'text',
         text: { body: caption },
       }),
