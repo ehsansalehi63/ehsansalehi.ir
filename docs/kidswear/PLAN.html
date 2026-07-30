@@ -1,0 +1,4321 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>بیزینس‌پلن جامع فروشگاه پوشاک کودک و نوجوان</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;900&display=swap');
+:root{
+  --bg:#0b1020; --panel:#121a33; --panel2:#0f1730; --line:#233158;
+  --txt:#e8edf9; --muted:#93a2c7; --accent:#5b8cff; --accent2:#22d3a5;
+  --warn:#ffb020; --danger:#ff5a7a;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--txt);
+  font-family:'Vazirmatn',system-ui,-apple-system,'Segoe UI',Tahoma,sans-serif;
+  direction:rtl; text-align:right; line-height:2; font-size:16px;
+}
+.wrap{display:flex; max-width:1500px; margin:0 auto; gap:0}
+/* ---------- Sidebar ---------- */
+nav{
+  position:sticky; top:0; height:100vh; overflow-y:auto;
+  width:290px; flex:0 0 290px; padding:26px 18px;
+  background:linear-gradient(180deg,#0d1428,#0b1020);
+  border-left:1px solid var(--line);
+}
+nav h2{font-size:15px; color:var(--muted); margin:0 0 16px; font-weight:500; letter-spacing:.3px}
+nav .brand{font-size:19px; font-weight:900; color:#fff; margin-bottom:4px; line-height:1.6}
+nav .sub{font-size:12px; color:var(--muted); margin-bottom:22px}
+nav a{
+  display:block; padding:10px 13px; margin:5px 0; border-radius:11px;
+  color:var(--muted); text-decoration:none; font-size:14.5px;
+  transition:.18s; border:1px solid transparent;
+}
+nav a:hover{background:var(--panel); color:#fff; border-color:var(--line)}
+nav a.active{background:linear-gradient(90deg,rgba(91,140,255,.22),transparent); color:#fff; border-color:var(--accent)}
+/* ---------- Main ---------- */
+main{flex:1; padding:36px 44px 120px; min-width:0}
+.hero{
+  background:linear-gradient(135deg,#16255c,#0f1730 60%);
+  border:1px solid var(--line); border-radius:22px; padding:34px 32px; margin-bottom:34px;
+}
+.hero h1{margin:0 0 10px; font-size:31px; font-weight:900; line-height:1.6}
+.hero p{margin:0; color:var(--muted); font-size:15.5px}
+.badges{display:flex; flex-wrap:wrap; gap:9px; margin-top:20px}
+.badge{
+  background:rgba(91,140,255,.14); border:1px solid rgba(91,140,255,.4);
+  color:#bcd0ff; padding:6px 14px; border-radius:999px; font-size:13px; font-weight:500;
+}
+section{
+  background:var(--panel2); border:1px solid var(--line);
+  border-radius:20px; padding:30px 32px; margin-bottom:26px; scroll-margin-top:20px;
+}
+section > h1:first-child, section > h2:first-child{margin-top:0}
+h1{font-size:27px; font-weight:900; border-bottom:2px solid var(--accent); padding-bottom:12px; margin:34px 0 20px; line-height:1.6}
+h2{font-size:22px; font-weight:700; color:#cfe0ff; margin:30px 0 14px; line-height:1.7}
+h3{font-size:18px; font-weight:700; color:var(--accent2); margin:22px 0 10px}
+h4{font-size:16px; color:#dbe5ff; margin:16px 0 8px}
+p{margin:11px 0}
+ul,ol{padding-right:24px; margin:11px 0}
+li{margin:7px 0}
+a{color:var(--accent)}
+strong{color:#fff; font-weight:700}
+hr{border:0; border-top:1px solid var(--line); margin:32px 0}
+blockquote{
+  margin:18px 0; padding:14px 18px; border-right:4px solid var(--warn);
+  background:rgba(255,176,32,.08); border-radius:0 12px 12px 0; color:#ffe0a8;
+}
+blockquote p{margin:4px 0}
+code{
+  background:#1b2545; color:#8ef0cd; padding:2px 7px; border-radius:6px;
+  font-size:13.5px; font-family:'JetBrains Mono',Consolas,monospace; direction:ltr; display:inline-block;
+}
+pre{
+  background:#080d1c; border:1px solid var(--line); border-radius:14px;
+  padding:18px; overflow-x:auto; direction:ltr; text-align:left; font-size:13px; line-height:1.75;
+}
+pre code{background:none; padding:0; color:#c9d6f5; font-size:13px}
+/* ---------- Tables ---------- */
+.tbl{overflow-x:auto; margin:18px 0; border-radius:14px; border:1px solid var(--line)}
+table{border-collapse:collapse; width:100%; font-size:14.5px; min-width:520px}
+th{
+  background:#1a2547; color:#dbe6ff; font-weight:700; padding:13px 14px;
+  text-align:right; border-bottom:2px solid var(--accent); white-space:nowrap;
+}
+td{padding:12px 14px; border-bottom:1px solid #1c2745; vertical-align:top}
+tbody tr:nth-child(even){background:rgba(255,255,255,.022)}
+tbody tr:hover{background:rgba(91,140,255,.09)}
+tbody tr:last-child td{border-bottom:none}
+/* ---------- Print ---------- */
+@media print{
+  nav{display:none} body{background:#fff; color:#111}
+  section,.hero{background:#fff; border-color:#ccc; break-inside:avoid}
+  h1,h2{color:#111} pre{background:#f5f5f5}
+}
+@media (max-width:1000px){
+  .wrap{flex-direction:column}
+  nav{position:relative; width:100%; flex:auto; height:auto; border-left:none; border-bottom:1px solid var(--line)}
+  main{padding:22px 16px 80px}
+  .hero h1{font-size:23px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav>
+  <div class="brand">🧒 فروشگاه پوشاک<br>کودک و نوجوان</div>
+  <div class="sub">بیزینس‌پلن جامع و طرح اجرایی</div>
+  <h2>فهرست اسناد</h2>
+  <a href="#readme">خلاصه و نقشه کلی</a><a href="#01-business-plan">۱ — بیزینس‌پلن</a><a href="#02-technical-architecture">۲ — معماری فنی</a><a href="#03-automation-pipeline">۳ — پایپ‌لاین اتوماسیون</a><a href="#04-social-media-plan">۴ — شبکه‌های اجتماعی</a><a href="#05-seo-backlink">۵ — سئو و بک‌لینک</a><a href="#06-ads-and-growth">۶ — تبلیغات و رشد</a><a href="#07-roadmap-and-kpi">۷ — نقشه راه و KPI</a><a href="#08-integrations-and-env">۸ — سرویس‌ها و کلیدها</a><a href="#09-data-model">۹ — مدل داده (SQL)</a><a href="#10-decisions-and-questions">۱۰ — تصمیم‌های باز</a>
+</nav>
+<main>
+  <div class="hero">
+    <h1>بیزینس‌پلن ۱۰۰٪ جامع — فروشگاه پوشاک کودک و نوجوان</h1>
+    <p>فروشگاه اینترنتی روی Hostinger + لایه ایران، با اتوماسیون کامل «عکس ← محصول ← پست شبکه‌های اجتماعی ← ویدئو»، موتور هوش مصنوعی AgentRouter، سئو و بک‌لینک درجه‌یک، و کمپین‌های تبلیغاتی خودکار.</p>
+    <div class="badges">
+      <span class="badge">۱۱ سند</span>
+      <span class="badge">۷٬۴۰۰+ کلمه</span>
+      <span class="badge">۲۵ جدول دیتابیس</span>
+      <span class="badge">۱۰ کانال اجتماعی</span>
+      <span class="badge">نقشه راه ۱۸۰ روزه</span>
+      <span class="badge">۱۲ سناریوی n8n</span>
+    </div>
+  </div>
+  <section id="readme"><h1 id="_1">پروژه فروشگاه پوشاک کودک و نوجوان — مستند مادر</h1>
+<p>این پوشه، بیزینس‌پلن و طرح اجرایی کامل راه‌اندازی یک فروشگاه اینترنتی پوشاک کودک و نوجوان روی زیرساخت <strong>Hostinger VPS</strong> است؛ با تمرکز بر:</p>
+<ul>
+<li>فروش داخل ایران (درگاه پرداخت، اینماد، ارسال، مالیات)</li>
+<li>اتوماسیون کامل «عکس → محصول → پست شبکه‌های اجتماعی → تبلیغ»</li>
+<li>سئو و بک‌لینک درجه‌یک</li>
+<li>استفاده از حساب <strong>AgentRouter</strong> به عنوان موتور هوش مصنوعی (تولید محتوا، توضیح محصول، کپشن، سناریوی ویدئو)</li>
+<li>بازاستفاده از تجربه و کد موجود پروژه <code>ehsansalehi.ir</code> (خبرخوان، سیستم انتشار خودکار تلگرام/بله/ایتا/روبیکا/لینکدین/اینستاگرام، واترمارک، پنل ادمین، دیپلوی cPanel/VPS)</li>
+</ul>
+<h2 id="_2">فهرست اسناد</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>فایل</th>
+<th>موضوع</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="01-business-plan.md"><code>01-business-plan.md</code></a></td>
+<td>بیزینس‌پلن: بازار، مدل درآمد، قیمت‌گذاری، مدل مالی، ریسک‌ها</td>
+</tr>
+<tr>
+<td><a href="02-technical-architecture.md"><code>02-technical-architecture.md</code></a></td>
+<td>معماری فنی روی Hostinger + لایه ایران، استک، امنیت، بکاپ</td>
+</tr>
+<tr>
+<td><a href="03-automation-pipeline.md"><code>03-automation-pipeline.md</code></a></td>
+<td>قلب پروژه: پایپ‌لاین اتوماتیک «چند عکس ساده → محصول + پست + ویدئو»</td>
+</tr>
+<tr>
+<td><a href="04-social-media-plan.md"><code>04-social-media-plan.md</code></a></td>
+<td>پلن شبکه‌های اجتماعی، تقویم محتوا، الگوهای پست و ویدئو</td>
+</tr>
+<tr>
+<td><a href="05-seo-backlink.md"><code>05-seo-backlink.md</code></a></td>
+<td>سئو تکنیکال، محتوایی، لوکال، لینک‌سازی و PR</td>
+</tr>
+<tr>
+<td><a href="06-ads-and-growth.md"><code>06-ads-and-growth.md</code></a></td>
+<td>کمپین‌های تبلیغاتی، اینفلوئنسر، CRM، باشگاه مشتریان، رشد</td>
+</tr>
+<tr>
+<td><a href="07-roadmap-and-kpi.md"><code>07-roadmap-and-kpi.md</code></a></td>
+<td>نقشه راه ۰ تا ۱۸۰ روز، تیم، KPI، داشبورد مدیریتی</td>
+</tr>
+<tr>
+<td><a href="08-integrations-and-env.md"><code>08-integrations-and-env.md</code></a></td>
+<td>لیست کامل سرویس‌ها، کلیدها، فایل env، تست اتصال</td>
+</tr>
+<tr>
+<td><a href="09-data-model.sql"><code>09-data-model.sql</code></a></td>
+<td>اسکیمای پیشنهادی دیتابیس فروشگاه + اتوماسیون</td>
+</tr>
+<tr>
+<td><a href="10-decisions-and-questions.md"><code>10-decisions-and-questions.md</code></a></td>
+<td>تصمیم‌های باز که قبل از اجرا باید قطعی شود</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="tldr">خلاصه یک‌صفحه‌ای (TL;DR)</h2>
+<p><strong>نام کاری پیشنهادی:</strong> یک برند دو-سیلابی فارسی/لاتین کوتاه (مثلاً «کیدزلی / Kidsly»، «توپولی»، «نی‌نی‌مد») — انتخاب نهایی در سند ۱۰.</p>
+<p><strong>مدل:</strong> فروشگاه آنلاین + انبار سبک (Light Stock) + دراپ‌شیپینگ از تولیدکننده‌های تهران/تبریز + کانال‌های اجتماعی به‌عنوان موتور اصلی ترافیک.</p>
+<p><strong>زیرساخت:</strong> Hostinger VPS (KVM 2 یا KVM 4) با Docker + Coolify؛ Next.js 16 (همان استک فعلی شما) + MySQL/MariaDB + Redis + MinIO (تصاویر) + n8n (ارکستراسیون اتوماسیون) + AgentRouter (مغز AI).<br />
+<strong>نکته حیاتی:</strong> برای فروش داخل ایران، یک <strong>لایه ایرانی</strong> (دامنه .ir + CDN ابرآروان + یک VPS کوچک ایران به عنوان Relay درگاه پرداخت و پیامک) در کنار Hostinger الزامی است. دلیل کامل در سند ۲.</p>
+<p><strong>اتوماسیون هدف:</strong> فروشنده فقط ۳ تا ۸ عکس خام از محصول را در اپ موبایل/پنل آپلود می‌کند →<br />
+۱) حذف پس‌زمینه و استانداردسازی تصویر، ۲) تشخیص نوع لباس/رنگ/سایز با AI، ۳) تولید عنوان و توضیح سئوشده فارسی، ۴) قیمت‌گذاری پیشنهادی، ۵) ساخت محصول در سایت، ۶) ساخت کپشن + هشتگ برای هر شبکه، ۷) ساخت ویدئوی کوتاه (Reels/Shorts) از همان عکس‌ها، ۸) زمان‌بندی و انتشار در اینستاگرام، تلگرام، بله، ایتا، روبیکا، واتساپ‌چنل، پینترست، یوتیوب‌شورتس، آپارات، ۹) ثبت لاگ و گزارش عملکرد. کل مسیر: زیر ۹۰ ثانیه بدون دخالت انسان.</p>
+<p><strong>هزینه راه‌اندازی تخمینی:</strong> ۹۵ تا ۲۸۰ میلیون تومان بسته به سناریو (جدول کامل در سند ۱).<br />
+<strong>نقطه سر‌به‌سر تخمینی:</strong> ماه ۵ تا ۷ با میانگین ۳۵۰ سفارش در ماه و AOV حدود ۱٫۸ میلیون تومان.</p>
+<blockquote>
+<p>همه اعداد ریالی در این اسناد تخمینی و برای مدل‌سازی است؛ قبل از اجرا با استعلام روز به‌روزرسانی شود.</p>
+</blockquote></section><section id="01-business-plan"><h1 id="_1">سند ۱ — بیزینس‌پلن فروشگاه پوشاک کودک و نوجوان</h1>
+<h2 id="_2">۱٫۱ خلاصه مدیریتی</h2>
+<p>یک فروشگاه اینترنتی تخصصی پوشاک کودک و نوجوان با سه تمایز اصلی نسبت به رقبا:</p>
+<ol>
+<li><strong>سرعت انتشار محصول</strong>: از لحظه‌ای که فروشنده عکس خام محصول را می‌گیرد تا لحظه‌ای که محصول روی سایت و ۹ کانال اجتماعی منتشر می‌شود، کمتر از ۹۰ ثانیه — بدون دخالت انسان. رقبای ایرانی معمولاً ۱ تا ۳ روز زمان می‌برند.</li>
+<li><strong>محتوای AI-native</strong>: توضیح محصول، راهنمای سایز، بلاگ تخصصی، کپشن، ویدئوی کوتاه و حتی پاسخ پشتیبانی، همه با موتور AI (AgentRouter) تولید می‌شوند. این یعنی هزینه تولید محتوا نزدیک به صفر و حجم محتوا ۱۰ برابر رقبا → سلطه سئویی.</li>
+<li><strong>راهنمای سایز هوشمند و ضدمرجوعی</strong>: بزرگ‌ترین درد فروش آنلاین پوشاک کودک، اشتباه سایز و مرجوعی است. یک ماشین توصیه‌گر سایز بر اساس قد/وزن/سن + دیتای مرجوعی، نرخ مرجوعی را از ~۲۰٪ صنعت به زیر ۸٪ می‌رساند.</li>
+</ol>
+<h2 id="_3">۱٫۲ چرا پوشاک کودک و نوجوان؟</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>عامل</th>
+<th>توضیح</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>تکرار خرید بالا</td>
+<td>کودک هر ۴ تا ۶ ماه سایزش عوض می‌شود → مشتری خودبه‌خود برمی‌گردد (LTV بالا)</td>
+</tr>
+<tr>
+<td>حساسیت قیمتی کمتر</td>
+<td>والدین برای بچه راحت‌تر خرج می‌کنند تا برای خودشان</td>
+</tr>
+<tr>
+<td>فصلی بودن قابل پیش‌بینی</td>
+<td>مهر (بازگشت به مدرسه)، عید، یلدا، تابستان → کمپین‌های تکرارشونده و قابل اتوماسیون</td>
+</tr>
+<tr>
+<td>محتوای ویروسی‌پذیر</td>
+<td>بچه + لباس = محتوای عاطفی با نرخ اشتراک بالا در اینستاگرام و شبکه‌های داخلی</td>
+</tr>
+<tr>
+<td>بازار بزرگ</td>
+<td>حدود ۲۵٪ جمعیت ایران زیر ۱۸ سال؛ بازار پوشاک کودک از بزرگ‌ترین زیرشاخه‌های خرده‌فروشی پوشاک است</td>
+</tr>
+<tr>
+<td>ورود آسان</td>
+<td>نیاز به سرمایه سنگین اولیه ندارد؛ با انبار سبک و دراپ‌شیپ قابل شروع است</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="_4">درد‌های بازار که ما حل می‌کنیم</h3>
+<ul>
+<li>❌ عکس‌های بی‌کیفیت و ناهمگون در فروشگاه‌های اینستاگرامی → ✅ استانداردسازی خودکار تصویر</li>
+<li>❌ نبود اطلاعات دقیق سایز و جنس پارچه → ✅ جدول سایز اجباری + توصیه‌گر هوشمند</li>
+<li>❌ پاسخ‌گویی کند در دایرکت → ✅ چت‌بات AI ۲۴/۷ روی سایت، تلگرام، واتساپ</li>
+<li>❌ عدم اعتماد به پرداخت → ✅ اینماد + پرداخت در محل + بازگشت ۷ روزه</li>
+<li>❌ فروشگاه‌های اینستاگرامی بدون سایت → بی‌بهره از ترافیک گوگل → ✅ استراتژی سئوی تهاجمی</li>
+</ul>
+<h2 id="_5">۱٫۳ تحلیل رقبا (چارچوب)</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>دسته</th>
+<th>نمونه</th>
+<th>نقطه قوت</th>
+<th>شکافی که ما پر می‌کنیم</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>مارکت‌پلیس‌های بزرگ</td>
+<td>دیجی‌کالا، باسلام</td>
+<td>ترافیک عظیم، اعتماد</td>
+<td>تجربه غیرتخصصی، بدون راهنمای سایز واقعی، رقابت قیمتی نابودکننده</td>
+</tr>
+<tr>
+<td>برندهای پوشاک کودک</td>
+<td>برندهای زنجیره‌ای ایرانی</td>
+<td>برند و شعبه فیزیکی</td>
+<td>آنلاین ضعیف، تنوع کم، قیمت بالا</td>
+</tr>
+<tr>
+<td>پیج‌های اینستاگرامی</td>
+<td>هزاران پیج</td>
+<td>چابکی، قیمت خوب</td>
+<td>بدون سایت، بدون سئو، بدون اعتماد، وابسته به فیلترشکن</td>
+</tr>
+<tr>
+<td>فروشگاه‌های ووکامرسی</td>
+<td>صدها سایت</td>
+<td>سایت دارند</td>
+<td>سرعت پایین، محتوای ضعیف، بدون اتوماسیون</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>پوزیشن ما:</strong> «تخصصی‌ترین و سریع‌ترین فروشگاه پوشاک کودک ایران — با تضمین سایز».</p>
+<h2 id="_6">۱٫۴ پرسونای مشتری</h2>
+<p><strong>پرسونا ۱ — مریم، ۳۳ ساله، مادر شاغل، تهران</strong><br />
+دو بچه ۴ و ۸ ساله. وقت خرید حضوری ندارد. اینستاگرام و تلگرام فعال. دغدغه اصلی: «سایزش نمی‌خوره و باید پس بفرستم». جذب: تبلیغ اینستاگرام + سئوی «لباس بچه گانه ۸ ساله». تبدیل: راهنمای سایز + بازگشت رایگان.</p>
+<p><strong>پرسونا ۲ — سمیرا، ۲۸ ساله، مادر تازه‌کار، شهرستان</strong><br />
+اولین بچه، حساس به جنس پارچه و بهداشت. جستجوگر گوگل: «بهترین جنس پارچه لباس نوزاد». جذب: بلاگ + پینترست. تبدیل: محتوای آموزشی + پرداخت در محل.</p>
+<p><strong>پرسونا ۳ — نوجوان ۱۴ ساله + مادرش</strong><br />
+تصمیم‌گیر مشترک. نوجوان مد را انتخاب می‌کند، مادر پرداخت می‌کند. جذب: ریلز و شورتس ترند. تبدیل: نظرات و استایل‌گاید.</p>
+<p><strong>پرسونا ۴ — عمده‌فروش/بوتیک محلی (B2B)</strong><br />
+خرید ۵۰ تا ۵۰۰ تایی. جذب: لینکدین، تلگرام B2B، نمایشگاه. تبدیل: پنل عمده با قیمت پلکانی.</p>
+<h2 id="_7">۱٫۵ مدل درآمدی</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>جریان درآمد</th>
+<th>سهم هدف سال ۱</th>
+<th>توضیح</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>فروش خرده B2C</td>
+<td>۷۰٪</td>
+<td>هسته اصلی</td>
+</tr>
+<tr>
+<td>فروش عمده B2B</td>
+<td>۲۰٪</td>
+<td>حاشیه کمتر ولی حجم بالا و پیش‌بینی‌پذیر</td>
+</tr>
+<tr>
+<td>اشتراک «باکس فصلی»</td>
+<td>۵٪</td>
+<td>هر فصل یک بسته لباس متناسب سایز کودک — درآمد تکرارشونده</td>
+</tr>
+<tr>
+<td>کمیسیون/تبلیغات و همکاری در فروش</td>
+<td>۵٪</td>
+<td>فروش فضای تبلیغاتی بلاگ به برندهای مکمل (کفش، اسباب‌بازی)</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="_8">قیمت‌گذاری</h3>
+<ul>
+<li>حاشیه سود ناخالص هدف: <strong>۴۵٪ تا ۶۰٪</strong> روی خرده‌فروشی، <strong>۲۰٪ تا ۲۸٪</strong> روی عمده.</li>
+<li>سیاست: قیمت‌گذاری روان‌شناختی (ختم به ۹۰۰ و ۹۹۰ هزار)، بسته‌سازی (Bundle) ست ۳ تکه، و «ارسال رایگان بالای X تومان» که X معادل ۱٫۴ برابر AOV تنظیم می‌شود.</li>
+<li>موتور قیمت‌گذاری خودکار: AI قیمت پیشنهادی را از روی قیمت خرید + رصد قیمت رقبا (اسکرپ ترب/باسلام) + کشش فصلی پیشنهاد می‌دهد، فروشنده فقط تأیید می‌کند.</li>
+</ul>
+<h2 id="_9">۱٫۶ ساختار هزینه راه‌اندازی (سه سناریو)</h2>
+<p>مبالغ تخمینی به میلیون تومان — برای مدل‌سازی، نه قیمت قطعی.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ردیف</th>
+<th>سناریو A (ناب)</th>
+<th>سناریو B (توصیه‌شده)</th>
+<th>سناریو C (تهاجمی)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>دامنه <code>.ir</code> + <code>.com</code></td>
+<td>۱</td>
+<td>۲</td>
+<td>۳</td>
+</tr>
+<tr>
+<td>Hostinger VPS (سالانه)</td>
+<td>۶ (KVM 1)</td>
+<td>۹ (KVM 2)</td>
+<td>۱۵ (KVM 4)</td>
+</tr>
+<tr>
+<td>لایه ایران (VPS + CDN ابرآروان)</td>
+<td>۵</td>
+<td>۱۰</td>
+<td>۱۸</td>
+</tr>
+<tr>
+<td>اینماد + جواز کسب اینترنتی</td>
+<td>۳</td>
+<td>۳</td>
+<td>۵</td>
+</tr>
+<tr>
+<td>درگاه پرداخت و راه‌اندازی</td>
+<td>۱</td>
+<td>۲</td>
+<td>۳</td>
+</tr>
+<tr>
+<td>اعتبار AI (AgentRouter + تصویر/ویدئو)</td>
+<td>۵</td>
+<td>۱۲</td>
+<td>۳۰</td>
+</tr>
+<tr>
+<td>موجودی اولیه کالا</td>
+<td>۳۰</td>
+<td>۸۰</td>
+<td>۲۰۰</td>
+</tr>
+<tr>
+<td>عکاسی و برندینگ اولیه</td>
+<td>۸</td>
+<td>۲۰</td>
+<td>۵۰</td>
+</tr>
+<tr>
+<td>توسعه سایت و اتوماسیون</td>
+<td>۰ (خودتان)</td>
+<td>۲۵</td>
+<td>۶۰</td>
+</tr>
+<tr>
+<td>بودجه تبلیغات ۳ ماه اول</td>
+<td>۱۵</td>
+<td>۶۰</td>
+<td>۱۸۰</td>
+</tr>
+<tr>
+<td>بسته‌بندی و لجستیک اولیه</td>
+<td>۵</td>
+<td>۱۲</td>
+<td>۲۵</td>
+</tr>
+<tr>
+<td>ذخیره احتیاطی ۱۵٪</td>
+<td>۱۲</td>
+<td>۳۵</td>
+<td>۸۸</td>
+</tr>
+<tr>
+<td><strong>جمع</strong></td>
+<td><strong>~۹۱</strong></td>
+<td><strong>~۲۷۰</strong></td>
+<td><strong>~۶۷۷</strong></td>
+</tr>
+</tbody>
+</table></div>
+<blockquote>
+<p>اگر توسعه را خودتان با کمک همین ایجنت انجام دهید، سناریوی B عملاً به حدود ۱۸۰ تا ۲۰۰ میلیون تومان کاهش پیدا می‌کند.</p>
+</blockquote>
+<h2 id="b">۱٫۷ هزینه‌های جاری ماهانه (سناریو B، ماه ۳ به بعد)</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ردیف</th>
+<th>مبلغ (میلیون تومان/ماه)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>زیرساخت (Hostinger + ایران + CDN + بکاپ)</td>
+<td>۲٫۵</td>
+</tr>
+<tr>
+<td>اعتبار AI و سرویس‌های تصویر/ویدئو</td>
+<td>۳</td>
+</tr>
+<tr>
+<td>تبلیغات (اینستاگرام + پوش + اینفلوئنسر)</td>
+<td>۲۰</td>
+</tr>
+<tr>
+<td>بسته‌بندی و ملزومات ارسال</td>
+<td>۶</td>
+</tr>
+<tr>
+<td>نیروی انسانی (۱ نفر پشتیبانی + ۱ نفر انبار پاره‌وقت)</td>
+<td>۲۵</td>
+</tr>
+<tr>
+<td>متفرقه و کارمزد درگاه</td>
+<td>۴</td>
+</tr>
+<tr>
+<td><strong>جمع</strong></td>
+<td><strong>~۶۰٫۵</strong></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="b_1">۱٫۸ پیش‌بینی مالی سال اول (سناریو B)</h2>
+<p>فرض‌ها: AOV = ۱٫۸ میلیون تومان، حاشیه ناخالص ۵۰٪، نرخ تبدیل سایت ۱٫۸٪ در ماه ۳ و ۲٫۶٪ در ماه ۱۲.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ماه</th>
+<th>سفارش</th>
+<th>فروش ناخالص (م.ت)</th>
+<th>سود ناخالص</th>
+<th>هزینه جاری</th>
+<th>سود/زیان خالص</th>
+<th>تجمعی</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>۱</td>
+<td>۲۰</td>
+<td>۳۶</td>
+<td>۱۸</td>
+<td>۴۰</td>
+<td>−۲۲</td>
+<td>−۲۲</td>
+</tr>
+<tr>
+<td>۲</td>
+<td>۶۰</td>
+<td>۱۰۸</td>
+<td>۵۴</td>
+<td>۵۰</td>
+<td>+۴</td>
+<td>−۱۸</td>
+</tr>
+<tr>
+<td>۳</td>
+<td>۱۲۰</td>
+<td>۲۱۶</td>
+<td>۱۰۸</td>
+<td>۶۰</td>
+<td>+۴۸</td>
+<td>+۳۰</td>
+</tr>
+<tr>
+<td>۴</td>
+<td>۱۸۰</td>
+<td>۳۲۴</td>
+<td>۱۶۲</td>
+<td>۶۵</td>
+<td>+۹۷</td>
+<td>+۱۲۷</td>
+</tr>
+<tr>
+<td>۵</td>
+<td>۲۵۰</td>
+<td>۴۵۰</td>
+<td>۲۲۵</td>
+<td>۷۵</td>
+<td>+۱۵۰</td>
+<td>+۲۷۷</td>
+</tr>
+<tr>
+<td>۶ (عید/مهر)</td>
+<td>۴۰۰</td>
+<td>۷۲۰</td>
+<td>۳۶۰</td>
+<td>۹۵</td>
+<td>+۲۶۵</td>
+<td>+۵۴۲</td>
+</tr>
+<tr>
+<td>۷</td>
+<td>۳۲۰</td>
+<td>۵۷۶</td>
+<td>۲۸۸</td>
+<td>۸۵</td>
+<td>+۲۰۳</td>
+<td>+۷۴۵</td>
+</tr>
+<tr>
+<td>۸</td>
+<td>۳۶۰</td>
+<td>۶۴۸</td>
+<td>۳۲۴</td>
+<td>۹۰</td>
+<td>+۲۳۴</td>
+<td>+۹۷۹</td>
+</tr>
+<tr>
+<td>۹</td>
+<td>۴۲۰</td>
+<td>۷۵۶</td>
+<td>۳۷۸</td>
+<td>۱۰۰</td>
+<td>+۲۷۸</td>
+<td>+۱٬۲۵۷</td>
+</tr>
+<tr>
+<td>۱۰</td>
+<td>۴۸۰</td>
+<td>۸۶۴</td>
+<td>۴۳۲</td>
+<td>۱۱۰</td>
+<td>+۳۲۲</td>
+<td>+۱٬۵۷۹</td>
+</tr>
+<tr>
+<td>۱۱ (یلدا)</td>
+<td>۶۵۰</td>
+<td>۱٬۱۷۰</td>
+<td>۵۸۵</td>
+<td>۱۳۵</td>
+<td>+۴۵۰</td>
+<td>+۲٬۰۲۹</td>
+</tr>
+<tr>
+<td>۱۲ (عید)</td>
+<td>۸۰۰</td>
+<td>۱٬۴۴۰</td>
+<td>۷۲۰</td>
+<td>۱۵۵</td>
+<td>+۵۶۵</td>
+<td>+۲٬۵۹۴</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>سر‌به‌سر عملیاتی:</strong> ماه ۲ تا ۳. <strong>بازگشت کل سرمایه اولیه (۲۷۰):</strong> حدود ماه ۵.<br />
+این اعداد خوش‌بینانه-میانه است؛ سناریوی محافظه‌کارانه را ۴۰٪ پایین‌تر در نظر بگیرید.</p>
+<h2 id="unit-economics">۱٫۹ واحد اقتصادی (Unit Economics) — مهم‌ترین جدول این سند</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>شاخص</th>
+<th>هدف</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AOV (ارزش میانگین سفارش)</td>
+<td>۱٫۸ م.ت</td>
+</tr>
+<tr>
+<td>حاشیه ناخالص</td>
+<td>۵۰٪ → ۹۰۰ هزار تومان</td>
+</tr>
+<tr>
+<td>CAC (هزینه جذب مشتری)</td>
+<td>زیر ۲۵۰ هزار تومان</td>
+</tr>
+<tr>
+<td>نرخ بازگشت مشتری در ۶ ماه</td>
+<td>بالای ۴۰٪</td>
+</tr>
+<tr>
+<td>LTV در ۱۸ ماه</td>
+<td>بالای ۶ م.ت</td>
+</tr>
+<tr>
+<td>نسبت LTV/CAC</td>
+<td>بالای ۴ (قرمز: زیر ۳)</td>
+</tr>
+<tr>
+<td>نرخ مرجوعی</td>
+<td>زیر ۸٪</td>
+</tr>
+<tr>
+<td>نرخ تبدیل سایت</td>
+<td>۲٪+</td>
+</tr>
+<tr>
+<td>سهم ترافیک ارگانیک (ماه ۱۲)</td>
+<td>بالای ۴۵٪</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="_10">۱٫۱۰ الزامات قانونی ایران</h2>
+<ol>
+<li><strong>اینماد (نماد اعتماد الکترونیکی)</strong> — برای فروشگاه اینترنتی الزامی است و بدون آن درگاه پرداخت بانکی مستقیم داده نمی‌شود؛ درگاه‌های واسط مانند زرین‌پال بدون اینماد هم قابل استفاده‌اند. شرایط کلیدی: مالک دامنه = متقاضی، حداقل ۱۸ سال، وجود صفحات «درباره ما»، «تماس با ما»، «قوانین و مقررات»، درج شفاف قیمت و مشخصات کالا، سازوکار ثبت شکایت، و تأیید صلاحیت از اماکن.</li>
+<li><strong>جواز کسب اینترنتی</strong> از اتحادیه کسب‌وکارهای مجازی.</li>
+<li><strong>درگاه پرداخت</strong>: فاز ۱ درگاه واسط (زرین‌پال/زیبال/آیدی‌پی) → فاز ۲ درگاه مستقیم بانکی پس از اینماد.</li>
+<li><strong>مالیات</strong>: ثبت‌نام در سامانه مؤدیان، صدور صورتحساب الکترونیکی، مالیات بر ارزش افزوده.</li>
+<li><strong>قانون تجارت الکترونیک</strong>: حق انصراف مصرف‌کننده، درج شفاف شرایط مرجوعی و گارانتی.</li>
+<li><strong>الزام محتوایی</strong>: تصاویر و محتوای منطبق با ضوابط؛ برای پوشاک کودک معمولاً چالشی نیست ولی در انتخاب مدل کودک باید رضایت‌نامه ولی گرفته شود.</li>
+</ol>
+<h2 id="_11">۱٫۱۱ ریسک‌ها و برنامه کاهش</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ریسک</th>
+<th>احتمال</th>
+<th>اثر</th>
+<th>برنامه کاهش</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>قطعی/محدودیت اینترنت بین‌الملل</td>
+<td>بالا</td>
+<td>بحرانی</td>
+<td>معماری هیبرید: نسخه آینه سایت روی هاست ایران، CDN داخلی، کانال‌های داخلی (بله/ایتا/روبیکا) به‌عنوان کانال پشتیبان</td>
+</tr>
+<tr>
+<td>فیلتر شدن اینستاگرام/تلگرام</td>
+<td>بالا</td>
+<td>متوسط</td>
+<td>تنوع کانال + مالکیت لیست مشتری (SMS/ایمیل/باشگاه مشتریان)</td>
+</tr>
+<tr>
+<td>نوسان قیمت پارچه و ارز</td>
+<td>بالا</td>
+<td>بالا</td>
+<td>قرارداد قیمت با تأمین‌کننده، به‌روزرسانی خودکار قیمت، موجودی سبک</td>
+</tr>
+<tr>
+<td>مرجوعی زیاد به‌خاطر سایز</td>
+<td>متوسط</td>
+<td>بالا</td>
+<td>توصیه‌گر سایز، ویدئوی روی تن، جدول اندازه دقیق سانتی‌متری</td>
+</tr>
+<tr>
+<td>تعلیق اکانت اینستاگرام</td>
+<td>متوسط</td>
+<td>متوسط</td>
+<td>اکانت پشتیبان، بکاپ محتوا، رعایت نرخ انتشار</td>
+</tr>
+<tr>
+<td>افزایش CAC تبلیغات</td>
+<td>متوسط</td>
+<td>متوسط</td>
+<td>تکیه بر سئو و محتوا (ترافیک رایگان) و برنامه معرفی دوستان</td>
+</tr>
+<tr>
+<td>وابستگی به یک تأمین‌کننده</td>
+<td>متوسط</td>
+<td>بالا</td>
+<td>حداقل ۳ تأمین‌کننده برای هر دسته اصلی</td>
+</tr>
+<tr>
+<td>قطع سرویس Hostinger برای IP ایران</td>
+<td>متوسط</td>
+<td>بالا</td>
+<td>استقرار Relay ایرانی + بکاپ روزانه قابل بازیابی روی هاست داخلی</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="_12">۱٫۱۲ استراتژی خروج / رشد بلندمدت</h2>
+<p>سال ۲: تبدیل به مارکت‌پلیس تخصصی کودک (پذیرش فروشنده‌های دیگر با همان موتور اتوماسیون) → سال ۳: عرضه «موتور اتوماسیون» به‌عنوان محصول SaaS به سایر فروشگاه‌های ایرانی. عملاً کاری که برای خودتان می‌سازید، خودش یک محصول قابل فروش است.</p></section><section id="02-technical-architecture"><h1 id="hostinger">سند ۲ — معماری فنی روی Hostinger (+ لایه ایران)</h1>
+<h2 id="hostinger_1">۲٫۱ تصمیم بنیادین: چرا معماری «هیبرید» و نه فقط Hostinger؟</h2>
+<p>شما گفتید سایت روی Hostinger باشد. این درست است، ولی برای <strong>فروش داخل ایران</strong> به‌تنهایی کافی نیست. دلایل:</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>مسئله</th>
+<th>توضیح</th>
+<th>راه‌حل</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>اینماد و اعتماد</td>
+<td>فرآیند اینماد و درگاه بانکی با دامنه <code>.ir</code> و در دسترس بودن پایدار داخل ایران راحت‌تر پیش می‌رود</td>
+<td>دامنه <code>.ir</code> روی لایه ایران، اپ روی Hostinger</td>
+</tr>
+<tr>
+<td>قطعی اینترنت بین‌الملل</td>
+<td>در بحران‌های اینترنتی، سایت‌های خارجی برای کاربر داخلی از دسترس خارج می‌شوند</td>
+<td>آینه (Mirror) سبک روی هاست ایران + CDN داخلی</td>
+</tr>
+<tr>
+<td>سرعت برای کاربر ایرانی</td>
+<td>پینگ به اروپا ۸۰-۲۰۰ms و در ساعات پیک بدتر</td>
+<td>CDN ابرآروان جلوی سایت، کش تهاجمی صفحات محصول</td>
+</tr>
+<tr>
+<td>درگاه پرداخت و پیامک</td>
+<td>برخی درگاه‌ها و پنل‌های پیامک IP خارجی را محدود می‌کنند</td>
+<td>Relay ایرانی: کال‌بک پرداخت و ارسال پیامک از سرور ایران</td>
+</tr>
+<tr>
+<td>دسترسی به AgentRouter و شبکه‌های خارجی</td>
+<td>از سرور ایران مستقیم ممکن نیست</td>
+<td>همه پردازش AI و انتشار خارجی روی Hostinger انجام شود</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote>
+<p><strong>جمع‌بندی:</strong> Hostinger = مغز (اپلیکیشن، AI، اتوماسیون، انتشار جهانی). لایه ایران = چهره و دست (CDN، پرداخت، پیامک، دسترس‌پذیری بحران).</p>
+</blockquote>
+<h2 id="_1">۲٫۲ دیاگرام معماری</h2>
+<pre><code>                         کاربر ایرانی
+                              │
+                    ┌─────────▼──────────┐
+                    │  CDN ابرآروان/ایران │  ← WAF، ضد DDoS، کش تصویر و صفحه
+                    │   دامنه: shop.ir    │
+                    └─────────┬──────────┘
+                              │
+             ┌────────────────┴───────────────┐
+             │                                │
+   ┌─────────▼──────────┐          ┌──────────▼───────────┐
+   │  IRAN RELAY (VPS    │          │  HOSTINGER VPS (KVM2/4)│
+   │  کوچک ایران)        │◄────────►│  Ubuntu 24.04 + Docker │
+   │                     │  tunnel   │                        │
+   │ • کال‌بک درگاه پرداخت│           │ ┌────────────────────┐ │
+   │ • ارسال پیامک       │           │ │ Next.js 16 (اپ اصلی)│ │
+   │ • آینه استاتیک بحران │           │ ├────────────────────┤ │
+   │ • مانیتورینگ داخلی   │           │ │ MySQL / MariaDB     │ │
+   └─────────────────────┘           │ ├────────────────────┤ │
+                                     │ │ Redis (کش/صف)       │ │
+   شبکه‌های اجتماعی ◄───────────────► │ ├────────────────────┤ │
+   IG / TG / Bale / Eitaa /          │ │ MinIO (تصویر/ویدئو) │ │
+   Rubika / WhatsApp / Pinterest /   │ ├────────────────────┤ │
+   YouTube / Aparat / LinkedIn       │ │ n8n (ارکستراتور)    │ │
+                                     │ ├────────────────────┤ │
+   AgentRouter ◄─────────────────────┤ │ Worker: FFmpeg/Sharp│ │
+   (متن، توضیح، کپشن، سناریو)         │ ├────────────────────┤ │
+                                     │ │ Coolify / Portainer │ │
+                                     │ └────────────────────┘ │
+                                     └────────────────────────┘
+</code></pre>
+<h2 id="hostinger_2">۲٫۳ انتخاب پلن Hostinger</h2>
+<p>بر اساس نیاز واقعی این پروژه (Next.js + MySQL + Redis + MinIO + n8n + رندر ویدئو):</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>پلن</th>
+<th>مشخصات</th>
+<th>مناسب برای</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>KVM 1 — ۱ vCPU / ۴GB / ۵۰GB NVMe</td>
+<td>حداقلی</td>
+<td>فقط تست و توسعه</td>
+</tr>
+<tr>
+<td><strong>KVM 2 — ۲ vCPU / ۸GB / ۱۰۰GB NVMe</strong></td>
+<td><strong>شروع توصیه‌شده</strong></td>
+<td>تا ~۵۰۰ محصول و ~۳۰ پست روزانه</td>
+</tr>
+<tr>
+<td><strong>KVM 4 — ۴ vCPU / ۱۶GB / ۲۰۰GB NVMe</strong></td>
+<td><strong>از ماه ۴</strong></td>
+<td>رندر هم‌زمان ویدئو + n8n سنگین + ترافیک بالا</td>
+</tr>
+<tr>
+<td>KVM 8 — ۸ vCPU / ۳۲GB</td>
+<td>مقیاس بزرگ</td>
+<td>وقتی مارکت‌پلیس شدید</td>
+</tr>
+</tbody>
+</table></div>
+<p>قیمت‌ها حدود ۶٫۵ تا ۲۶ دلار در ماه هستند و پلن KVM 2 برای اکثر بارهای کاری اتوماسیون کافی است (<a href="https://ivristech.com/n8n-self-hosting-hostinger/">مرجع</a>, <a href="https://hostadvice.com/hosting-company/hostinger-reviews/n8n-hosting-review/">مرجع</a>). Hostinger برای n8n تصویر آماده هم دارد که نصب را ساده می‌کند.</p>
+<p><strong>پیشنهاد نهایی:</strong> KVM 2 با تعهد بلندمدت (قیمت خیلی بهتر)، و ارتقا به KVM 4 در ماه ۴.</p>
+<h2 id="_2">۲٫۴ استک نرم‌افزاری</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>لایه</th>
+<th>انتخاب</th>
+<th>دلیل</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>فریم‌ورک</td>
+<td><strong>Next.js 16 (App Router)</strong></td>
+<td>ادامه استک <code>ehsansalehi.ir</code> — کد auth، db، socialPoster، watermark، i18n قابل بازاستفاده مستقیم است</td>
+</tr>
+<tr>
+<td>زبان</td>
+<td>TypeScript</td>
+<td>همان استک</td>
+</tr>
+<tr>
+<td>UI</td>
+<td>Tailwind + Framer Motion</td>
+<td>همان استک، RTL-first</td>
+</tr>
+<tr>
+<td>دیتابیس</td>
+<td>MySQL 8 / MariaDB</td>
+<td><code>app/lib/mysql.ts</code> و <code>app/lib/db/index.ts</code> آماده است</td>
+</tr>
+<tr>
+<td>کش و صف</td>
+<td>Redis + BullMQ</td>
+<td>صف کارهای اتوماسیون (پردازش تصویر، رندر ویدئو، انتشار)</td>
+</tr>
+<tr>
+<td>ذخیره فایل</td>
+<td>MinIO (S3-compatible)</td>
+<td>تصاویر محصول، ویدئوها، بکاپ</td>
+</tr>
+<tr>
+<td>ارکستراسیون</td>
+<td><strong>n8n</strong> self-hosted</td>
+<td>سناریوهای بازاریابی/انتشار قابل ویرایش بدون کدنویسی</td>
+</tr>
+<tr>
+<td>موتور AI</td>
+<td><strong>AgentRouter</strong> (Anthropic-compatible و OpenAI-compatible)</td>
+<td>تولید متن، توضیح محصول، کپشن، سناریوی ویدئو</td>
+</tr>
+<tr>
+<td>تصویر</td>
+<td>Sharp + rembg (حذف پس‌زمینه)</td>
+<td>پردازش سریع محلی</td>
+</tr>
+<tr>
+<td>ویدئو</td>
+<td>FFmpeg + قالب‌های آماده</td>
+<td>ساخت Reels/Shorts از عکس‌ها</td>
+</tr>
+<tr>
+<td>جستجو</td>
+<td>MeiliSearch</td>
+<td>جستجوی فارسی سریع با تحمل غلط املایی</td>
+</tr>
+<tr>
+<td>مانیتورینگ</td>
+<td>Uptime Kuma + Grafana/Loki</td>
+<td>آپتایم و لاگ</td>
+</tr>
+<tr>
+<td>استقرار</td>
+<td>Docker Compose + Coolify</td>
+<td>دیپلوی گیت‌محور، شبیه Vercel</td>
+</tr>
+<tr>
+<td>CI/CD</td>
+<td>GitHub Actions</td>
+<td>همان الگوی <code>deploy-mizbanfa.yml</code> ولی برای VPS</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="agentrouter">۲٫۵ اتصال به AgentRouter</h2>
+<p>AgentRouter دو حالت سازگاری دارد:</p>
+<pre><code class="language-bash"># حالت OpenAI-compatible — مناسب برای کد فعلی شما که از پکیج openai استفاده می‌کند
+OPENAI_BASE_URL=https://agentrouter.org/v1
+OPENAI_API_KEY=&lt;AgentRouter API Key&gt;
+OPENAI_MODEL=claude-opus-4-6
+
+# حالت Anthropic-compatible — مخصوص Claude Code CLI (بدون /v1)
+ANTHROPIC_BASE_URL=https://agentrouter.org
+ANTHROPIC_AUTH_TOKEN=&lt;AgentRouter API Key&gt;
+ANTHROPIC_MODEL=claude-opus-4-6
+</code></pre>
+<p>نکته مهم: مستندات AgentRouter تأکید می‌کند Base URL حالت Claude Code <strong>نباید</strong> <code>/v1</code> داشته باشد و نباید با حالت OpenAI-compatible قاطی شود.</p>
+<p><strong>خبر خوب:</strong> پروژه فعلی شما همین الان <code>OPENAI_BASE_URL</code> و <code>OPENAI_MODEL</code> را می‌خواند، پس اتصال به AgentRouter بدون تغییر کد ممکن است.</p>
+<p><strong>نکته حیاتی:</strong> AgentRouter برای متن/کدنویسی است. برای <strong>تولید و ویرایش تصویر</strong> و <strong>تولید ویدئو</strong> به سرویس جداگانه نیاز داریم (جزئیات در سند ۳ و ۸).</p>
+<p><strong>لایه انتزاع اجباری:</strong> یک ماژول <code>lib/ai/provider.ts</code> می‌نویسیم که همه فراخوانی‌های AI از آن رد شود، با:<br />
+- انتخاب مدل بر اساس نوع کار (ارزان برای کپشن، قوی برای مقاله)<br />
+- Fallback خودکار به provider دوم اگر AgentRouter پاسخ نداد<br />
+- کش پاسخ‌های تکراری در Redis (کاهش هزینه تا ۴۰٪)<br />
+- سقف مصرف روزانه و لاگ هزینه</p>
+<h2 id="docker-compose">۲٫۶ ساختار سرویس‌ها (Docker Compose)</h2>
+<pre><code class="language-yaml"># طرح مفهومی — نسخه نهایی در فاز اجرا
+services:
+  app:          # Next.js standalone
+  worker:       # BullMQ worker: image, video, publish
+  mysql:
+  redis:
+  minio:
+  meilisearch:
+  n8n:
+  caddy:        # reverse proxy + TLS خودکار
+  uptime-kuma:
+  backup:       # cron: mysqldump + rclone به ابرآروان و Backblaze
+</code></pre>
+<h2 id="_3">۲٫۷ ساختار پوشه‌بندی اپ</h2>
+<pre><code>app/
+  (shop)/                    # فروشگاه عمومی
+    page.tsx                 # صفحه اصلی
+    products/[slug]/         # صفحه محصول
+    category/[...slug]/      # دسته‌بندی (پسرانه/دخترانه/سن/فصل)
+    cart/ checkout/ track/   # سبد، پرداخت، رهگیری
+    blog/[slug]/             # بلاگ سئویی
+    size-guide/              # راهنمای سایز هوشمند
+  (seller)/                  # پنل فروشنده — PWA
+    upload/                  # ★ آپلود عکس (قلب اتوماسیون)
+    products/ orders/ stats/
+  (admin)/                   # پنل مدیریت
+    automation/ social/ seo/ ads/ inventory/
+  api/
+    ai/                      # پروکسی AgentRouter
+    ingest/photos/           # ★ ورودی عکس‌ها
+    products/ orders/ payment/
+    social/publish/          # انتشار چندکاناله
+    cron/                    # زمان‌بندها
+    webhooks/                # درگاه، پیک، اینستاگرام
+lib/
+  ai/ media/ social/ seo/ commerce/ db/
+</code></pre>
+<h2 id="_4">۲٫۸ امنیت</h2>
+<ul>
+<li>Caddy با TLS خودکار، HSTS، و هدرهای امنیتی؛ WAF ابرآروان جلوی آن</li>
+<li>SSH فقط با کلید، پورت غیر پیش‌فرض، fail2ban، UFW</li>
+<li>جداسازی کامل کلیدها: هیچ کلیدی در گیت — فقط <code>.env</code> روی سرور با دسترسی ۶۰۰</li>
+<li>نقش‌های کاربری: <code>owner / admin / seller / support / viewer</code> با RBAC</li>
+<li>رمزنگاری توکن‌های شبکه‌های اجتماعی در دیتابیس (AES-256 با کلید در env)</li>
+<li>Rate limit روی API عمومی و لاگین (Redis-based)</li>
+<li>لاگ حسابرسی (audit log) برای هر تغییر قیمت، موجودی و انتشار</li>
+<li>بکاپ ۳-۲-۱: روزانه روی VPS، شبانه روی ابرآروان، هفتگی روی Backblaze B2؛ تست بازیابی ماهانه</li>
+</ul>
+<h2 id="performance">۲٫۹ عملکرد (Performance)</h2>
+<p>هدف: <strong>LCP زیر ۲٫۵ ثانیه روی موبایل ایرانی با اینترنت متوسط</strong>.</p>
+<ul>
+<li>ISR برای صفحات محصول و دسته (revalidate ۶۰ ثانیه)</li>
+<li>تصاویر: WebP/AVIF، سه سایز، <code>next/image</code> + کش CDN طولانی</li>
+<li>فونت فارسی محلی (وزیرمتن/ایران‌سنس) با <code>font-display: swap</code></li>
+<li>JS اولیه زیر ۱۵۰KB؛ کامپوننت‌های سنگین با dynamic import</li>
+<li>Skeleton برای همه صفحات (الگوی <code>loading.tsx</code> که در پروژه فعلی دارید)</li>
+<li>بودجه عملکرد در CI: هر PR که Lighthouse را زیر ۹۰ ببرد، fail شود</li>
+</ul>
+<h2 id="_5">۲٫۱۰ برنامه تداوم کسب‌وکار (قطعی اینترنت)</h2>
+<p>سه سطح تخریب کنترل‌شده:</p>
+<ol>
+<li><strong>سطح سبز (عادی):</strong> همه‌چیز روی Hostinger، CDN ایران جلو.</li>
+<li><strong>سطح زرد (کندی بین‌الملل):</strong> CDN از کش سرو می‌کند؛ صفحات محصول تا ۲۴ ساعت از کش. سفارش‌گیری از Relay ایران با صف آفلاین.</li>
+<li><strong>سطح قرمز (قطع کامل بین‌الملل):</strong> آینه ایرانی فعال می‌شود — نسخه استاتیک کاتالوگ + فرم سفارش + پرداخت داخلی. اتوماسیون خارجی متوقف، کانال‌های داخلی (بله/ایتا/روبیکا/پیامک) فعال می‌مانند. همگام‌سازی سفارش‌ها پس از بازگشت اتصال.</li>
+</ol>
+<p>هاست‌های ایرانی در دوره‌های محدودیت شدید اینترنت به‌مراتب در دسترس‌تر بوده‌اند (<a href="https://mizbanfa.net/">مرجع</a>)، به همین دلیل لایه ایران در معماری «اختیاری» نیست.</p>
+<h2 id="_6">۲٫۱۱ چه چیزی از پروژه فعلی مستقیماً بازاستفاده می‌شود؟</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>فایل/ماژول فعلی</th>
+<th>استفاده جدید</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>app/lib/socialPoster.ts</code></td>
+<td>هسته انتشار چندکاناله — فقط قالب کپشن عوض می‌شود</td>
+</tr>
+<tr>
+<td><code>app/lib/linkedinPoster.ts</code></td>
+<td>کانال B2B</td>
+</tr>
+<tr>
+<td><code>app/lib/watermark.ts</code></td>
+<td>واترمارک برند روی عکس محصول</td>
+</tr>
+<tr>
+<td><code>app/lib/mysql.ts</code> + <code>app/lib/db/index.ts</code></td>
+<td>لایه دیتابیس با fallback هوشمند env</td>
+</tr>
+<tr>
+<td><code>app/lib/auth.ts</code> + <code>middleware.ts</code></td>
+<td>احراز هویت و محافظت پنل</td>
+</tr>
+<tr>
+<td><code>app/api/admin/automation/route.ts</code></td>
+<td>جدول <code>automation_settings</code> و مدیریت کلیدها از پنل</td>
+</tr>
+<tr>
+<td><code>app/api/admin/integrations-test/route.ts</code></td>
+<td>تست سلامت اتصال‌ها</td>
+</tr>
+<tr>
+<td><code>app/api/cron/*</code></td>
+<td>الگوی cron با <code>CRON_SECRET</code></td>
+</tr>
+<tr>
+<td><code>app/components/AiChatbot.tsx</code></td>
+<td>چت‌بات فروش و مشاور سایز</td>
+</tr>
+<tr>
+<td><code>app/lib/i18n.ts</code> + RTL</td>
+<td>چندزبانه (فا/عر/en)</td>
+</tr>
+<tr>
+<td><code>scripts/*</code> و <code>deploy.sh</code></td>
+<td>الگوی دیپلوی، با تطبیق برای Docker</td>
+</tr>
+</tbody>
+</table></div>
+<p>این یعنی تقریباً <strong>۳۵ تا ۴۵ درصد کد پایه از قبل آماده است</strong> — مزیت بزرگ زمانی و هزینه‌ای.</p></section><section id="03-automation-pipeline"><h1 id="_1">سند ۳ — پایپ‌لاین اتوماسیون: از «چند عکس ساده» تا محصول + پست + ویدئو</h1>
+<p>این سند قلب پروژه است. خواسته اصلی شما:</p>
+<blockquote>
+<p>«فروشنده فقط با چند تا عکس ساده که برای سایت می‌فرسته یا توی پنل می‌ذاره یا حتی اپلیکیشن موبایل، محصول روی سایت بره و پست بشه روی شبکه‌های اجتماعی.»</p>
+</blockquote>
+<h2 id="_2">۳٫۰ نگاه کلی: خط تولید ۹ ایستگاهی</h2>
+<pre><code>[۱] ورودی عکس  →  [۲] پاکسازی تصویر  →  [۳] درک محصول با AI  →  [۴] غنی‌سازی داده
+      ↓
+[۵] ساخت محصول در سایت  →  [۶] تولید محتوای اجتماعی  →  [۷] ساخت ویدئو کوتاه
+      ↓
+[۸] زمان‌بندی و انتشار چندکاناله  →  [۹] رصد، یادگیری و بهینه‌سازی خودکار
+</code></pre>
+<p><strong>زمان کل هدف:</strong> ۶۰ تا ۹۰ ثانیه از آپلود تا انتشار.<br />
+<strong>دخالت انسان:</strong> صفر در حالت Auto؛ یک کلیک تأیید در حالت Review.</p>
+<hr />
+<h2 id="_3">ایستگاه ۱ — ورودی عکس (سه مسیر ورود)</h2>
+<p>فروشنده هر کدام را که راحت‌تر بود انتخاب می‌کند؛ هر سه به یک endpoint واحد می‌رسند: <code>POST /api/ingest/photos</code>.</p>
+<h3 id="a-pwa">مسیر A — PWA موبایل (توصیه‌شده، فاز ۱)</h3>
+<p>اپ وب نصب‌شدنی روی موبایل. صفحه <code>/(seller)/upload</code>:<br />
+- دکمه بزرگ «عکس بگیر یا انتخاب کن» (چندتایی، تا ۸ عکس)<br />
+- راهنمای زنده عکاسی: کادر شبح‌مانند + هشدار «نور کم است» / «تصویر تار است» (تشخیص محلی با Canvas)<br />
+- سه فیلد اختیاری: قیمت خرید، تعداد موجودی، یادداشت صوتی 🎤<br />
+- آپلود پس‌زمینه با صف آفلاین (Service Worker) — اگر نت قطع شد، بعداً خودکار می‌فرستد<br />
+- بعد از آپلود، فروشنده هیچ کار دیگری ندارد؛ نوتیف می‌گیرد: «محصول منتشر شد ✅»</p>
+<h3 id="b">مسیر B — ربات تلگرام (سریع‌ترین برای پیاده‌سازی)</h3>
+<p>فروشنده عکس‌ها را داخل یک گروه/بات تلگرام می‌فرستد، کپشن دلخواه مثل <code>120 قیمت:850 تعداد:12</code>. ربات همان پایپ‌لاین را trigger می‌کند و لینک محصول را برمی‌گرداند.</p>
+<blockquote>
+<p>این مسیر را <strong>اول</strong> بسازید: در ۲ روز کار می‌کند و فروشنده هیچ آموزشی لازم ندارد.</p>
+</blockquote>
+<h3 id="c">مسیر C — پنل وب دسکتاپ</h3>
+<p>Drag &amp; Drop چندتایی + آپلود دسته‌ای اکسل برای ورود انبوه محصولات.</p>
+<h3 id="_4">یادداشت صوتی → متن</h3>
+<p>اگر فروشنده صوت فرستاد (مثلاً «شلوار جین پسرانه، سایز ۶ تا ۱۲، جنس کش‌دار، قیمت ۸۵۰»)، با Speech-to-Text به متن تبدیل و به‌عنوان context به AI داده می‌شود. این کیفیت خروجی را چشمگیر بالا می‌برد.</p>
+<hr />
+<h2 id="_5">ایستگاه ۲ — پاکسازی و استانداردسازی تصویر (خودکار)</h2>
+<p>روی worker با Sharp + rembg:</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>مرحله</th>
+<th>عملیات</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>۱</td>
+<td>تشخیص و چرخش خودکار (EXIF)</td>
+</tr>
+<tr>
+<td>۲</td>
+<td>حذف پس‌زمینه (rembg / u2net) → پس‌زمینه سفید یا رنگ برند</td>
+</tr>
+<tr>
+<td>۳</td>
+<td>برش هوشمند و مرکزچین کردن سوژه با حاشیه یکسان</td>
+</tr>
+<tr>
+<td>۴</td>
+<td>اصلاح نور، کنتراست و وایت‌بالانس خودکار</td>
+</tr>
+<tr>
+<td>۵</td>
+<td>حذف نویز و شارپن ملایم</td>
+</tr>
+<tr>
+<td>۶</td>
+<td>خروجی چندسایزی: <code>2000×2000</code> (زوم)، <code>1200×1200</code> (گالری)، <code>600×600</code> (لیست)، <code>1080×1350</code> (اینستا پست)، <code>1080×1920</code> (استوری/ریلز)</td>
+</tr>
+<tr>
+<td>۷</td>
+<td>واترمارک ظریف برند (بازاستفاده از <code>app/lib/watermark.ts</code>)</td>
+</tr>
+<tr>
+<td>۸</td>
+<td>تبدیل به WebP + AVIF و آپلود در MinIO</td>
+</tr>
+<tr>
+<td>۹</td>
+<td>امتیاز کیفیت (۰-۱۰۰)؛ زیر ۵۰ → درخواست عکس مجدد از فروشنده</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>ارتقای اختیاری (فاز ۲):</strong> تولید عکس «روی مانکن/مدل» با سرویس AI تصویر — از عکس ساده روی زمین، تصویر لایف‌استایل بسازد. تأثیر بزرگی روی نرخ تبدیل دارد. (نیاز به سرویس تصویر جدا از AgentRouter)</p>
+<hr />
+<h2 id="ai-vision">ایستگاه ۳ — درک محصول با AI (Vision)</h2>
+<p>مدل چندوجهی (Vision) عکس‌ها را می‌بیند و JSON ساختاریافته برمی‌گرداند:</p>
+<pre><code class="language-jsonc">{
+  &quot;category&quot;: &quot;شلوار&quot;,           // تیشرت|شلوار|پیراهن|سرهمی|ست|کاپشن|...
+  &quot;gender&quot;: &quot;پسرانه&quot;,            // پسرانه|دخترانه|یونیسکس
+  &quot;age_group&quot;: &quot;۶ تا ۱۲ سال&quot;,
+  &quot;colors&quot;: [&quot;سرمه‌ای&quot;, &quot;آبی روشن&quot;],
+  &quot;pattern&quot;: &quot;ساده&quot;,
+  &quot;fabric_guess&quot;: &quot;جین کش‌دار&quot;,
+  &quot;season&quot;: &quot;پاییز و زمستان&quot;,
+  &quot;style_tags&quot;: [&quot;اسپرت&quot;, &quot;روزمره&quot;, &quot;مدرسه&quot;],
+  &quot;occasions&quot;: [&quot;مدرسه&quot;, &quot;گردش&quot;],
+  &quot;features&quot;: [&quot;جیب‌دار&quot;, &quot;کمر کش&quot;, &quot;دکمه فلزی&quot;],
+  &quot;quality_flags&quot;: [],           // مثلاً &quot;تصویر تار&quot; | &quot;نور ناکافی&quot;
+  &quot;confidence&quot;: 0.93
+}
+</code></pre>
+<p><strong>پرامپت سیستمی نمونه:</strong></p>
+<pre><code>تو یک متخصص مرچندایزینگ پوشاک کودک هستی. از روی تصاویر، ویژگی‌های محصول را استخراج کن.
+فقط JSON معتبر بده. اگر مطمئن نیستی مقدار را null بگذار و confidence را پایین بیاور.
+واحد سن بر اساس استاندارد ایران باشد. رنگ‌ها را با نام فارسی رایج بازار بنویس.
+</code></pre>
+<p>اگر <code>confidence &lt; 0.7</code> → محصول به صف «نیازمند بازبینی» می‌رود و به فروشنده نوتیف داده می‌شود.</p>
+<hr />
+<h2 id="_6">ایستگاه ۴ — غنی‌سازی داده و قیمت‌گذاری</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>داده</th>
+<th>منبع</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SKU</td>
+<td>تولید خودکار: <code>KID-{cat}-{gender}-{yymm}-{seq}</code></td>
+</tr>
+<tr>
+<td>جدول سایز</td>
+<td>از قالب استاندارد دسته + سن تشخیص‌داده‌شده</td>
+</tr>
+<tr>
+<td>قیمت پیشنهادی</td>
+<td>قیمت خرید × ضریب دسته + رصد قیمت رقبا (اسکرپ ترب/باسلام) + کشش فصلی</td>
+</tr>
+<tr>
+<td>موجودی به تفکیک سایز</td>
+<td>از ورودی فروشنده یا پیش‌فرض</td>
+</tr>
+<tr>
+<td>هزینه ارسال و وزن</td>
+<td>تخمین از روی دسته</td>
+</tr>
+<tr>
+<td>دسته‌بندی سایت</td>
+<td>نگاشت خودکار به درخت دسته‌ها</td>
+</tr>
+<tr>
+<td>کلیدواژه سئو</td>
+<td>از ماژول SEO (سند ۵): کلیدواژه اصلی + ۵ کلیدواژه فرعی</td>
+</tr>
+</tbody>
+</table></div>
+<p>قیمت نهایی همیشه قابل override توسط فروشنده است (اصل: AI پیشنهاد می‌دهد، انسان مالک قیمت است).</p>
+<hr />
+<h2 id="_7">ایستگاه ۵ — ساخت محصول در سایت</h2>
+<p>AI با ورودی ایستگاه ۳ و ۴ این‌ها را تولید می‌کند:</p>
+<ul>
+<li><strong>عنوان سئو‌شده</strong> (۵۰-۶۰ کاراکتر): «شلوار جین پسرانه کش‌دار مدل آرش — ۶ تا ۱۲ سال»</li>
+<li><strong>توضیح کوتاه</strong> (۲ خط برای کارت محصول)</li>
+<li><strong>توضیح کامل</strong> (۳۰۰-۵۰۰ کلمه): جنس، حس پارچه، مناسب چه فصلی، نکات نگهداری و شست‌وشو، چرا برای کودک مناسب است</li>
+<li><strong>بولت‌پوینت ویژگی‌ها</strong> (۵ تا ۷ مورد)</li>
+<li><strong>متا تایتل و متا دیسکریپشن</strong></li>
+<li><strong>FAQ اختصاصی محصول</strong> (۴ سؤال — برای ریچ‌اسنیپت گوگل)</li>
+<li><strong>Alt text</strong> برای هر تصویر</li>
+<li><strong>اسکیمای JSON-LD</strong>: <code>Product</code> + <code>Offer</code> + <code>AggregateRating</code> + <code>FAQPage</code></li>
+<li><strong>Slug فارسی-فرندلی</strong></li>
+</ul>
+<p>سپس رکورد در <code>products</code> ساخته می‌شود، ایندکس MeiliSearch به‌روز می‌شود، سایت‌مپ رفرش می‌شود و به گوگل (Indexing API / IndexNow) پینگ زده می‌شود.</p>
+<p><strong>قانون ضدجریمه‌ی گوگل:</strong> هرگز دو محصول با توضیح یکسان منتشر نشود — هش شباهت متنی محاسبه می‌شود؛ اگر شباهت بالای ۸۵٪ بود، بازتولید انجام می‌گیرد.</p>
+<hr />
+<h2 id="_8">ایستگاه ۶ — تولید محتوای شبکه‌های اجتماعی</h2>
+<p>برای هر کانال، محتوای <strong>بومی‌شده</strong> (نه کپی یکسان) تولید می‌شود:</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>کانال</th>
+<th>فرمت</th>
+<th>طول کپشن</th>
+<th>هشتگ</th>
+<th>لینک</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>اینستاگرام پست</td>
+<td>کاروسل ۳-۵ تصویر</td>
+<td>۱۵۰-۳۰۰ کاراکتر، هوک در خط اول</td>
+<td>۱۵-۲۵ ترکیبی</td>
+<td>لینک در بایو/استیکر</td>
+</tr>
+<tr>
+<td>اینستاگرام ریلز</td>
+<td>ویدئو ۷-۱۵ ثانیه</td>
+<td>کوتاه + CTA</td>
+<td>۱۰-۱۵</td>
+<td>—</td>
+</tr>
+<tr>
+<td>اینستاگرام استوری</td>
+<td>۱۰۸۰×۱۹۲۰ + استیکر لینک</td>
+<td>۱ جمله</td>
+<td>—</td>
+<td>لینک مستقیم</td>
+</tr>
+<tr>
+<td>تلگرام</td>
+<td>عکس + کپشن HTML</td>
+<td>۳۰۰-۶۰۰ کاراکتر</td>
+<td>۵-۸</td>
+<td>لینک مستقیم محصول</td>
+</tr>
+<tr>
+<td>بله / ایتا / روبیکا</td>
+<td>عکس + کپشن ساده</td>
+<td>۲۰۰-۴۰۰</td>
+<td>۳-۵</td>
+<td>لینک مستقیم</td>
+</tr>
+<tr>
+<td>واتساپ چنل</td>
+<td>عکس + متن کوتاه</td>
+<td>۱۵۰</td>
+<td>—</td>
+<td>لینک</td>
+</tr>
+<tr>
+<td>پینترست</td>
+<td>تصویر عمودی ۲:۳</td>
+<td>توضیح سئویی فارسی+انگلیسی</td>
+<td>کلیدواژه‌محور</td>
+<td>لینک مستقیم (بک‌لینک ارزشمند)</td>
+</tr>
+<tr>
+<td>یوتیوب شورتس</td>
+<td>ویدئو عمودی</td>
+<td>عنوان + توضیح سئو</td>
+<td>۵</td>
+<td>لینک در توضیحات</td>
+</tr>
+<tr>
+<td>آپارات</td>
+<td>ویدئو</td>
+<td>عنوان فارسی سئو</td>
+<td>تگ فارسی</td>
+<td>لینک</td>
+</tr>
+<tr>
+<td>لینکدین</td>
+<td>تصویر + متن B2B</td>
+<td>۴۰۰-۸۰۰</td>
+<td>۳-۵</td>
+<td>لینک صفحه عمده</td>
+</tr>
+<tr>
+<td>ایکس (X)</td>
+<td>تصویر + متن</td>
+<td>۲۰۰</td>
+<td>۳</td>
+<td>لینک</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>قوانین کپشن:</strong><br />
+- خط اول = هوک (سؤال، عدد، یا درد مخاطب)<br />
+- همیشه یک CTA مشخص: «سایزها رو ببین 👉»<br />
+- امضای برند + شماره تماس/آیدی<br />
+- Emoji متعادل (۳ تا ۶)<br />
+- هرگز کپشن تکراری برای دو محصول — تنوع لحن (۵ لحن: صمیمی، خبری، داستانی، مقایسه‌ای، فوریت‌ساز) به‌صورت چرخشی</p>
+<p><strong>پرامپت نمونه کپشن اینستاگرام:</strong></p>
+<pre><code>برای این محصول یک کپشن اینستاگرام فارسی بنویس.
+مخاطب: مادر ایرانی ۲۵ تا ۴۰ ساله.
+لحن: {rotating_tone}
+خط اول باید هوک قوی باشد و در ۳ ثانیه توجه بگیرد.
+حداکثر ۳۰۰ کاراکتر. سپس ۲۰ هشتگ فارسی و انگلیسی مرتبط با پوشاک کودک ایران.
+هشتگ‌ها را در سه گروه بده: پرترافیک، متوسط، نیچ.
+از کلیشه‌های تبلیغاتی و ادعای اغراق‌آمیز پرهیز کن.
+</code></pre>
+<hr />
+<h2 id="reelsshorts">ایستگاه ۷ — تولید ویدئوی کوتاه خودکار (Reels/Shorts)</h2>
+<p>خواسته شما: «حتی ویدئوها هم پست بشه». این با FFmpeg و بدون هزینه سرویس خارجی کاملاً شدنی است.</p>
+<h3 id="template-engine">الگوهای ویدئویی آماده (Template Engine)</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>قالب</th>
+<th>ساختار</th>
+<th>مناسب</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>showcase</code></td>
+<td>Ken Burns روی ۴ عکس + متن روی تصویر + موزیک</td>
+<td>محصول تکی</td>
+</tr>
+<tr>
+<td><code>before-after</code></td>
+<td>عکس خام ← عکس استایل‌شده</td>
+<td>جذابیت بصری</td>
+</tr>
+<tr>
+<td><code>size-guide</code></td>
+<td>انیمیشن جدول سایز</td>
+<td>آموزشی</td>
+</tr>
+<tr>
+<td><code>carousel-3</code></td>
+<td>۳ محصول مکمل («ست کن!»)</td>
+<td>افزایش AOV</td>
+</tr>
+<tr>
+<td><code>sale-countdown</code></td>
+<td>تایمر + قیمت قبل/بعد</td>
+<td>کمپین</td>
+</tr>
+<tr>
+<td><code>ugc-style</code></td>
+<td>عکس + متن دست‌نویس‌مانند + ترنزیشن سریع</td>
+<td>ترند اینستاگرام</td>
+</tr>
+<tr>
+<td><code>story-poll</code></td>
+<td>استوری تعاملی «کدوم رنگ؟»</td>
+<td>تعامل</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="_9">پایپ‌لاین رندر</h3>
+<pre><code>عکس‌های استاندارد + متن AI + موزیک بی‌کلام + قالب
+        ↓ FFmpeg (zoompan, drawtext, xfade, aformat)
+   ویدئو ۱۰۸۰×۱۹۲۰، ۳۰fps، ۷-۱۵ ثانیه، H.264, &lt;8MB
+        ↓
+  زیرنویس فارسی برنت-این (چون اکثر کاربران بدون صدا می‌بینند)
+</code></pre>
+<p><strong>نکته حقوقی:</strong> فقط موزیک بدون کپی‌رایت (کتابخانه محلی از ۵۰ ترک royalty-free) — یا برای اینستاگرام از موزیک ترند داخل خود اپ در حالت نیمه‌خودکار.</p>
+<p><strong>سناریوی ویدئو با AI:</strong> AgentRouter برای هر محصول یک اسکریپت ۳ سکانسی می‌نویسد (هوک ۰-۲ث، ویژگی ۲-۸ث، CTA ۸-۱۲ث) که به‌عنوان متن روی ویدئو رندر می‌شود.</p>
+<hr />
+<h2 id="_10">ایستگاه ۸ — زمان‌بندی و انتشار چندکاناله</h2>
+<h3 id="_11">موتور صف انتشار</h3>
+<p>هر پست یک رکورد در جدول <code>social_queue</code> است با: کانال، زمان هدف، محتوا، وضعیت، تعداد تلاش.</p>
+<h3 id="_12">قوانین زمان‌بندی هوشمند</h3>
+<ul>
+<li><strong>پنجره‌های طلایی ایران:</strong> ۱۰:۰۰-۱۱:۳۰، ۱۳:۳۰-۱۵:۰۰، <strong>۲۱:۰۰-۲۳:۳۰ (بهترین)</strong></li>
+<li>سقف روزانه هر کانال: اینستاگرام ۲ پست + ۵ استوری، تلگرام ۴، بله/ایتا/روبیکا ۳، پینترست ۱۰</li>
+<li>فاصله حداقل ۹۰ دقیقه بین پست‌های اینستاگرام (جلوگیری از شادوبن)</li>
+<li>اگر ۵ محصول هم‌زمان آپلود شد → روی ۳ روز پخش می‌شود، نه یک‌جا</li>
+<li>تعطیلات و مناسبت‌های ایرانی از تقویم داخلی خوانده می‌شود (کمپین خودکار)</li>
+</ul>
+<h3 id="_13">انتشار</h3>
+<p>بازاستفاده و توسعه <code>app/lib/socialPoster.ts</code> فعلی که همین حالا تلگرام، بله، ایتا، روبیکا، لینکدین، فیسبوک، اینستاگرام و واتساپ را پشتیبانی می‌کند. اضافه می‌شود: پینترست، یوتیوب، آپارات، X.</p>
+<p><strong>مدیریت خطا:</strong> ۳ بار تلاش با backoff نمایی → در صورت شکست، ثبت در <code>social_failures</code> و اعلان به ادمین در تلگرام. هرگز پست ناقص منتشر نشود.</p>
+<p><strong>Idempotency:</strong> هر پست یک کلید یکتا <code>{product_id}:{channel}:{template}</code> دارد تا پست تکراری منتشر نشود.</p>
+<hr />
+<h2 id="_14">ایستگاه ۹ — رصد، یادگیری و بهینه‌سازی خودکار</h2>
+<ul>
+<li>هر ۶ ساعت آمار هر پست (لایک، سیو، اشتراک، کلیک، فروش منتسب) جمع می‌شود</li>
+<li>لینک‌ها با UTM و کوتاه‌کننده اختصاصی (<code>s.brand.ir/xxxx</code>) ردیابی می‌شوند</li>
+<li>سیستم یاد می‌گیرد: کدام لحن کپشن، کدام قالب ویدئو، کدام ساعت، کدام دسته بهترین عملکرد را دارد</li>
+<li>هفتگی: گزارش خودکار «۵ پست برتر / ۵ پست ضعیف + توصیه» به تلگرام مدیر</li>
+<li><strong>بازنشر هوشمند:</strong> محصولاتی که در ۳۰ روز نفروخته‌اند، با کپشن و قالب متفاوت دوباره منتشر می‌شوند</li>
+<li><strong>A/B تست خودکار:</strong> برای ۲۰٪ محصولات، دو نسخه کپشن ساخته و برنده انتخاب می‌شود</li>
+</ul>
+<hr />
+<h2 id="_15">۳٫۱۰ محتوای غیرمحصولی خودکار (مطالب جالب و ویدئوهای آموزشی)</h2>
+<p>خواسته شما: «مطالب جالب در خصوص پوشاک کودک و نوجوان هم پست بشه». این یک پایپ‌لاین جدا و روزانه است — دقیقاً مشابه سیستم اخبار خودکاری که در <code>ehsansalehi.ir</code> ساخته‌اید (<code>app/api/cron/news</code>).</p>
+<h3 id="_16">چرخه محتوایی هفتگی (خودکار)</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>روز</th>
+<th>نوع محتوا</th>
+<th>مثال</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>شنبه</td>
+<td>راهنمای خرید</td>
+<td>«چطور سایز درست لباس بچه رو انتخاب کنیم؟»</td>
+</tr>
+<tr>
+<td>یکشنبه</td>
+<td>ترند مد کودک</td>
+<td>«رنگ‌های محبوب پاییز امسال برای بچه‌ها»</td>
+</tr>
+<tr>
+<td>دوشنبه</td>
+<td>نکته سلامت و پارچه</td>
+<td>«چرا پنبه ۱۰۰٪ برای پوست حساس کودک بهتره؟»</td>
+</tr>
+<tr>
+<td>سه‌شنبه</td>
+<td>استایل‌گاید</td>
+<td>«۵ ست مدرسه برای دختر ۹ ساله»</td>
+</tr>
+<tr>
+<td>چهارشنبه</td>
+<td>محتوای تعاملی</td>
+<td>نظرسنجی، کوییز سایز، مسابقه عکس</td>
+</tr>
+<tr>
+<td>پنجشنبه</td>
+<td>UGC و رضایت مشتری</td>
+<td>بازنشر عکس مشتری‌ها با اجازه</td>
+</tr>
+<tr>
+<td>جمعه</td>
+<td>سرگرمی و احساسی</td>
+<td>ویدئوی بامزه، نکته تربیتی سبک</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="_17">منابع محتوا</h3>
+<ol>
+<li><strong>تولید کامل با AgentRouter</strong> بر اساس بانک ۳۰۰ موضوع از قبل تعریف‌شده (Content Bank)</li>
+<li><strong>رصد ترند:</strong> Google Trends ایران + هشتگ‌های اینستاگرام + سؤالات پرتکرار مشتری‌ها در چت‌بات</li>
+<li><strong>بازنویسی منابع بین‌المللی:</strong> RSS از مجلات مد کودک — بازنویسی کامل فارسی و بومی‌سازی (نه ترجمه ماشینی)</li>
+<li><strong>دیتای خود سایت:</strong> «پرفروش‌ترین‌های این هفته»، «محصولات جدید»</li>
+</ol>
+<p>هر مطلب: ۱ مقاله بلاگ (۱۰۰۰-۱۵۰۰ کلمه سئوشده) + ۱ کاروسل اینستاگرام + ۱ ریلز + ۱ پست تلگرام + ۱ پین پینترست. یعنی <strong>یک ورودی، پنج خروجی</strong>.</p>
+<h3 id="ai">کنترل کیفیت محتوای AI</h3>
+<ul>
+<li>ممنوعیت ادعای پزشکی و درمانی</li>
+<li>ممنوعیت آمار بدون منبع</li>
+<li>بررسی خودکار تکراری‌بودن با محتوای قبلی سایت</li>
+<li>امتیاز خوانایی فارسی (طول جمله، جملات مجهول)</li>
+<li>نمونه‌گیری ۱۰٪ برای بازبینی انسانی هفتگی</li>
+</ul>
+<hr />
+<h2 id="_18">۳٫۱۱ اتوماسیون فروش و پشتیبانی (نه فقط محتوا)</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>اتوماسیون</th>
+<th>شرح</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>چت‌بات AI فروش</td>
+<td>روی سایت + تلگرام + واتساپ. مشاور سایز، پیگیری سفارش، پیشنهاد محصول مکمل</td>
+</tr>
+<tr>
+<td>رها کردن سبد خرید</td>
+<td>۱ ساعت بعد پیامک، ۲۴ ساعت بعد پیام تلگرام با کد تخفیف ۵٪</td>
+</tr>
+<tr>
+<td>پیگیری پس از خرید</td>
+<td>روز ۳: «رسید؟»، روز ۷: درخواست نظر و عکس، روز ۹۰: «سایز بچه بزرگ شده؟» ← موتور اصلی خرید مجدد</td>
+</tr>
+<tr>
+<td>هشدار موجودی</td>
+<td>اتمام موجودی → اعلان به فروشنده + مخفی‌سازی خودکار + پیشنهاد جایگزین به مشتری</td>
+</tr>
+<tr>
+<td>بازیابی مشتری خفته</td>
+<td>۶۰ روز بی‌فعالیت → کمپین بازگشت</td>
+</tr>
+<tr>
+<td>پاسخ خودکار دایرکت و کامنت</td>
+<td>پاسخ به سؤال قیمت/سایز در کامنت‌های اینستاگرام (نیمه‌خودکار با تأیید)</td>
+</tr>
+<tr>
+<td>مچ کردن مرجوعی</td>
+<td>تحلیل دلیل مرجوعی و اصلاح خودکار جدول سایز محصول</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="_19">۳٫۱۲ حالت‌های عملیاتی و کنترل انسانی</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>حالت</th>
+<th>رفتار</th>
+<th>چه زمانی</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>AUTO</code></td>
+<td>همه‌چیز خودکار منتشر می‌شود</td>
+<td>بعد از ۳۰ روز اطمینان</td>
+</tr>
+<tr>
+<td><code>REVIEW</code></td>
+<td>محصول ساخته می‌شود ولی انتشار اجتماعی منتظر تأیید یک‌کلیکی در تلگرام</td>
+<td>۳۰ روز اول</td>
+</tr>
+<tr>
+<td><code>DRAFT</code></td>
+<td>فقط پیش‌نویس، هیچ انتشاری</td>
+<td>محصولات خاص/گران</td>
+</tr>
+<tr>
+<td><code>PAUSE</code></td>
+<td>کل اتوماسیون متوقف (کلید قرمز اضطراری)</td>
+<td>بحران یا اشتباه</td>
+</tr>
+</tbody>
+</table></div>
+<p>دکمه‌های تأیید در تلگرام: <code>✅ انتشار</code> / <code>✏️ ویرایش</code> / <code>🔄 بازتولید</code> / <code>❌ حذف</code></p>
+<hr />
+<h2 id="n8n">۳٫۱۳ چرا n8n در کنار کد اختصاصی؟</h2>
+<ul>
+<li><strong>کد اختصاصی (Next.js + BullMQ):</strong> مسیرهای حیاتی و پرسرعت — پردازش تصویر، ساخت محصول، انتشار اصلی.</li>
+<li><strong>n8n:</strong> سناریوهای بازاریابی که مدام تغییر می‌کنند — کمپین‌ها، پیگیری‌ها، گزارش‌ها، اتصال به ابزارهای جدید. مزیتش این است که شما (یا هر کسی در تیم) بدون دیپلوی مجدد می‌توانید سناریو بسازید.</li>
+</ul>
+<p>اجرای n8n روی VPS به‌جای n8n Cloud، صرفه‌جویی قابل توجهی دارد (حدود ۶٫۵ دلار در ماه در برابر ۲۰ تا ۶۶۷ دلار) و محدودیت اجرا هم ندارد (<a href="https://ivristech.com/n8n-self-hosting-hostinger/">مرجع</a>).</p>
+<h3 id="n8n_1">۱۲ سناریوی n8n که از روز اول باید ساخته شوند</h3>
+<ol>
+<li>New Product → Multi-channel Publish</li>
+<li>Daily Content Generator (بلاگ + سوشال)</li>
+<li>Abandoned Cart Recovery</li>
+<li>Post-Purchase Follow-up</li>
+<li>Weekly Performance Report → Telegram</li>
+<li>Competitor Price Watch</li>
+<li>Low Stock Alert</li>
+<li>Review Request + UGC Collection</li>
+<li>Seasonal Campaign Trigger (تقویم مناسبتی)</li>
+<li>Google Search Console → Content Gap Alert</li>
+<li>Social Comment/DM Triage</li>
+<li>Backup &amp; Health Check</li>
+</ol>
+<hr />
+<h2 id="definition-of-done">۳٫۱۴ معیار پذیرش (Definition of Done) پایپ‌لاین</h2>
+<p>پایپ‌لاین وقتی «تمام» است که این تست بدون خطا پاس شود:</p>
+<blockquote>
+<p>فروشنده ۵ عکس گوشی از یک شلوار بچگانه را در ربات تلگرام می‌فرستد و می‌نویسد «قیمت ۸۵۰ تعداد ۱۰».<br />
+ظرف ۹۰ ثانیه: محصول با عکس تمیزشده و توضیح ۴۰۰ کلمه‌ای روی سایت است، در گوگل قابل ایندکس، در تلگرام/بله/ایتا/روبیکا منتشر شده، یک کاروسل و یک ریلز ۱۰ ثانیه‌ای برای اینستاگرام در صف است، یک پین پینترست ثبت شده، و لینک محصول به فروشنده برگشته.<br />
+<strong>هیچ انسانی چیزی تایپ نکرده است.</strong></p>
+</blockquote></section><section id="04-social-media-plan"><h1 id="_1">سند ۴ — پلن شبکه‌های اجتماعی</h1>
+<h2 id="_2">۴٫۱ استراتژی کانالی</h2>
+<p>اصل حاکم: <strong>کانال‌ها را رتبه‌بندی کن، همه را یکسان نبین.</strong> هر کانال یک نقش مشخص در قیف دارد.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ردیف</th>
+<th>کانال</th>
+<th>نقش در قیف</th>
+<th>اولویت</th>
+<th>مالکیت مخاطب</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>۱</td>
+<td><strong>اینستاگرام</strong></td>
+<td>جذب + کشف + برند</td>
+<td>🔴 حیاتی</td>
+<td>ندارید (ریسک بالا)</td>
+</tr>
+<tr>
+<td>۲</td>
+<td><strong>تلگرام</strong></td>
+<td>تبدیل + فروش مستقیم + وفاداری</td>
+<td>🔴 حیاتی</td>
+<td>نیمه</td>
+</tr>
+<tr>
+<td>۳</td>
+<td><strong>سایت + سئو</strong></td>
+<td>تبدیل + دارایی بلندمدت</td>
+<td>🔴 حیاتی</td>
+<td>✅ کامل</td>
+</tr>
+<tr>
+<td>۴</td>
+<td><strong>پیامک/باشگاه مشتریان</strong></td>
+<td>نگهداشت + خرید مجدد</td>
+<td>🔴 حیاتی</td>
+<td>✅ کامل</td>
+</tr>
+<tr>
+<td>۵</td>
+<td><strong>واتساپ (چنل + بیزینس)</strong></td>
+<td>پشتیبانی + فروش</td>
+<td>🟠 بالا</td>
+<td>نیمه</td>
+</tr>
+<tr>
+<td>۶</td>
+<td><strong>بله / ایتا / روبیکا</strong></td>
+<td>پوشش داخلی + بیمه فیلترینگ</td>
+<td>🟠 بالا</td>
+<td>نیمه</td>
+</tr>
+<tr>
+<td>۷</td>
+<td><strong>پینترست</strong></td>
+<td>ترافیک ارگانیک + بک‌لینک</td>
+<td>🟡 متوسط (ROI عالی، رقابت صفر در ایران)</td>
+<td>ندارید</td>
+</tr>
+<tr>
+<td>۸</td>
+<td><strong>یوتیوب + آپارات</strong></td>
+<td>سئوی ویدئویی + اعتماد</td>
+<td>🟡 متوسط</td>
+<td>ندارید</td>
+</tr>
+<tr>
+<td>۹</td>
+<td><strong>لینکدین</strong></td>
+<td>B2B و عمده‌فروشی</td>
+<td>🟡 متوسط</td>
+<td>ندارید</td>
+</tr>
+<tr>
+<td>۱۰</td>
+<td><strong>ایکس (X)</strong></td>
+<td>برندینگ سبک</td>
+<td>🟢 پایین</td>
+<td>ندارید</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote>
+<p><strong>قانون طلایی:</strong> هر پست در هر کانالی، هدفش در نهایت آوردن مخاطب به دارایی‌های تحت مالکیت شماست (سایت، لیست پیامک، کانال تلگرام). چون اینستاگرام هر لحظه ممکن است از دسترس خارج شود.</p>
+</blockquote>
+<h2 id="_3">۴٫۲ هویت برند در شبکه‌ها</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>عنصر</th>
+<th>مشخصات</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>لحن</td>
+<td>صمیمی، مادرانه، قابل اعتماد — نه شعاری، نه کودکانه‌ی مصنوعی</td>
+</tr>
+<tr>
+<td>پالت رنگ</td>
+<td>۲ رنگ اصلی روشن و شاد + ۱ رنگ خنثی؛ ثابت در همه کانال‌ها</td>
+</tr>
+<tr>
+<td>فونت</td>
+<td>یک فونت فارسی مدرن (مثل ایران‌سنس/دانا) + یک لاتین</td>
+</tr>
+<tr>
+<td>قالب بصری</td>
+<td>همه پست‌ها دارای یک نوار برند ثابت (رنگ + لوگو گوشه) → شناسایی فوری در فید</td>
+</tr>
+<tr>
+<td>Bio استاندارد</td>
+<td>«پوشاک کودک و نوجوان</td>
+</tr>
+<tr>
+<td>هایلایت‌های اینستاگرام</td>
+<td>راهنمای سایز / نظر مشتری‌ها / پرفروش‌ها / تخفیف‌ها / نحوه سفارش / پشت صحنه</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="content-mix">۴٫۳ ترکیب محتوایی (Content Mix) — قانون ۴۰/۳۰/۲۰/۱۰</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>نوع</th>
+<th>سهم</th>
+<th>هدف</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>محصول‌محور</td>
+<td>۴۰٪</td>
+<td>فروش مستقیم</td>
+</tr>
+<tr>
+<td>آموزشی/ارزش‌آفرین</td>
+<td>۳۰٪</td>
+<td>اعتماد و سئو (سایز، پارچه، نگهداری، استایل)</td>
+</tr>
+<tr>
+<td>اجتماعی/تعاملی</td>
+<td>۲۰٪</td>
+<td>الگوریتم و ارتباط (نظرسنجی، کوییز، UGC، پشت صحنه)</td>
+</tr>
+<tr>
+<td>تبلیغاتی/کمپینی</td>
+<td>۱۰٪</td>
+<td>تخفیف و فوریت</td>
+</tr>
+</tbody>
+</table></div>
+<p>اگر بیش از ۴۰٪ پست‌ها محصول باشد، ریچ ارگانیک سقوط می‌کند. موتور اتوماسیون این نسبت را <strong>اجباری</strong> رعایت می‌کند (قانون در کد).</p>
+<h2 id="cadence">۴٫۴ ریتم انتشار (Cadence)</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>کانال</th>
+<th>فرکانس روزانه/هفتگی</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>اینستاگرام فید</td>
+<td>۱ تا ۲ پست در روز</td>
+</tr>
+<tr>
+<td>اینستاگرام ریلز</td>
+<td>۱ ریلز در روز (مهم‌ترین اهرم رشد ۱۴۰۵)</td>
+</tr>
+<tr>
+<td>اینستاگرام استوری</td>
+<td>۵ تا ۸ در روز</td>
+</tr>
+<tr>
+<td>تلگرام</td>
+<td>۳ تا ۴ در روز</td>
+</tr>
+<tr>
+<td>بله/ایتا/روبیکا</td>
+<td>۲ تا ۳ در روز</td>
+</tr>
+<tr>
+<td>واتساپ چنل</td>
+<td>۱ در روز</td>
+</tr>
+<tr>
+<td>پینترست</td>
+<td>۵ تا ۱۰ پین در روز (کاملاً خودکار)</td>
+</tr>
+<tr>
+<td>یوتیوب شورتس</td>
+<td>۱ در روز (همان ریلز)</td>
+</tr>
+<tr>
+<td>آپارات</td>
+<td>۳ در هفته</td>
+</tr>
+<tr>
+<td>لینکدین</td>
+<td>۳ در هفته</td>
+</tr>
+<tr>
+<td>بلاگ سایت</td>
+<td>۱ مقاله در روز (خودکار)</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>کل خروجی روزانه: حدود ۳۰ قطعه محتوا — همه خودکار.</strong> انسان صفر ساعت وقت می‌گذارد.</p>
+<h2 id="_4">۴٫۵ تقویم مناسبتی ایران (کمپین‌های خودکار سالانه)</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>مناسبت</th>
+<th>زمان</th>
+<th>نوع کمپین</th>
+<th>شروع آماده‌سازی</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>بازگشت به مدرسه</td>
+<td>مرداد–شهریور</td>
+<td>🔥 بزرگ‌ترین فصل</td>
+<td>۴۵ روز قبل</td>
+</tr>
+<tr>
+<td>مهر و روز دانش‌آموز</td>
+<td>مهر–آبان</td>
+<td>ست مدرسه</td>
+<td>۲۰ روز قبل</td>
+</tr>
+<tr>
+<td>یلدا</td>
+<td>آذر</td>
+<td>هدیه یلدا، ست خانوادگی</td>
+<td>۳۰ روز قبل</td>
+</tr>
+<tr>
+<td>جمعه سیاه/سه‌شنبه شگفت‌انگیز</td>
+<td>آذر</td>
+<td>تخفیف حراج</td>
+<td>۱۵ روز قبل</td>
+</tr>
+<tr>
+<td>عید نوروز</td>
+<td>اسفند</td>
+<td>🔥 دومین فصل بزرگ (لباس عید)</td>
+<td>۵۰ روز قبل</td>
+</tr>
+<tr>
+<td>روز مادر و پدر</td>
+<td>اسفند/بهمن</td>
+<td>هدیه</td>
+<td>۲۰ روز قبل</td>
+</tr>
+<tr>
+<td>روز کودک</td>
+<td>مهر</td>
+<td>کمپین احساسی</td>
+<td>۱۵ روز قبل</td>
+</tr>
+<tr>
+<td>تابستان و سفر</td>
+<td>خرداد–تیر</td>
+<td>لباس خنک، مایو، ست ساحلی</td>
+<td>۳۰ روز قبل</td>
+</tr>
+<tr>
+<td>حراج تغییر فصل</td>
+<td>۴ بار در سال</td>
+<td>تخلیه انبار</td>
+<td>۱۰ روز قبل</td>
+</tr>
+</tbody>
+</table></div>
+<p>این تقویم به‌صورت جدول در دیتابیس ذخیره می‌شود و n8n به‌صورت خودکار X روز قبل، کمپین را می‌سازد: بنر سایت + پست‌ها + کد تخفیف + پیامک + ایمیل.</p>
+<h2 id="_5">۴٫۶ ۲۵ ایده محتوایی که همیشه جواب می‌دهد (بانک محتوا)</h2>
+<p><strong>محصولی:</strong> ۱) قبل/بعد استایل ۲) ۳ ست از یک تیشرت ۳) بازکردن بسته (Unboxing) ۴) کلوزآپ کیفیت دوخت ۵) مقایسه دو مدل</p>
+<p><strong>آموزشی:</strong> ۶) چطور سایز بگیریم (با متر) ۷) جدول سایز سنی ۸) شست‌وشوی لباس بچه ۹) تشخیص پارچه اصل ۱۰) چیدمان کمد کودک ۱۱) لباس مناسب پوست حساس ۱۲) چند دست لباس برای هر فصل کافی است</p>
+<p><strong>تعاملی:</strong> ۱۳) «کدوم رنگ؟» نظرسنجی ۱۴) کوییز «سایز بچت چنده؟» ۱۵) پرسش و پاسخ با مادرها ۱۶) مسابقه عکس بچه با لباس ما ۱۷) حدس قیمت</p>
+<p><strong>اعتمادساز:</strong> ۱۸) نظر مشتری (اسکرین‌شات) ۱۹) ویدئوی بسته‌بندی و ارسال ۲۰) پشت صحنه انبار ۲۱) معرفی تیم ۲۲) گارانتی تعویض سایز</p>
+<p><strong>فروش:</strong> ۲۳) شمارش معکوس تخفیف ۲۴) «فقط ۳ تا مونده» ۲۵) باندل «۳ بخر ۲ حساب کن»</p>
+<h2 id="_6">۴٫۷ رشد ارگانیک اینستاگرام (بدون تبلیغ)</h2>
+<ol>
+<li><strong>ریلز روزانه</strong> — تنها راه ریچ ارگانیک واقعی در ۱۴۰۵. ۷ تا ۱۵ ثانیه، هوک در ثانیه اول، لوپ‌شدنی.</li>
+<li><strong>همکاری Collab</strong> با پیج‌های مادر و کودک (پست مشترک = دو برابر ریچ رایگان).</li>
+<li><strong>UGC:</strong> هر مشتری که عکس بفرستد، ۱۰٪ تخفیف خرید بعدی. عکس‌ها منبع بی‌پایان محتوای معتبر.</li>
+<li><strong>کامنت‌مارکتینگ:</strong> پاسخ هوشمند و ارزشمند زیر پست پیج‌های بزرگ حوزه کودک (نه اسپم).</li>
+<li><strong>گیواوی هدفمند:</strong> با شرط تگ ۲ مادر — نه گیواوی عمومی که فالوور بی‌کیفیت می‌آورد.</li>
+<li><strong>سری‌سازی:</strong> یک سری هفتگی ثابت (مثلاً «سه‌شنبه‌های استایل») که مخاطب منتظرش باشد.</li>
+<li><strong>پاسخ سریع به دایرکت:</strong> الگوریتم به پیج‌های پاسخگو ریچ بیشتری می‌دهد → چت‌بات اینجا دوبرابر ارزشمند است.</li>
+</ol>
+<h2 id="_7">۴٫۸ استراتژی تلگرام (موتور فروش واقعی در ایران)</h2>
+<ul>
+<li><strong>کانال اصلی</strong> (پست محصول و تخفیف) + <strong>گروه مشاوره مادران</strong> (اجتماع‌سازی) + <strong>ربات فروش</strong> (سفارش داخل تلگرام)</li>
+<li>ربات تلگرام باید: کاتالوگ، جستجو، سبد خرید، پرداخت (لینک درگاه)، رهگیری سفارش، مشاور سایز داشته باشد</li>
+<li>Deep-link هر محصول: <code>t.me/BrandBot?start=p_1234</code></li>
+<li>پیام‌های خودکار «فقط برای اعضای کانال» → انگیزه عضویت</li>
+<li>مزیت بزرگ تلگرام: فوروارد شدن بین گروه‌های مادران = رشد ویروسی رایگان</li>
+</ul>
+<h2 id="_8">۴٫۹ کانال‌های داخلی (بله، ایتا، روبیکا، سروش)</h2>
+<p>اینها را جدی بگیرید — دلیل: در دوره‌های محدودیت اینترنت، تنها کانال ارتباطی زنده شما هستند و کد فعلی شما (<code>socialPoster.ts</code>) از قبل هر سه را پشتیبانی می‌کند.<br />
+- محتوا: همان محتوای تلگرام با کپشن کمی ساده‌تر<br />
+- تمرکز روی مخاطب شهرستانی و خانواده‌های مذهبی‌تر که در این پلتفرم‌ها فعال‌ترند<br />
+- رقابت تقریباً صفر → دیده‌شدن بالا با هزینه صفر</p>
+<h2 id="_9">۴٫۱۰ پینترست — فرصت پنهان</h2>
+<p>چرا؟ پینترست موتور جستجوی بصری است، بک‌لینک <code>dofollow</code> می‌دهد، در گوگل ایندکس می‌شود، و رقابت فارسی در حوزه پوشاک کودک تقریباً صفر است. عمر هر پین ۶ تا ۱۲ ماه است (در مقابل ۴۸ ساعت اینستاگرام).<br />
+- ۱۰ برد: پوشاک پسرانه، دخترانه، نوزادی، ست مدرسه، لباس عید، استایل زمستانی، راهنمای سایز، DIY کودک، اتاق کودک، مد نوجوان<br />
+- هر محصول = ۳ پین با تصاویر و توضیحات متفاوت<br />
+- توضیحات دوزبانه (فارسی + انگلیسی) برای پوشش ترافیک بین‌المللی فارسی‌زبان</p>
+<h2 id="_10">۴٫۱۱ مدیریت بحران و ریسک شبکه‌ها</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>سناریو</th>
+<th>واکنش خودکار</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>تعلیق اکانت اینستاگرام</td>
+<td>فعال‌سازی اکانت پشتیبان، اطلاع‌رسانی در تلگرام و پیامک، افزایش بودجه به کانال‌های دیگر</td>
+</tr>
+<tr>
+<td>فیلتر شدن پلتفرم</td>
+<td>تغییر خودکار وزن انتشار به کانال‌های داخلی</td>
+</tr>
+<tr>
+<td>کامنت منفی/شکایت</td>
+<td>تشخیص احساس، اعلان فوری به پشتیبانی، پاسخ عمومی مؤدبانه + پیگیری خصوصی</td>
+</tr>
+<tr>
+<td>نشت محتوای نامناسب AI</td>
+<td>فیلتر واژگان + سطح REVIEW برای کلیدواژه‌های حساس</td>
+</tr>
+<tr>
+<td>افت ناگهانی ریچ</td>
+<td>توقف انتشار ۲۴ ساعت، بررسی شادوبن، تغییر الگوی هشتگ</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="kpi">۴٫۱۲ KPI شبکه‌های اجتماعی</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>شاخص</th>
+<th>ماه ۳</th>
+<th>ماه ۶</th>
+<th>ماه ۱۲</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>فالوور اینستاگرام</td>
+<td>۵٬۰۰۰</td>
+<td>۲۰٬۰۰۰</td>
+<td>۶۰٬۰۰۰</td>
+</tr>
+<tr>
+<td>نرخ تعامل</td>
+<td>۴٪</td>
+<td>۵٪</td>
+<td>۵٪+</td>
+</tr>
+<tr>
+<td>اعضای تلگرام</td>
+<td>۲٬۰۰۰</td>
+<td>۸٬۰۰۰</td>
+<td>۲۵٬۰۰۰</td>
+</tr>
+<tr>
+<td>کلیک ماهانه از سوشال به سایت</td>
+<td>۸٬۰۰۰</td>
+<td>۳۰٬۰۰۰</td>
+<td>۹۰٬۰۰۰</td>
+</tr>
+<tr>
+<td>سهم فروش از سوشال</td>
+<td>۵۵٪</td>
+<td>۴۵٪</td>
+<td>۳۵٪ (بقیه از سئو — نشانه سلامت)</td>
+</tr>
+<tr>
+<td>بازدید ماهانه پینترست</td>
+<td>۵٬۰۰۰</td>
+<td>۵۰٬۰۰۰</td>
+<td>۲۰۰٬۰۰۰</td>
+</tr>
+<tr>
+<td>هزینه تولید هر قطعه محتوا</td>
+<td>زیر ۵٬۰۰۰ تومان</td>
+<td>زیر ۳٬۰۰۰</td>
+<td>زیر ۲٬۰۰۰</td>
+</tr>
+</tbody>
+</table></div></section><section id="05-seo-backlink"><h1 id="_1">سند ۵ — سئو و بک‌لینک درجه‌یک</h1>
+<p>هدف: <strong>در ۱۲ ماه، رتبه صفحه اول گوگل برای بالای ۳۰۰ کلیدواژه تجاری پوشاک کودک، و رسیدن به ۴۵٪+ سهم ترافیک ارگانیک.</strong></p>
+<h2 id="_2">۵٫۱ چرا سئو برای این پروژه حیاتی‌تر از تبلیغات است؟</h2>
+<ul>
+<li>ترافیک تبلیغاتی با قطع بودجه صفر می‌شود؛ ترافیک ارگانیک دارایی ماندگار است</li>
+<li>CAC ارگانیک نزدیک صفر → مستقیم روی حاشیه سود</li>
+<li>در ایران، تبلیغات اینستاگرام پرنوسان و پرریسک است؛ گوگل پایدارتر است</li>
+<li>مزیت رقابتی شما: <strong>موتور تولید محتوای AI</strong> → می‌توانید ۱۰۰ برابر رقیب محتوا بسازید</li>
+</ul>
+<h2 id="_3">۵٫۲ سئوی تکنیکال (پایه — باید از روز ۱ درست باشد)</h2>
+<h3 id="_4">چک‌لیست الزامی</h3>
+<ul>
+<li>[ ] HTTPS اجباری + HSTS</li>
+<li>[ ] Core Web Vitals سبز روی موبایل: LCP &lt;2.5s، INP &lt;200ms، CLS &lt;0.1</li>
+<li>[ ] ساختار URL فارسی و کوتاه: <code>/product/شلوار-جین-پسرانه-آرش</code> و <code>/category/پسرانه/شلوار</code></li>
+<li>[ ] Canonical روی همه صفحات (به‌ویژه فیلترها و صفحه‌بندی)</li>
+<li>[ ] <code>noindex</code> روی نتایج جستجوی داخلی، سبد خرید، پنل</li>
+<li>[ ] سایت‌مپ‌های جدا و خودکار: <code>sitemap-products.xml</code>، <code>sitemap-categories.xml</code>، <code>sitemap-blog.xml</code>، <code>sitemap-images.xml</code>، <code>sitemap-video.xml</code></li>
+<li>[ ] <code>robots.txt</code> دقیق + بلاک کردن پارامترهای فیلتر بی‌ارزش</li>
+<li>[ ] IndexNow + Google Indexing API — هر محصول جدید ظرف چند دقیقه ایندکس شود</li>
+<li>[ ] Breadcrumb با اسکیما در همه صفحات</li>
+<li>[ ] hreflang اگر نسخه انگلیسی/عربی داشتیم</li>
+<li>[ ] صفحه ۴۰۴ هوشمند با پیشنهاد محصول</li>
+<li>[ ] ریدایرکت ۳۰۱ خودکار وقتی محصول حذف/جایگزین می‌شود (هرگز صفحه مرده نگذارید)</li>
+<li>[ ] Lazy-load تصاویر + <code>width/height</code> صریح (جلوگیری از CLS)</li>
+<li>[ ] AMP لازم نیست؛ به‌جایش سرعت واقعی</li>
+</ul>
+<h3 id="json-ld">اسکیمای ساختاریافته (JSON-LD)</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>صفحه</th>
+<th>اسکیما</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>محصول</td>
+<td><code>Product</code> + <code>Offer</code> (قیمت، موجودی، ارز IRR) + <code>AggregateRating</code> + <code>Review</code></td>
+</tr>
+<tr>
+<td>محصول</td>
+<td><code>FAQPage</code> (۴ سؤال تولیدشده با AI)</td>
+</tr>
+<tr>
+<td>دسته</td>
+<td><code>ItemList</code> + <code>BreadcrumbList</code></td>
+</tr>
+<tr>
+<td>بلاگ</td>
+<td><code>Article</code> + <code>Author</code> + <code>Publisher</code></td>
+</tr>
+<tr>
+<td>راهنما</td>
+<td><code>HowTo</code> (مثلاً «چطور سایز بگیریم»)</td>
+</tr>
+<tr>
+<td>سایت</td>
+<td><code>Organization</code> + <code>WebSite</code> + <code>SearchAction</code> (سرچ‌باکس در نتایج گوگل)</td>
+</tr>
+<tr>
+<td>ویدئو</td>
+<td><code>VideoObject</code> (برای ریلزهایی که در سایت جاسازی می‌شوند)</td>
+</tr>
+<tr>
+<td>فروشگاه</td>
+<td><code>LocalBusiness</code> اگر انبار/شعبه فیزیکی دارید</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote>
+<p>اسکیما با کامل بودنش رتبه نمی‌گیرد ولی <strong>ریچ‌اسنیپت</strong> می‌گیرد: ستاره، قیمت و موجودی در نتایج = CTR دو برابر.</p>
+</blockquote>
+<h2 id="topic-clusters">۵٫۳ تحقیق کلیدواژه — ساختار خوشه‌ای (Topic Clusters)</h2>
+<h3 id="_5">خوشه‌های اصلی</h3>
+<pre><code>خوشه ۱: پوشاک پسرانه
+  ├─ لباس پسرانه [سنی: ۲ ساله ... ۱۵ ساله]
+  ├─ شلوار/تیشرت/پیراهن/کاپشن/ست پسرانه
+  └─ لباس مدرسه پسرانه
+
+خوشه ۲: پوشاک دخترانه
+  ├─ لباس دخترانه [سنی]
+  ├─ سارافون/دامن/شومیز/مانتو دخترانه
+  └─ لباس مجلسی دخترانه
+
+خوشه ۳: نوزادی (۰-۲)
+  ├─ سرهمی، بادی، ست نوزادی، لباس بیمارستانی
+
+خوشه ۴: نوجوان (۱۲-۱۷)
+  ├─ مد نوجوان، استایل نوجوان، سایزبندی نوجوان
+
+خوشه ۵: فصلی
+  ├─ لباس تابستانی/زمستانی/بهاری کودک، لباس عید، لباس یلدا
+
+خوشه ۶: راهنما و آموزش (موتور اعتماد و لینک)
+  ├─ راهنمای سایز، جنس پارچه، شست‌وشو، چیدمان کمد
+
+خوشه ۷: برند و مقایسه
+  ├─ بهترین برند لباس بچگانه، مقایسه X و Y
+</code></pre>
+<p>هر خوشه: ۱ صفحه Pillar (۲۵۰۰+ کلمه) + ۱۵ تا ۳۰ مقاله زیرشاخه + لینک‌دهی داخلی متقابل.</p>
+<h3 id="long-tail">الگوی کلیدواژه دم‌بلند (Long-tail) — طلای واقعی</h3>
+<p><code>{نوع لباس} + {جنسیت} + {سن} + {ویژگی/فصل/مناسبت}</code><br />
+مثال: «شلوار جین پسرانه ۸ ساله کش‌دار زمستانی»<br />
+اینها حجم جستجوی کم ولی <strong>نیت خرید بسیار بالا و رقابت نزدیک صفر</strong> دارند. با AI می‌توانید هزاران صفحه از این نوع بسازید — ولی با <strong>محتوای واقعاً متفاوت و مفید</strong>، نه صفحات تکراری (وگرنه جریمه Helpful Content).</p>
+<h3 id="_6">ابزارها</h3>
+<p>Google Search Console (حیاتی و رایگان)، Google Trends ایران، Keyword Planner، AnswerThePublic، جستجوهای مرتبط گوگل، سؤالات مشتری در چت‌بات (بهترین منبع کلیدواژه واقعی!)، رصد رقبا.</p>
+<h2 id="_7">۵٫۴ سئوی محتوایی خودکار</h2>
+<h3 id="agentrouter">تولید روزانه (با AgentRouter)</h3>
+<ul>
+<li>۱ مقاله بلاگ ۱۲۰۰-۱۸۰۰ کلمه‌ای در روز = ۳۶۵ مقاله در سال</li>
+<li>استاندارد هر مقاله: عنوان H1 حاوی کلیدواژه، ۵-۸ زیرعنوان H2/H3، فهرست مطالب، حداقل ۳ تصویر با alt، ۵ لینک داخلی، ۲ لینک خروجی معتبر، بخش FAQ، CTA به محصول مرتبط، خلاصه در ابتدای مطلب (برای Featured Snippet)</li>
+</ul>
+<h3 id="ai">قوانین ضد‌جریمه محتوای AI</h3>
+<p>گوگل با محتوای AI مشکلی ندارد؛ با <strong>محتوای بی‌ارزش</strong> مشکل دارد. پس:<br />
+1. هر مقاله باید حداقل یک «دیتای اختصاصی» داشته باشد: آمار فروش خودتان، نظر واقعی مشتری، عکس اختصاصی، تجربه واقعی<br />
+2. هرگز بازنویسی مستقیم مقاله رقیب — بازنویسی معنایی با زاویه جدید<br />
+3. نویسنده انسانی واقعی به‌عنوان Author با صفحه پروفایل (E-E-A-T)<br />
+4. بازبینی انسانی ۱۰٪ نمونه‌ای هفتگی + ویرایش ۲۰ مقاله برتر<br />
+5. به‌روزرسانی محتوای قدیمی: هر مقاله هر ۶ ماه بازبینی خودکار و افزودن بخش جدید<br />
+6. حذف بی‌رحمانه محتوای بی‌بازده (Content Pruning) — سالانه</p>
+<h3 id="e-e-a-t">E-E-A-T برای فروشگاه</h3>
+<ul>
+<li>صفحه «درباره ما» با عکس واقعی تیم و انبار</li>
+<li>صفحه نویسندگان با تخصص</li>
+<li>درج گواهی‌ها، اینماد، مجوز اتحادیه</li>
+<li>نظرات واقعی مشتری با تأیید خرید</li>
+<li>شماره تماس و آدرس فیزیکی واقعی</li>
+<li>سیاست شفاف مرجوعی و حریم خصوصی</li>
+</ul>
+<h2 id="roi">۵٫۵ سئوی صفحه محصول (بیشترین ROI)</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>عنصر</th>
+<th>استاندارد</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>عنوان</td>
+<td><code>{محصول} {جنسیت} {ویژگی} مدل {نام} — خرید با تضمین سایز</code></td>
+</tr>
+<tr>
+<td>متا</td>
+<td>۱۵۰-۱۶۰ کاراکتر با قیمت و مزیت و CTA</td>
+</tr>
+<tr>
+<td>H1</td>
+<td>یکتا، شامل کلیدواژه اصلی</td>
+</tr>
+<tr>
+<td>توضیح</td>
+<td>۳۰۰-۵۰۰ کلمه یکتا (نه کپی تأمین‌کننده!)</td>
+</tr>
+<tr>
+<td>تصاویر</td>
+<td>۵+ تصویر با alt توصیفی فارسی</td>
+</tr>
+<tr>
+<td>ویدئو</td>
+<td>ویدئوی کوتاه محصول جاسازی‌شده (سیگنال قوی به گوگل)</td>
+</tr>
+<tr>
+<td>نظرات</td>
+<td>حداقل ۳ نظر (فعال‌سازی درخواست خودکار نظر)</td>
+</tr>
+<tr>
+<td>محصولات مرتبط</td>
+<td>۸ محصول (لینک داخلی)</td>
+</tr>
+<tr>
+<td>جدول سایز</td>
+<td>HTML واقعی نه تصویر (قابل خزش)</td>
+</tr>
+<tr>
+<td>موجودی</td>
+<td>اسکیمای <code>InStock/OutOfStock</code> صحیح</td>
+</tr>
+<tr>
+<td>FAQ</td>
+<td>۴ سؤال یکتا</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="_8">۵٫۶ استراتژی بک‌لینک — «درجه یک» یعنی چه؟</h2>
+<p>اصل: <strong>کیفیت و طبیعی بودن، نه تعداد.</strong> ۵۰ بک‌لینک باکیفیت مرتبط، از ۵۰۰۰ لینک اسپم بهتر است. رشد پروفایل لینک باید تدریجی باشد (ماهی ۱۰-۳۰ لینک، نه ۵۰۰ تا در یک هفته).</p>
+<h3 id="_9">لایه ۱ — لینک‌های پایه (ماه ۱، رایگان، ۳۰ تا ۵۰ لینک)</h3>
+<ul>
+<li>Google Business Profile (بسیار مهم برای سئوی لوکال)</li>
+<li>دایرکتوری‌های ایرانی معتبر و صنفی</li>
+<li>شبکه‌های اجتماعی: پروفایل کامل با لینک در همه (اینستاگرام، لینکدین، پینترست، آپارات، ویرگول، توییتر)</li>
+<li>پلتفرم‌های محتوایی ایرانی: ویرگول، بلاگ‌های تخصصی</li>
+<li>مارکت‌پلیس‌ها: باسلام، ترب، ایمالز (هم لینک هم فروش)</li>
+<li>سایت اینماد و اتحادیه</li>
+</ul>
+<h3 id="_10">لایه ۲ — لینک محتوایی (ماه ۲ به بعد، موتور اصلی)</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>تاکتیک</th>
+<th>توضیح</th>
+<th>تلاش</th>
+<th>ارزش</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>محتوای لینک‌پذیر</strong></td>
+<td>«راهنمای جامع سایز پوشاک کودک ایران» + «ماشین‌حساب سایز» تعاملی — منبعی که همه به آن لینک می‌دهند</td>
+<td>بالا</td>
+<td>⭐⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>پست مهمان</strong></td>
+<td>در وبلاگ‌های مادر و کودک، سلامت خانواده، سبک زندگی</td>
+<td>متوسط</td>
+<td>⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>آمار و پژوهش اختصاصی</strong></td>
+<td>«گزارش الگوی خرید پوشاک کودک در ایران ۱۴۰۵» بر اساس دیتای خودتان — خبرگزاری‌ها به آمار لینک می‌دهند</td>
+<td>متوسط</td>
+<td>⭐⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>اینفوگرافیک</strong></td>
+<td>جدول سایز، تقویم خرید فصلی — قابل بازنشر با لینک</td>
+<td>کم</td>
+<td>⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>HARO فارسی</strong></td>
+<td>پاسخ به درخواست‌های خبرنگاران حوزه خانواده</td>
+<td>کم</td>
+<td>⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>مصاحبه و پادکست</strong></td>
+<td>حضور در پادکست‌های کسب‌وکار و مادرانه</td>
+<td>متوسط</td>
+<td>⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>همکاری با بلاگرها</strong></td>
+<td>ارسال محصول رایگان در ازای ریویو با لینک</td>
+<td>کم</td>
+<td>⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>حمایت مالی محلی</strong></td>
+<td>اسپانسر مهدکودک، مسابقه نقاشی، جشنواره کودک → لینک <code>.ac.ir</code> و خبری</td>
+<td>متوسط</td>
+<td>⭐⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>لینک شکسته</strong></td>
+<td>یافتن لینک‌های خراب در سایت‌های حوزه کودک و پیشنهاد جایگزین</td>
+<td>متوسط</td>
+<td>⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>رپورتاژ آگهی</strong></td>
+<td>فقط در رسانه‌های واقعاً معتبر و مرتبط، نه شبکه‌های رپورتاژ ارزان</td>
+<td>پول</td>
+<td>⭐⭐⭐</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="brand-signals">لایه ۳ — لینک‌های نشانه‌ای (Brand Signals)</h3>
+<ul>
+<li>ذکر نام برند بدون لینک هم برای گوگل سیگنال است → PR گسترده</li>
+<li>جستجوی برندی (کسی «نام برند» را در گوگل سرچ کند) قوی‌ترین سیگنال است → تبلیغات برندینگ به سئو کمک می‌کند</li>
+</ul>
+<h3 id="_11">❌ چه کارهایی هرگز نکنید</h3>
+<ul>
+<li>خرید بسته‌های «۱۰۰۰ بک‌لینک ۵۰ هزار تومان»</li>
+<li>شبکه‌های PBN</li>
+<li>کامنت‌اسپم و فروم‌اسپم</li>
+<li>تبادل لینک انبوه و بی‌ربط</li>
+<li>انکرتکست دقیقاً یکسان روی همه لینک‌ها (نسبت طبیعی: ۴۰٪ برند، ۳۰٪ URL خام، ۲۰٪ عمومی، ۱۰٪ کلیدواژه دقیق)</li>
+</ul>
+<h3 id="_12">اتوماسیون بک‌لینک (چه چیزی قابل خودکارسازی است)</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>خودکار ✅</th>
+<th>دستی ❌</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>رصد بک‌لینک‌های جدید و از‌دست‌رفته</td>
+<td>ساخت رابطه با بلاگرها</td>
+</tr>
+<tr>
+<td>یافتن فرصت (سایت‌هایی که به رقبا لینک داده‌اند)</td>
+<td>مذاکره و ایمیل شخصی‌سازی‌شده</td>
+</tr>
+<tr>
+<td>ثبت خودکار در دایرکتوری‌ها</td>
+<td>تولید محتوای پژوهشی اصیل</td>
+</tr>
+<tr>
+<td>انتشار در پلتفرم‌های اجتماعی لینک‌دار</td>
+<td>حمایت مالی و رویداد</td>
+</tr>
+<tr>
+<td>هشدار لینک سمی</td>
+<td>تصمیم Disavow</td>
+</tr>
+<tr>
+<td>پیش‌نویس ایمیل outreach با AI</td>
+<td>ارسال و پیگیری</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="_13">۵٫۷ سئوی لوکال</h2>
+<ul>
+<li>Google Business Profile کامل با عکس، ساعات کاری، محصولات، پست هفتگی</li>
+<li>صفحات شهری: «خرید لباس بچگانه در تهران/مشهد/اصفهان/شیراز/تبریز» — با محتوای واقعاً متفاوت (زمان ارسال، نمایندگی، نظرات مشتریان همان شهر)</li>
+<li>ثبت در نقشه‌های ایرانی: بلد، نشان</li>
+<li>NAP یکسان (نام، آدرس، تلفن) در همه جا</li>
+</ul>
+<h2 id="_14">۵٫۸ سئوی ویدئویی (فرصت کم‌رقابت)</h2>
+<ul>
+<li>آپارات: عنوان و توضیح سئوشده فارسی — آپارات در گوگل فارسی خوب رتبه می‌گیرد</li>
+<li>یوتیوب: نسخه انگلیسی/فارسی، لینک در توضیحات</li>
+<li>جاسازی ویدئو در صفحه محصول و بلاگ + اسکیمای <code>VideoObject</code> → شانس نمایش در نتایج ویدئویی گوگل</li>
+</ul>
+<h2 id="_15">۵٫۹ داشبورد و رصد سئو</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ابزار</th>
+<th>کاربرد</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Google Search Console</td>
+<td>حیاتی — کلیک، ایمپرشن، پوزیشن، مشکلات ایندکس</td>
+</tr>
+<tr>
+<td>Google Analytics 4</td>
+<td>رفتار، قیف، درآمد</td>
+</tr>
+<tr>
+<td>رصد رتبه (اسکریپت خودکار)</td>
+<td>۳۰۰ کلیدواژه هدف، هفتگی</td>
+</tr>
+<tr>
+<td>Screaming Frog / خزنده داخلی</td>
+<td>سلامت فنی ماهانه</td>
+</tr>
+<tr>
+<td>مانیتور بک‌لینک</td>
+<td>هفتگی</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>گزارش خودکار هفتگی به تلگرام مدیر:</strong> تغییر رتبه ۲۰ کلیدواژه اصلی، صفحات جدید ایندکس‌شده، بک‌لینک جدید، خطاهای فنی، ۵ فرصت محتوایی پیشنهادی AI.</p>
+<h2 id="_16">۵٫۱۰ جدول زمانی انتظارات واقع‌بینانه سئو</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>بازه</th>
+<th>انتظار</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ماه ۱-۲</td>
+<td>ایندکس شدن، رتبه برای کلیدواژه‌های برندی، ترافیک ناچیز</td>
+</tr>
+<tr>
+<td>ماه ۳-۴</td>
+<td>رتبه صفحه ۲-۳ برای دم‌بلندها، ۵۰۰-۲٬۰۰۰ بازدید ارگانیک ماهانه</td>
+</tr>
+<tr>
+<td>ماه ۵-۷</td>
+<td>صفحه اول برای ده‌ها دم‌بلند، ۵٬۰۰۰-۱۵٬۰۰۰ بازدید</td>
+</tr>
+<tr>
+<td>ماه ۸-۱۲</td>
+<td>رقابت روی کلیدواژه‌های اصلی، ۳۰٬۰۰۰-۸۰٬۰۰۰ بازدید ماهانه</td>
+</tr>
+<tr>
+<td>سال ۲</td>
+<td>مرجعیت موضوعی، ۱۵۰٬۰۰۰+ بازدید</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote>
+<p>هر کسی به شما «صفحه اول در ۱ ماه» را وعده داد، دارد ریسک جریمه می‌فروشد.</p>
+</blockquote></section><section id="06-ads-and-growth"><h1 id="_1">سند ۶ — کمپین‌های تبلیغاتی، بازاریابی و رشد</h1>
+<h2 id="funnel">۶٫۱ قیف بازاریابی (Funnel) و تخصیص بودجه</h2>
+<pre><code>        ┌──────────────────────────────────────┐
+ TOFU   │ آگاهی: ریلز، اینفلوئنسر، پینترست،   │  ۴۰٪ بودجه
+        │ بلاگ سئو، تبلیغات بنری               │
+        └──────────────┬───────────────────────┘
+        ┌──────────────▼───────────────────────┐
+ MOFU   │ علاقه: کاتالوگ، راهنمای سایز، کوییز،│  ۲۵٪ بودجه
+        │ عضویت کانال، نمونه رایگان            │
+        └──────────────┬───────────────────────┘
+        ┌──────────────▼───────────────────────┐
+ BOFU   │ خرید: ریتارگتینگ، کد تخفیف اول،     │  ۲۵٪ بودجه
+        │ سبد رهاشده، فوریت                    │
+        └──────────────┬───────────────────────┘
+        ┌──────────────▼───────────────────────┐
+ LOYAL  │ نگهداشت: باشگاه، پیامک، معرفی دوست، │  ۱۰٪ بودجه
+        │ یادآوری تعویض سایز                   │
+        └──────────────────────────────────────┘
+</code></pre>
+<h2 id="roi">۶٫۲ کانال‌های تبلیغاتی در ایران — رتبه‌بندی بر اساس ROI</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>کانال</th>
+<th>هزینه شروع/ماه</th>
+<th>ROI مورد انتظار</th>
+<th>زمان نتیجه</th>
+<th>اولویت</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>تبلیغات پیج اینستاگرام (اکسپلور/استوری پیج‌های مادر)</strong></td>
+<td>۵-۲۰ م.ت</td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>فوری</td>
+<td>۱</td>
+</tr>
+<tr>
+<td><strong>اینفلوئنسر مارکتینگ خرد (Micro)</strong></td>
+<td>۳-۱۵ م.ت</td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>۱-۷ روز</td>
+<td>۱</td>
+</tr>
+<tr>
+<td><strong>سئو و محتوا</strong></td>
+<td>۵-۱۰ م.ت</td>
+<td>⭐⭐⭐⭐⭐ (بلندمدت)</td>
+<td>۳-۶ ماه</td>
+<td>۱</td>
+</tr>
+<tr>
+<td><strong>کانال‌های تلگرامی مادر و کودک</strong></td>
+<td>۲-۸ م.ت</td>
+<td>⭐⭐⭐⭐</td>
+<td>فوری</td>
+<td>۲</td>
+</tr>
+<tr>
+<td><strong>تبلیغات کلیکی ایرانی (یکتانت، تپسل، صباویژن)</strong></td>
+<td>۵-۳۰ م.ت</td>
+<td>⭐⭐⭐</td>
+<td>۱-۳ روز</td>
+<td>۲</td>
+</tr>
+<tr>
+<td><strong>ترب / ایمالز / مقایسه قیمت</strong></td>
+<td>کارمزدی</td>
+<td>⭐⭐⭐⭐ (نیت خرید بالا)</td>
+<td>فوری</td>
+<td>۲</td>
+</tr>
+<tr>
+<td><strong>باسلام / دیجی‌کالا (به‌عنوان کانال مکمل)</strong></td>
+<td>کمیسیون</td>
+<td>⭐⭐⭐</td>
+<td>فوری</td>
+<td>۳</td>
+</tr>
+<tr>
+<td><strong>پوش نوتیفیکیشن</strong></td>
+<td>۱-۳ م.ت</td>
+<td>⭐⭐⭐⭐ (ارزان)</td>
+<td>فوری</td>
+<td>۲</td>
+</tr>
+<tr>
+<td><strong>پیامک هدفمند</strong></td>
+<td>۲-۵ م.ت</td>
+<td>⭐⭐⭐ (فقط لیست خودی)</td>
+<td>فوری</td>
+<td>۳</td>
+</tr>
+<tr>
+<td><strong>گوگل ادز</strong></td>
+<td>محدودیت ایران</td>
+<td>⭐⭐</td>
+<td>—</td>
+<td>۴</td>
+</tr>
+<tr>
+<td><strong>بیلبورد و آفلاین</strong></td>
+<td>بالا</td>
+<td>⭐⭐</td>
+<td>ماه‌ها</td>
+<td>۵</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="_2">۶٫۳ اینفلوئنسر مارکتینگ — دقیق‌ترین اهرم در این نیچ</h2>
+<h3 id="micro">چرا خرد (Micro) بهتر از کلان است؟</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>نوع</th>
+<th>فالوور</th>
+<th>هزینه هر پست</th>
+<th>نرخ تعامل</th>
+<th>توصیه</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>نانو</td>
+<td>۱K-۱۰K</td>
+<td>محصول رایگان تا ۲ م.ت</td>
+<td>۸-۱۵٪</td>
+<td>✅ عالی — حجم بالا بگیرید</td>
+</tr>
+<tr>
+<td>میکرو</td>
+<td>۱۰K-۱۰۰K</td>
+<td>۲-۱۵ م.ت</td>
+<td>۴-۸٪</td>
+<td>✅ بهترین ROI</td>
+</tr>
+<tr>
+<td>ماکرو</td>
+<td>۱۰۰K-۱M</td>
+<td>۱۵-۸۰ م.ت</td>
+<td>۲-۴٪</td>
+<td>⚠️ فقط برای برندینگ</td>
+</tr>
+<tr>
+<td>سلبریتی</td>
+<td>۱M+</td>
+<td>۸۰+ م.ت</td>
+<td>۱-۲٪</td>
+<td>❌ در فاز اول نه</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="_3">استراتژی «ارتش مادران» (توصیه اکید)</h3>
+<p>به‌جای یک اینفلوئنسر ۵۰۰هزارتایی، <strong>۳۰ مادر بلاگر ۵ تا ۲۰ هزارتایی</strong> را فعال کنید:<br />
+- هر ماه بسته محصول رایگان + کد تخفیف اختصاصی + پورسانت ۱۰-۱۵٪ فروش<br />
+- محتوای آنها UGC واقعی است و در تبلیغات خودتان قابل استفاده مجدد<br />
+- هزینه: ارزش کالای ارسالی (نه پول نقد) → بسیار به‌صرفه<br />
+- ردیابی: هر نفر کد یکتا → دقیقاً می‌دانید کدام ROI دارد</p>
+<h3 id="_4">فرآیند خودکار مدیریت اینفلوئنسر</h3>
+<ol>
+<li>کشف: اسکرپ پیج‌های حوزه مادر و کودک + امتیازدهی (تعامل واقعی، جمعیت‌شناسی، کیفیت محتوا)</li>
+<li>تماس اولیه با پیام شخصی‌سازی‌شده (AI پیش‌نویس می‌کند)</li>
+<li>قرارداد ساده دیجیتال + ارسال بسته</li>
+<li>کد تخفیف یکتا و لینک UTM خودکار</li>
+<li>داشبورد عملکرد: فروش، کلیک، CPA به تفکیک نفر</li>
+<li>تمدید خودکار برای بالای آستانه، حذف زیر آستانه</li>
+</ol>
+<h2 id="_5">۶٫۴ کمپین‌های تعریف‌شده سال اول</h2>
+<h3 id="_6">کمپین ۱ — «راه‌اندازی» (ماه ۱)</h3>
+<p>هدف: ۱٬۰۰۰ فالوور اول و ۵۰ سفارش اول. بودجه ۱۵ م.ت.<br />
+- گیواوی مشترک با ۵ پیج مادر (شرط: فالو + تگ ۲ نفر)<br />
+- کد <code>WELCOME25</code> — ۲۵٪ تخفیف اولین خرید<br />
+- ۱۰ نانو-اینفلوئنسر با بسته رایگان</p>
+<h3 id="-">کمپین ۲ — «تضمین سایز» (ماه ۲-۳، کمپین امضای برند)</h3>
+<p>پیام: «اگه سایز نخورد، رایگان تعویض می‌کنیم.»<br />
+- ویدئوی کمپین + صفحه فرود اختصاصی + بج روی همه محصولات<br />
+- این کمپین بزرگ‌ترین مانع خرید آنلاین پوشاک را حذف می‌کند و باید تا همیشه بماند</p>
+<h3 id="-_1">کمپین ۳ — «بازگشت به مدرسه» (مرداد-شهریور) 🔥</h3>
+<p>بزرگ‌ترین کمپین سال. بودجه ۲۰٪ کل سالانه.<br />
+- باندل «ست کامل مدرسه» با ۲۰٪ تخفیف<br />
+- شمارش معکوس تا مهر<br />
+- همکاری با کانال‌های آموزشی و پیج‌های معلمان<br />
+- محتوای «چک‌لیست خرید مدرسه» — لینک‌پذیر و ویروسی</p>
+<h3 id="-_2">کمپین ۴ — «لباس عید» (بهمن-اسفند) 🔥</h3>
+<ul>
+<li>کالکشن نوروزی، بسته‌بندی هدیه رایگان</li>
+<li>ضمانت رسیدن قبل از عید (مهم‌ترین دغدغه مشتری)</li>
+<li>پیش‌فروش با تخفیف</li>
+</ul>
+<h3 id="_7">کمپین ۵ — «یلدا و هدیه» (آذر)</h3>
+<ul>
+<li>ست خانوادگی، کارت هدیه دیجیتال</li>
+</ul>
+<h3 id="_8">کمپین ۶ — «تخلیه فصل» (۴ بار در سال)</h3>
+<ul>
+<li>تخفیف پلکانی زمانی (روز ۱: ۳۰٪، روز ۳: ۴۰٪، روز ۵: ۵۰٪) → فوریت واقعی</li>
+</ul>
+<h3 id="_9">کمپین ۷ — «معرفی دوست» (دائمی)</h3>
+<ul>
+<li>معرف ۵۰ هزار تومان اعتبار، معرفی‌شونده ۱۰٪ تخفیف</li>
+<li>ویروسی‌ترین کانال در جامعه مادران</li>
+</ul>
+<h3 id="_10">کمپین ۸ — «باشگاه مادران» (از ماه ۴)</h3>
+<ul>
+<li>سیستم امتیاز و سطح (برنز/نقره/طلا)</li>
+<li>مزایا: ارسال رایگان، دسترسی زودهنگام به کالکشن، تخفیف تولد کودک</li>
+<li><strong>قلاب هوشمند:</strong> تاریخ تولد کودک را می‌گیرید → هم پیام تبریک خودکار، هم پیش‌بینی تغییر سایز</li>
+</ul>
+<h2 id="_11">۶٫۵ ریتارگتینگ — ارزان‌ترین فروش</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>مخاطب</th>
+<th>پیام</th>
+<th>کانال</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>بازدیدکننده محصول بدون خرید (۳ روز)</td>
+<td>همان محصول + «هنوز موجوده»</td>
+<td>پوش + اینستاگرام</td>
+</tr>
+<tr>
+<td>سبد رهاشده (۱ ساعت)</td>
+<td>یادآوری ساده</td>
+<td>پیامک</td>
+</tr>
+<tr>
+<td>سبد رهاشده (۲۴ ساعت)</td>
+<td>کد ۵٪</td>
+<td>تلگرام/پوش</td>
+</tr>
+<tr>
+<td>سبد رهاشده (۷۲ ساعت)</td>
+<td>«موجودی رو به اتمام»</td>
+<td>پیامک</td>
+</tr>
+<tr>
+<td>خریدار قبلی (۹۰ روز)</td>
+<td>«سایز بچتون بزرگ شده؟»</td>
+<td>پیامک + تلگرام</td>
+</tr>
+<tr>
+<td>خریدار قبلی (تغییر فصل)</td>
+<td>کالکشن جدید فصل</td>
+<td>همه</td>
+</tr>
+<tr>
+<td>مشتری خفته (۱۸۰ روز)</td>
+<td>تخفیف بازگشت ۲۰٪</td>
+<td>پیامک</td>
+</tr>
+</tbody>
+</table></div>
+<p>همه اینها به‌صورت سناریوی n8n خودکارند.</p>
+<h2 id="_12">۶٫۶ استراتژی قیمت‌گذاری و پروموشن</h2>
+<ul>
+<li><strong>قیمت لنگر (Anchor):</strong> نمایش «قیمت قبل» خط‌خورده — ولی فقط اگر واقعی باشد (قانونی و اخلاقی)</li>
+<li><strong>باندلینگ:</strong> ست ۳ تکه با ۱۵٪ تخفیف → AOV بالا می‌رود</li>
+<li><strong>آستانه ارسال رایگان:</strong> ۱٫۴ × AOV</li>
+<li><strong>تخفیف پلکانی حجمی:</strong> ۲ عدد ۵٪، ۳ عدد ۱۰٪، ۵ عدد ۱۵٪</li>
+<li><strong>قیمت‌گذاری پویا:</strong> موجودی کند‌فروش بعد از ۴۵ روز خودکار ۱۰٪ کاهش، بعد از ۹۰ روز ۲۵٪</li>
+<li><strong>هرگز:</strong> تخفیف دائمی (ارزش برند را نابود می‌کند). تخفیف باید رویداد باشد نه حالت عادی.</li>
+</ul>
+<h2 id="crm-rfm">۶٫۷ CRM و بخش‌بندی مشتری (RFM)</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>بخش</th>
+<th>تعریف</th>
+<th>اقدام</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>قهرمانان</td>
+<td>خرید اخیر، مکرر، پرارزش</td>
+<td>دسترسی VIP، تخفیف تولد، درخواست معرفی</td>
+</tr>
+<tr>
+<td>وفادار</td>
+<td>خرید مکرر</td>
+<td>برنامه امتیاز</td>
+</tr>
+<tr>
+<td>نویدبخش</td>
+<td>خرید اخیر، یک‌بار</td>
+<td>آنبوردینگ، پیشنهاد مکمل</td>
+</tr>
+<tr>
+<td>در خطر</td>
+<td>قبلاً خوب، اخیراً نه</td>
+<td>کمپین بازگشت</td>
+</tr>
+<tr>
+<td>خفته</td>
+<td>خیلی وقت است نخریده</td>
+<td>آخرین تلاش با تخفیف بزرگ</td>
+</tr>
+<tr>
+<td>شکارچی تخفیف</td>
+<td>فقط با تخفیف می‌خرد</td>
+<td>فقط در حراج‌ها هدف بگیرید</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>دیتای طلایی این کسب‌وکار:</strong> سن و تاریخ تولد کودک هر مشتری. با آن می‌توانید دقیقاً پیش‌بینی کنید چه ماهی به سایز بعدی نیاز دارد و <strong>قبل از خود مادر</strong> یادآوری کنید. این تنها ویژگی، نرخ خرید مجدد را می‌تواند دو برابر کند.</p>
+<h2 id="_13">۶٫۸ لجستیک و تجربه پس از خرید (بخشی از بازاریابی است)</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>عنصر</th>
+<th>استاندارد</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>زمان پردازش</td>
+<td>زیر ۲۴ ساعت</td>
+</tr>
+<tr>
+<td>ارسال</td>
+<td>تیپاکس/چاپار/پست پیشتاز + پیک تهران</td>
+</tr>
+<tr>
+<td>رهگیری</td>
+<td>پیامک خودکار در هر مرحله</td>
+</tr>
+<tr>
+<td>بسته‌بندی</td>
+<td>برندشده، با کارت تشکر دست‌نویس‌مانند + یک استیکر هدیه برای بچه (هزینه ناچیز، تأثیر عظیم روی UGC)</td>
+</tr>
+<tr>
+<td>مرجوعی</td>
+<td>۷ روز، رایگان برای مشکل سایز</td>
+</tr>
+<tr>
+<td>پرداخت در محل</td>
+<td>برای شهرهای منتخب (نیازمند اینماد)</td>
+</tr>
+<tr>
+<td>نظرسنجی</td>
+<td>پیامک روز ۳ با لینک یک‌کلیکی</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>نکته:</strong> استیکر و کارت داخل بسته باعث می‌شود مادرها عکس بگیرند و استوری کنند = تبلیغ رایگان.</p>
+<h2 id="_14">۶٫۹ داشبورد رشد — شاخص‌هایی که هر روز باید ببینید</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>شاخص</th>
+<th>هشدار قرمز</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>سفارش امروز</td>
+<td>زیر ۷۰٪ میانگین ۷ روز</td>
+</tr>
+<tr>
+<td>نرخ تبدیل</td>
+<td>زیر ۱٫۲٪</td>
+</tr>
+<tr>
+<td>AOV</td>
+<td>افت بیش از ۱۵٪</td>
+</tr>
+<tr>
+<td>CAC</td>
+<td>بالای ۳۰۰ هزار تومان</td>
+</tr>
+<tr>
+<td>ROAS</td>
+<td>زیر ۳</td>
+</tr>
+<tr>
+<td>نرخ مرجوعی</td>
+<td>بالای ۱۲٪</td>
+</tr>
+<tr>
+<td>زمان پاسخ پشتیبانی</td>
+<td>بالای ۱۵ دقیقه</td>
+</tr>
+<tr>
+<td>موجودی رو به اتمام</td>
+<td>بیش از ۱۰ کد</td>
+</tr>
+<tr>
+<td>سلامت اتوماسیون</td>
+<td>هر پست ناموفق</td>
+</tr>
+</tbody>
+</table></div>
+<p>گزارش خودکار ساعت ۹ صبح هر روز در تلگرام مدیر.</p>
+<h2 id="_15">۶٫۱۰ بازاریابی محتوایی بلندمدت — «دارایی‌سازی»</h2>
+<p>سه دارایی که باید بسازید و در طول زمان ارزششان بالا می‌رود:<br />
+1. <strong>ماشین‌حساب سایز کودک</strong> — ابزار تعاملی رایگان که همه به آن لینک می‌دهند و بارها استفاده می‌شود<br />
+2. <strong>دایره‌المعارف پوشاک کودک</strong> — مرجع کامل انواع پارچه، دوخت، سایز استاندارد ایران<br />
+3. <strong>جامعه مادران</strong> — گروه تلگرام/اپلیکیشن با محتوای ارزشمند؛ سخت‌ترین دارایی برای کپی شدن توسط رقبا</p></section><section id="07-roadmap-and-kpi"><h1 id="kpi">سند ۷ — نقشه راه اجرا، تیم و KPI</h1>
+<h2 id="_1">۷٫۱ نمای کلی فازها</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>فاز</th>
+<th>بازه</th>
+<th>هدف اصلی</th>
+<th>خروجی قابل لمس</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>فاز ۰</strong></td>
+<td>روز ۱-۷</td>
+<td>تصمیم و زیرساخت</td>
+<td>دامنه، سرور، تصمیم‌های سند ۱۰ قطعی</td>
+</tr>
+<tr>
+<td><strong>فاز ۱</strong></td>
+<td>روز ۸-۳۰</td>
+<td>MVP فروشگاه</td>
+<td>سایت قابل خرید با ۵۰ محصول</td>
+</tr>
+<tr>
+<td><strong>فاز ۲</strong></td>
+<td>روز ۳۱-۶۰</td>
+<td>موتور اتوماسیون</td>
+<td>عکس → محصول → پست، تمام خودکار</td>
+</tr>
+<tr>
+<td><strong>فاز ۳</strong></td>
+<td>روز ۶۱-۹۰</td>
+<td>رشد و سئو</td>
+<td>۳۰۰ محصول، ۹۰ مقاله، کمپین اول</td>
+</tr>
+<tr>
+<td><strong>فاز ۴</strong></td>
+<td>روز ۹۱-۱۲۰</td>
+<td>بهینه‌سازی</td>
+<td>افزایش نرخ تبدیل، کاهش مرجوعی</td>
+</tr>
+<tr>
+<td><strong>فاز ۵</strong></td>
+<td>روز ۱۲۱-۱۸۰</td>
+<td>مقیاس</td>
+<td>B2B، اپ موبایل، باشگاه مشتریان</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="_2">فاز ۰ — بنیان (روز ۱ تا ۷)</h2>
+<ul>
+<li>[ ] قطعی کردن نام برند و ثبت دامنه <code>.ir</code> + <code>.com</code></li>
+<li>[ ] خرید Hostinger VPS (KVM 2) + راه‌اندازی Ubuntu 24.04</li>
+<li>[ ] خرید VPS کوچک ایران + فعال‌سازی CDN ابرآروان</li>
+<li>[ ] نصب Docker، Coolify، Caddy، MySQL، Redis، MinIO</li>
+<li>[ ] راه‌اندازی مخزن گیت + CI/CD</li>
+<li>[ ] تنظیم AgentRouter و تست اتصال AI</li>
+<li>[ ] ساخت اکانت‌های اجتماعی + اخذ توکن‌های API</li>
+<li>[ ] شروع فرآیند اینماد و جواز کسب (چون طولانی است، همین حالا شروع شود)</li>
+<li>[ ] هویت بصری اولیه: لوگو، پالت، فونت</li>
+<li>[ ] انتخاب ۳ تأمین‌کننده و مذاکره اولیه</li>
+</ul>
+<p><strong>ریسک این فاز:</strong> اگر اینماد را دیر شروع کنید، در فاز ۳ گیر می‌کنید. روز اول شروع کنید.</p>
+<hr />
+<h2 id="mvp">فاز ۱ — MVP فروشگاه (روز ۸ تا ۳۰)</h2>
+<h3 id="_3">هفته ۲</h3>
+<ul>
+<li>[ ] اسکلت Next.js با RTL، فونت فارسی، دیزاین‌سیستم</li>
+<li>[ ] مدل داده و مهاجرت‌ها (سند ۹)</li>
+<li>[ ] صفحه اصلی، لیست دسته، صفحه محصول</li>
+<li>[ ] جستجو با MeiliSearch</li>
+</ul>
+<h3 id="_4">هفته ۳</h3>
+<ul>
+<li>[ ] سبد خرید، تسویه، حساب کاربری (بازاستفاده از <code>app/lib/auth.ts</code>)</li>
+<li>[ ] اتصال درگاه واسط (زرین‌پال) از طریق Relay ایران</li>
+<li>[ ] محاسبه هزینه ارسال، انتخاب روش ارسال</li>
+<li>[ ] پنل ادمین: محصول، سفارش، موجودی</li>
+<li>[ ] پیامک: تأیید سفارش و رهگیری</li>
+</ul>
+<h3 id="_5">هفته ۴</h3>
+<ul>
+<li>[ ] صفحات الزامی اینماد: درباره ما، تماس، قوانین، حریم خصوصی، شرایط مرجوعی، ثبت شکایت</li>
+<li>[ ] راهنمای سایز پایه + ماشین‌حساب سایز</li>
+<li>[ ] ورود دستی ۵۰ محصول اول (برای تست و اینماد)</li>
+<li>[ ] سئوی پایه: sitemap، robots، اسکیما، GSC</li>
+<li>[ ] تست سفارش واقعی سرتاسری</li>
+</ul>
+<p><strong>معیار پذیرش فاز ۱:</strong> یک نفر غریبه بتواند بدون راهنمایی، محصولی بخرد و آن را دریافت کند.</p>
+<hr />
+<h2 id="_6">فاز ۲ — موتور اتوماسیون (روز ۳۱ تا ۶۰) ⭐ مهم‌ترین فاز</h2>
+<h3 id="_7">هفته ۵</h3>
+<ul>
+<li>[ ] endpoint <code>POST /api/ingest/photos</code> + صف BullMQ</li>
+<li>[ ] <strong>ربات تلگرام آپلود</strong> (سریع‌ترین مسیر — اول این)</li>
+<li>[ ] پردازش تصویر: حذف پس‌زمینه، برش، چندسایزی، واترمارک، MinIO</li>
+</ul>
+<h3 id="_8">هفته ۶</h3>
+<ul>
+<li>[ ] ماژول Vision: تشخیص ویژگی محصول → JSON</li>
+<li>[ ] تولید محتوای محصول با AgentRouter: عنوان، توضیح، متا، FAQ، اسکیما</li>
+<li>[ ] ساخت خودکار محصول + ایندکس + پینگ گوگل</li>
+<li>[ ] PWA آپلود موبایل فروشنده</li>
+</ul>
+<h3 id="_9">هفته ۷</h3>
+<ul>
+<li>[ ] موتور کپشن چندکاناله + بانک هشتگ</li>
+<li>[ ] توسعه <code>socialPoster</code> برای پینترست، یوتیوب، آپارات، X</li>
+<li>[ ] صف انتشار با زمان‌بندی هوشمند و مدیریت خطا</li>
+<li>[ ] حالت REVIEW با دکمه‌های تأیید در تلگرام</li>
+</ul>
+<h3 id="_10">هفته ۸</h3>
+<ul>
+<li>[ ] موتور ویدئو FFmpeg + ۳ قالب اول</li>
+<li>[ ] پایپ‌لاین محتوای روزانه (بلاگ + سوشال)</li>
+<li>[ ] n8n: ۶ سناریوی اول</li>
+<li>[ ] داشبورد اتوماسیون در پنل ادمین</li>
+</ul>
+<p><strong>معیار پذیرش فاز ۲:</strong> تست سند ۳ بخش ۳٫۱۴ با موفقیت پاس شود.</p>
+<hr />
+<h2 id="_11">فاز ۳ — رشد و سئو (روز ۶۱ تا ۹۰)</h2>
+<ul>
+<li>[ ] ورود انبوه محصول تا ۳۰۰ کد (حالا سریع است چون اتوماسیون کار می‌کند)</li>
+<li>[ ] ۹۰ مقاله بلاگ (روزی ۳ در ابتدا سپس ۱)</li>
+<li>[ ] ۷ صفحه Pillar خوشه‌های اصلی</li>
+<li>[ ] لایه ۱ بک‌لینک (۳۰-۵۰ لینک پایه)</li>
+<li>[ ] کمپین راه‌اندازی + ۱۰ نانو-اینفلوئنسر</li>
+<li>[ ] اتصال به ترب، ایمالز، باسلام</li>
+<li>[ ] چت‌بات AI فروش روی سایت و تلگرام</li>
+<li>[ ] دریافت اینماد (پیگیری) و ارتقا به درگاه مستقیم</li>
+<li>[ ] سناریوهای ریتارگتینگ و سبد رهاشده</li>
+</ul>
+<p><strong>هدف عددی فاز ۳:</strong> ۱۲۰ سفارش در ماه، ۵٬۰۰۰ فالوور، ۲٬۰۰۰ بازدید ارگانیک.</p>
+<hr />
+<h2 id="_12">فاز ۴ — بهینه‌سازی (روز ۹۱ تا ۱۲۰)</h2>
+<ul>
+<li>[ ] تحلیل قیف و رفع نشتی‌ها (Hotjar/Clarity)</li>
+<li>[ ] A/B تست: صفحه محصول، دکمه خرید، صفحه تسویه</li>
+<li>[ ] بهبود توصیه‌گر سایز بر اساس دیتای مرجوعی واقعی</li>
+<li>[ ] بهینه‌سازی سرعت تا Lighthouse ۹۵+</li>
+<li>[ ] موتور توصیه محصول (شخصی‌سازی صفحه اصلی)</li>
+<li>[ ] باشگاه مشتریان نسخه ۱</li>
+<li>[ ] گسترش قالب‌های ویدئو تا ۷ قالب</li>
+<li>[ ] بهینه‌سازی هزینه AI (کش، انتخاب مدل)</li>
+</ul>
+<p><strong>هدف:</strong> نرخ تبدیل از ۱٫۲٪ به ۲٪، مرجوعی زیر ۱۰٪.</p>
+<hr />
+<h2 id="_13">فاز ۵ — مقیاس (روز ۱۲۱ تا ۱۸۰)</h2>
+<ul>
+<li>[ ] پنل عمده‌فروشی B2B با قیمت پلکانی</li>
+<li>[ ] اپ موبایل React Native (مشتری + فروشنده)</li>
+<li>[ ] اشتراک «باکس فصلی»</li>
+<li>[ ] ارتقا به KVM 4، بهینه‌سازی زیرساخت</li>
+<li>[ ] چندفروشندگی (اگر تصمیم مارکت‌پلیس گرفته شد)</li>
+<li>[ ] لایه ۲ و ۳ بک‌لینک (محتوای پژوهشی، PR)</li>
+<li>[ ] کمپین بزرگ فصلی با بودجه جدی</li>
+</ul>
+<hr />
+<h2 id="_14">۷٫۲ تیم مورد نیاز</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>نقش</th>
+<th>زمان</th>
+<th>مرحله ورود</th>
+<th>جایگزین اتوماسیون</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>مالک/مدیر محصول (شما)</td>
+<td>تمام‌وقت</td>
+<td>روز ۱</td>
+<td>—</td>
+</tr>
+<tr>
+<td>توسعه‌دهنده Full-stack</td>
+<td>تمام‌وقت</td>
+<td>روز ۱</td>
+<td>تا حد زیادی با AI Agent</td>
+</tr>
+<tr>
+<td>پشتیبانی مشتری</td>
+<td>تمام‌وقت</td>
+<td>روز ۲۰</td>
+<td>چت‌بات ۷۰٪ را می‌گیرد</td>
+</tr>
+<tr>
+<td>انبار و بسته‌بندی</td>
+<td>پاره‌وقت→تمام‌وقت</td>
+<td>روز ۲۵</td>
+<td>غیرقابل اتوماسیون</td>
+</tr>
+<tr>
+<td>عکاس/تولید محتوا</td>
+<td>پروژه‌ای</td>
+<td>روز ۱۵</td>
+<td>۸۰٪ با AI</td>
+</tr>
+<tr>
+<td>مدیر سوشال</td>
+<td>❌ لازم نیست</td>
+<td>—</td>
+<td>✅ کاملاً خودکار</td>
+</tr>
+<tr>
+<td>کارشناس سئو</td>
+<td>مشاور ماهانه</td>
+<td>روز ۴۵</td>
+<td>۷۰٪ خودکار</td>
+</tr>
+<tr>
+<td>گرافیست</td>
+<td>پروژه‌ای</td>
+<td>روز ۵</td>
+<td>قالب‌ها + AI</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>نکته:</strong> با این معماری، تیمی که معمولاً ۸ نفر لازم دارد، با <strong>۳ نفر تمام‌وقت</strong> اداره می‌شود. این صرفه‌جویی حدود ۱۰۰ میلیون تومان در ماه است — و همان چیزی است که این پروژه را «درجه یک» می‌کند.</p>
+<h2 id="kpi_1">۷٫۳ KPI اصلی به تفکیک بازه</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>شاخص</th>
+<th>ماه ۱</th>
+<th>ماه ۳</th>
+<th>ماه ۶</th>
+<th>ماه ۱۲</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>محصول فعال</td>
+<td>۵۰</td>
+<td>۳۰۰</td>
+<td>۸۰۰</td>
+<td>۲٬۰۰۰</td>
+</tr>
+<tr>
+<td>سفارش ماهانه</td>
+<td>۲۰</td>
+<td>۱۲۰</td>
+<td>۴۰۰</td>
+<td>۸۰۰</td>
+</tr>
+<tr>
+<td>فروش ماهانه (م.ت)</td>
+<td>۳۶</td>
+<td>۲۱۶</td>
+<td>۷۲۰</td>
+<td>۱٬۴۴۰</td>
+</tr>
+<tr>
+<td>بازدید ماهانه سایت</td>
+<td>۲٬۰۰۰</td>
+<td>۱۵٬۰۰۰</td>
+<td>۶۰٬۰۰۰</td>
+<td>۲۰۰٬۰۰۰</td>
+</tr>
+<tr>
+<td>سهم ارگانیک</td>
+<td>۵٪</td>
+<td>۱۵٪</td>
+<td>۳۰٪</td>
+<td>۴۵٪</td>
+</tr>
+<tr>
+<td>فالوور اینستاگرام</td>
+<td>۱٬۰۰۰</td>
+<td>۵٬۰۰۰</td>
+<td>۲۰٬۰۰۰</td>
+<td>۶۰٬۰۰۰</td>
+</tr>
+<tr>
+<td>اعضای تلگرام</td>
+<td>۴۰۰</td>
+<td>۲٬۰۰۰</td>
+<td>۸٬۰۰۰</td>
+<td>۲۵٬۰۰۰</td>
+</tr>
+<tr>
+<td>نرخ تبدیل</td>
+<td>۱٪</td>
+<td>۱٫۵٪</td>
+<td>۲٪</td>
+<td>۲٫۶٪</td>
+</tr>
+<tr>
+<td>نرخ مرجوعی</td>
+<td>۱۵٪</td>
+<td>۱۲٪</td>
+<td>۹٪</td>
+<td>۷٪</td>
+</tr>
+<tr>
+<td>مشتری تکرارشونده</td>
+<td>—</td>
+<td>۱۰٪</td>
+<td>۲۵٪</td>
+<td>۴۰٪</td>
+</tr>
+<tr>
+<td>پست خودکار روزانه</td>
+<td>۵</td>
+<td>۲۰</td>
+<td>۳۰</td>
+<td>۳۵</td>
+</tr>
+<tr>
+<td>ساعت کار انسانی برای محتوا</td>
+<td>۲۰/هفته</td>
+<td>۵/هفته</td>
+<td>۲/هفته</td>
+<td>۲/هفته</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="operating-rhythm">۷٫۴ آیین کاری (Operating Rhythm)</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>دوره</th>
+<th>جلسه/اقدام</th>
+<th>خروجی</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>روزانه ۹ صبح</td>
+<td>مرور داشبورد خودکار در تلگرام</td>
+<td>۳ اقدام روز</td>
+</tr>
+<tr>
+<td>هفتگی شنبه</td>
+<td>مرور KPI، ۵ پست برتر/ضعیف، برنامه محتوا</td>
+<td>اصلاح تاکتیک</td>
+</tr>
+<tr>
+<td>دوهفتگی</td>
+<td>بازبینی موجودی و قیمت</td>
+<td>سفارش خرید</td>
+</tr>
+<tr>
+<td>ماهانه</td>
+<td>مرور مالی، CAC/LTV، تصمیم بودجه</td>
+<td>تخصیص بودجه ماه بعد</td>
+</tr>
+<tr>
+<td>فصلی</td>
+<td>بازبینی استراتژی، کالکشن فصل بعد، ممیزی سئو</td>
+<td>نقشه فصل</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="_15">۷٫۵ نقاط شکست محتمل (و چطور جلویشان را بگیریم)</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>نقطه شکست</th>
+<th>نشانه هشدار</th>
+<th>پیشگیری</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>اتوماسیون محتوای بی‌کیفیت تولید کند</td>
+<td>افت تعامل، کامنت منفی</td>
+<td>نمونه‌گیری کیفی هفتگی، حالت REVIEW در شروع</td>
+</tr>
+<tr>
+<td>کیفیت کالا پایین باشد</td>
+<td>مرجوعی بالا، نظر منفی</td>
+<td>کنترل کیفیت نمونه از هر تأمین‌کننده</td>
+</tr>
+<tr>
+<td>موجودی ناهماهنگ (فروش کالای ناموجود)</td>
+<td>لغو سفارش</td>
+<td>همگام‌سازی لحظه‌ای، رزرو موجودی هنگام افزودن به سبد</td>
+</tr>
+<tr>
+<td>هزینه AI از کنترل خارج شود</td>
+<td>صورتحساب بالا</td>
+<td>سقف روزانه، کش، مدل ارزان برای کارهای ساده</td>
+</tr>
+<tr>
+<td>تمرکز روی ابزار به‌جای فروش</td>
+<td>ماه ۳ و هنوز سایت لانچ نشده</td>
+<td>قانون: هر فاز باید خروجی قابل فروش داشته باشد</td>
+</tr>
+<tr>
+<td>وابستگی به اینستاگرام</td>
+<td>۸۰٪ فروش از یک کانال</td>
+<td>هدف: هیچ کانالی بیش از ۴۰٪ فروش</td>
+</tr>
+<tr>
+<td>فرسودگی مالک</td>
+<td>همه‌کاره بودن</td>
+<td>اتوماسیون + استخدام زودهنگام پشتیبانی</td>
+</tr>
+</tbody>
+</table></div></section><section id="08-integrations-and-env"><h1 id="_1">سند ۸ — سرویس‌ها، یکپارچه‌سازی‌ها و متغیرهای محیطی</h1>
+<h2 id="_2">۸٫۱ فهرست کامل سرویس‌های مورد نیاز</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>دسته</th>
+<th>سرویس</th>
+<th>ضرورت</th>
+<th>یادداشت</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>زیرساخت</td>
+<td>Hostinger VPS (KVM 2/4)</td>
+<td>🔴</td>
+<td>میزبان اصلی اپ + AI + n8n</td>
+</tr>
+<tr>
+<td>زیرساخت</td>
+<td>VPS ایران (Relay)</td>
+<td>🔴</td>
+<td>پرداخت، پیامک، آینه بحران</td>
+</tr>
+<tr>
+<td>زیرساخت</td>
+<td>CDN ابرآروان</td>
+<td>🔴</td>
+<td>سرعت + WAF + دسترس‌پذیری</td>
+</tr>
+<tr>
+<td>زیرساخت</td>
+<td>دامنه <code>.ir</code> + <code>.com</code></td>
+<td>🔴</td>
+<td><code>.ir</code> برای اینماد</td>
+</tr>
+<tr>
+<td>زیرساخت</td>
+<td>Backblaze B2 / فضای بکاپ</td>
+<td>🟠</td>
+<td>بکاپ خارج از سرور</td>
+</tr>
+<tr>
+<td>AI</td>
+<td><strong>AgentRouter</strong></td>
+<td>🔴</td>
+<td>متن، توضیح محصول، کپشن، مقاله، سناریو</td>
+</tr>
+<tr>
+<td>AI</td>
+<td>سرویس Vision (تشخیص تصویر)</td>
+<td>🔴</td>
+<td>از طریق AgentRouter اگر مدل چندوجهی داشت، وگرنه جدا</td>
+</tr>
+<tr>
+<td>AI</td>
+<td>سرویس تولید/ویرایش تصویر</td>
+<td>🟠</td>
+<td>عکس روی مانکن، بنر</td>
+</tr>
+<tr>
+<td>AI</td>
+<td>Speech-to-Text فارسی</td>
+<td>🟡</td>
+<td>یادداشت صوتی فروشنده</td>
+</tr>
+<tr>
+<td>پرداخت</td>
+<td>زرین‌پال / زیبال / آیدی‌پی</td>
+<td>🔴</td>
+<td>فاز ۱ واسط</td>
+</tr>
+<tr>
+<td>پرداخت</td>
+<td>درگاه مستقیم بانکی</td>
+<td>🟠</td>
+<td>بعد از اینماد</td>
+</tr>
+<tr>
+<td>پرداخت</td>
+<td>پرداخت در محل (پست)</td>
+<td>🟠</td>
+<td>نیازمند اینماد</td>
+</tr>
+<tr>
+<td>پیامک</td>
+<td>کاوه‌نگار / ملی‌پیامک / SMS.ir</td>
+<td>🔴</td>
+<td>OTP، رهگیری، کمپین</td>
+</tr>
+<tr>
+<td>لجستیک</td>
+<td>تیپاکس / چاپار / پست</td>
+<td>🔴</td>
+<td>API رهگیری</td>
+</tr>
+<tr>
+<td>قانونی</td>
+<td>اینماد</td>
+<td>🔴</td>
+<td>الزامی برای فروشگاه</td>
+</tr>
+<tr>
+<td>قانونی</td>
+<td>جواز کسب اینترنتی</td>
+<td>🔴</td>
+<td>اتحادیه کسب‌وکار مجازی</td>
+</tr>
+<tr>
+<td>قانونی</td>
+<td>سامانه مؤدیان</td>
+<td>🔴</td>
+<td>صورتحساب الکترونیکی</td>
+</tr>
+<tr>
+<td>سوشال</td>
+<td>تلگرام Bot API</td>
+<td>🔴</td>
+<td>✅ کد آماده دارید</td>
+</tr>
+<tr>
+<td>سوشال</td>
+<td>اینستاگرام Graph API</td>
+<td>🔴</td>
+<td>نیاز به اکانت Business + صفحه فیسبوک</td>
+</tr>
+<tr>
+<td>سوشال</td>
+<td>بله / ایتا / روبیکا Bot API</td>
+<td>🟠</td>
+<td>✅ کد آماده دارید</td>
+</tr>
+<tr>
+<td>سوشال</td>
+<td>واتساپ Business API / Green API</td>
+<td>🟠</td>
+<td>✅ کد آماده دارید</td>
+</tr>
+<tr>
+<td>سوشال</td>
+<td>پینترست API</td>
+<td>🟡</td>
+<td>ROI عالی</td>
+</tr>
+<tr>
+<td>سوشال</td>
+<td>یوتیوب Data API</td>
+<td>🟡</td>
+<td>شورتس</td>
+</tr>
+<tr>
+<td>سوشال</td>
+<td>آپارات</td>
+<td>🟡</td>
+<td>سئوی ویدئویی فارسی</td>
+</tr>
+<tr>
+<td>سوشال</td>
+<td>لینکدین API</td>
+<td>🟡</td>
+<td>✅ کد آماده دارید</td>
+</tr>
+<tr>
+<td>سئو</td>
+<td>Google Search Console API</td>
+<td>🔴</td>
+<td>رصد و ایندکس</td>
+</tr>
+<tr>
+<td>سئو</td>
+<td>Google Indexing API / IndexNow</td>
+<td>🟠</td>
+<td>ایندکس سریع</td>
+</tr>
+<tr>
+<td>سئو</td>
+<td>Google Analytics 4</td>
+<td>🔴</td>
+<td>تحلیل</td>
+</tr>
+<tr>
+<td>سئو</td>
+<td>Google Business Profile</td>
+<td>🟠</td>
+<td>سئوی لوکال</td>
+</tr>
+<tr>
+<td>مارکت‌پلیس</td>
+<td>ترب / ایمالز / باسلام</td>
+<td>🟠</td>
+<td>فید محصول</td>
+</tr>
+<tr>
+<td>ابزار</td>
+<td>MeiliSearch</td>
+<td>🟠</td>
+<td>جستجوی فارسی</td>
+</tr>
+<tr>
+<td>ابزار</td>
+<td>n8n</td>
+<td>🔴</td>
+<td>ارکستراسیون</td>
+</tr>
+<tr>
+<td>ابزار</td>
+<td>Uptime Kuma</td>
+<td>🟠</td>
+<td>مانیتورینگ</td>
+</tr>
+<tr>
+<td>ابزار</td>
+<td>Microsoft Clarity</td>
+<td>🟡</td>
+<td>هیت‌مپ رایگان</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="env">۸٫۲ الگوی فایل <code>.env</code> (نمونه — هرگز در گیت کامیت نشود)</h2>
+<pre><code class="language-bash"># ─── پایه ─────────────────────────────────────────────
+NODE_ENV=production
+SITE_URL=https://example-shop.ir
+SITE_NAME=&quot;نام برند&quot;
+TZ=Asia/Tehran
+
+# ─── دیتابیس (سازگار با app/lib/mysql.ts فعلی) ────────
+MYSQL_HOST=mysql
+MYSQL_PORT=3306
+MYSQL_USER=shop
+MYSQL_PASSWORD=
+MYSQL_DATABASE=kidswear
+
+# ─── Redis / صف ───────────────────────────────────────
+REDIS_URL=redis://redis:6379
+
+# ─── فایل و رسانه ─────────────────────────────────────
+S3_ENDPOINT=http://minio:9000
+S3_BUCKET=media
+S3_ACCESS_KEY=
+S3_SECRET_KEY=
+CDN_BASE_URL=https://cdn.example-shop.ir
+
+# ─── AgentRouter (OpenAI-compatible) ──────────────────
+OPENAI_BASE_URL=https://agentrouter.org/v1
+OPENAI_API_KEY=
+OPENAI_MODEL=claude-opus-4-6
+AI_MODEL_CHEAP=            # مدل ارزان برای کپشن‌های ساده
+AI_DAILY_BUDGET_USD=5      # سقف مصرف روزانه
+AI_CACHE_TTL=86400
+
+# ─── AgentRouter (Anthropic-compatible / Claude Code) ─
+# توجه: بدون /v1
+ANTHROPIC_BASE_URL=https://agentrouter.org
+ANTHROPIC_AUTH_TOKEN=
+ANTHROPIC_MODEL=claude-opus-4-6
+
+# ─── سرویس تصویر و ویدئو ──────────────────────────────
+IMAGE_GEN_PROVIDER=
+IMAGE_GEN_API_KEY=
+FFMPEG_PATH=/usr/bin/ffmpeg
+VIDEO_MUSIC_DIR=/app/assets/music
+
+# ─── امنیت ────────────────────────────────────────────
+JWT_SECRET=
+CRON_SECRET=
+ENCRYPTION_KEY=            # AES-256 برای رمزنگاری توکن‌های سوشال
+ADMIN_TELEGRAM_CHAT_ID=
+
+# ─── پرداخت (از طریق Relay ایران) ─────────────────────
+ZARINPAL_MERCHANT_ID=
+PAYMENT_CALLBACK_URL=https://example-shop.ir/api/payment/callback
+IRAN_RELAY_URL=https://relay.example-shop.ir
+IRAN_RELAY_TOKEN=
+
+# ─── پیامک ────────────────────────────────────────────
+SMS_PROVIDER=kavenegar
+SMS_API_KEY=
+SMS_SENDER=
+SMS_TEMPLATE_OTP=
+SMS_TEMPLATE_ORDER=
+
+# ─── لجستیک ───────────────────────────────────────────
+TIPAX_API_KEY=
+POST_API_KEY=
+
+# ─── شبکه‌های اجتماعی (سازگار با socialPoster.ts فعلی) ─
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHANNEL_ID=
+TELEGRAM_UPLOAD_BOT_TOKEN=     # ربات آپلود فروشنده (جدا)
+TELEGRAM_SELLER_GROUP_ID=
+
+INSTAGRAM_ACCESS_TOKEN=
+INSTAGRAM_ACCOUNT_ID=
+FB_PAGE_ACCESS_TOKEN=
+FB_PAGE_ID=
+
+BALE_BOT_TOKEN=
+BALE_CHANNEL_ID=
+EITAA_BOT_TOKEN=
+EITAA_CHANNEL_ID=
+RUBIKA_BOT_TOKEN=
+RUBIKA_CHANNEL_ID=
+
+WHATSAPP_ACCESS_TOKEN=
+WHATSAPP_PHONE_NUMBER_ID=
+GREEN_API_INSTANCE_ID=
+GREEN_API_TOKEN=
+
+LINKEDIN_ACCESS_TOKEN=
+LINKEDIN_COMPANY_ID=
+
+PINTEREST_ACCESS_TOKEN=
+PINTEREST_BOARD_MAP=           # JSON: {&quot;پسرانه&quot;:&quot;boardId&quot;, ...}
+YOUTUBE_CLIENT_ID=
+YOUTUBE_CLIENT_SECRET=
+YOUTUBE_REFRESH_TOKEN=
+APARAT_USERNAME=
+APARAT_PASSWORD=
+X_API_KEY=
+X_API_SECRET=
+X_ACCESS_TOKEN=
+X_ACCESS_SECRET=
+
+# ─── سئو و تحلیل ──────────────────────────────────────
+GOOGLE_SITE_VERIFICATION=
+GSC_SERVICE_ACCOUNT_JSON=
+INDEXNOW_KEY=
+GA4_MEASUREMENT_ID=
+CLARITY_PROJECT_ID=
+
+# ─── جستجو ────────────────────────────────────────────
+MEILI_HOST=http://meilisearch:7700
+MEILI_MASTER_KEY=
+
+# ─── کنترل اتوماسیون ──────────────────────────────────
+AUTOMATION_MODE=REVIEW        # AUTO | REVIEW | DRAFT | PAUSE
+AUTO_PUBLISH_CHANNELS=telegram,bale,eitaa,rubika,pinterest
+REVIEW_REQUIRED_CHANNELS=instagram,youtube,aparat
+MAX_POSTS_PER_DAY_INSTAGRAM=2
+MAX_POSTS_PER_DAY_TELEGRAM=4
+POST_GOLDEN_HOURS=10:00-11:30,13:30-15:00,21:00-23:30
+</code></pre>
+<h2 id="_3">۸٫۳ مدیریت کلیدها از پنل (بدون ری‌دیپلوی)</h2>
+<p>پروژه فعلی شما الگوی خیلی خوبی دارد: جدول <code>automation_settings</code> که مقادیر را از دیتابیس می‌خواند و اگر نبود از <code>process.env</code>. همین الگو را نگه می‌داریم و توسعه می‌دهیم:</p>
+<pre><code>اولویت خواندن تنظیمات:
+  1. مقدار دیتابیس (قابل ویرایش از پنل ادمین) — رمزنگاری‌شده
+  2. متغیر محیطی
+  3. مقدار پیش‌فرض
+</code></pre>
+<p>مزیت: تیم غیرفنی می‌تواند توکن اینستاگرام منقضی‌شده را از پنل عوض کند، بدون دیپلوی.</p>
+<h2 id="endpoint">۸٫۴ endpointهای سلامت و تست (الگوی موجود پروژه)</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>مسیر</th>
+<th>کاربرد</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET /api/deploy/health</code></td>
+<td>نسخه، کامیت، زمان بیلد</td>
+</tr>
+<tr>
+<td><code>GET /api/deploy/health?db=1</code></td>
+<td>تست دیتابیس</td>
+</tr>
+<tr>
+<td><code>GET /api/admin/integrations-test</code></td>
+<td>تست همه اتصال‌ها بدون انتشار واقعی</td>
+</tr>
+<tr>
+<td><code>GET /api/admin/ai-test</code></td>
+<td>تست AgentRouter و اندازه‌گیری تأخیر</td>
+</tr>
+<tr>
+<td><code>POST /api/ingest/photos</code></td>
+<td>ورودی اصلی اتوماسیون</td>
+</tr>
+<tr>
+<td><code>GET /api/cron/daily-content</code></td>
+<td>تولید محتوای روزانه</td>
+</tr>
+<tr>
+<td><code>GET /api/cron/publish-queue</code></td>
+<td>پردازش صف انتشار</td>
+</tr>
+<tr>
+<td><code>GET /api/cron/price-watch</code></td>
+<td>رصد قیمت رقبا</td>
+</tr>
+<tr>
+<td><code>GET /api/cron/backup</code></td>
+<td>بکاپ</td>
+</tr>
+</tbody>
+</table></div>
+<p>همه cronها با هدر <code>Authorization: Bearer $CRON_SECRET</code> محافظت می‌شوند — دقیقاً الگوی فعلی شما.</p>
+<h2 id="cron">۸٫۵ زمان‌بندی cron پیشنهادی</h2>
+<pre><code class="language-cron"># پردازش صف انتشار — هر ۵ دقیقه
+*/5 * * * * curl -fsS -H &quot;Authorization: Bearer $CRON_SECRET&quot; https://SITE/api/cron/publish-queue
+
+# تولید محتوای روزانه — ۶ صبح
+0 6 * * * curl -fsS -H &quot;Authorization: Bearer $CRON_SECRET&quot; https://SITE/api/cron/daily-content
+
+# گزارش صبحگاهی مدیر — ۹ صبح
+0 9 * * * curl -fsS -H &quot;Authorization: Bearer $CRON_SECRET&quot; https://SITE/api/cron/daily-report
+
+# رصد قیمت رقبا — هر ۶ ساعت
+0 */6 * * * curl -fsS -H &quot;Authorization: Bearer $CRON_SECRET&quot; https://SITE/api/cron/price-watch
+
+# جمع‌آوری آمار پست‌ها — هر ۶ ساعت
+30 */6 * * * curl -fsS -H &quot;Authorization: Bearer $CRON_SECRET&quot; https://SITE/api/cron/social-stats
+
+# ریتارگتینگ و سبد رهاشده — هر ساعت
+15 * * * * curl -fsS -H &quot;Authorization: Bearer $CRON_SECRET&quot; https://SITE/api/cron/retargeting
+
+# بکاپ — ۳ بامداد
+0 3 * * * curl -fsS -H &quot;Authorization: Bearer $CRON_SECRET&quot; https://SITE/api/cron/backup
+
+# گزارش سئوی هفتگی — شنبه ۱۰ صبح
+0 10 * * 6 curl -fsS -H &quot;Authorization: Bearer $CRON_SECRET&quot; https://SITE/api/cron/seo-report
+</code></pre>
+<h2 id="ai">۸٫۶ کنترل هزینه AI</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>تکنیک</th>
+<th>صرفه‌جویی تخمینی</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>کش پاسخ‌های مشابه در Redis</td>
+<td>۲۵-۴۰٪</td>
+</tr>
+<tr>
+<td>مدل ارزان برای کارهای ساده (کپشن، هشتگ)</td>
+<td>۳۰-۵۰٪</td>
+</tr>
+<tr>
+<td>Batch کردن درخواست‌ها</td>
+<td>۱۰-۱۵٪</td>
+</tr>
+<tr>
+<td>قالب‌های ثابت برای بخش‌های تکراری متن</td>
+<td>۲۰٪</td>
+</tr>
+<tr>
+<td>فشرده‌سازی تصویر قبل از ارسال به Vision</td>
+<td>۳۰٪ توکن تصویر</td>
+</tr>
+<tr>
+<td>سقف روزانه و هشدار مصرف</td>
+<td>جلوگیری از فاجعه</td>
+</tr>
+</tbody>
+</table></div>
+<p>جدول <code>ai_usage_log</code> هر فراخوانی را ثبت می‌کند: مدل، توکن ورودی/خروجی، هزینه، مدت، نوع کار. گزارش هفتگی هزینه به تفکیک نوع کار.</p></section><section id="09-data-model"><h1>۹ — مدل داده (SQL)</h1>
+<pre><code>-- =====================================================================
+-- اسکیمای پیشنهادی دیتابیس — فروشگاه پوشاک کودک و نوجوان
+-- MySQL 8 / MariaDB 10.6+  |  utf8mb4_unicode_ci
+-- این فایل «طرح» است، نه مهاجرت نهایی. در فاز اجرا به migration تبدیل می‌شود.
+-- =====================================================================
+
+SET NAMES utf8mb4;
+
+-- ─────────────────────────────────────────────────────────────────────
+-- ۱) کاتالوگ
+-- ─────────────────────────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS categories (
+  id            INT AUTO_INCREMENT PRIMARY KEY,
+  parent_id     INT NULL,
+  slug          VARCHAR(190) NOT NULL UNIQUE,
+  name          VARCHAR(190) NOT NULL,
+  gender        ENUM('boy','girl','unisex') DEFAULT 'unisex',
+  age_min_month SMALLINT NULL,
+  age_max_month SMALLINT NULL,
+  seo_title     VARCHAR(190),
+  seo_desc      VARCHAR(320),
+  content_html  MEDIUMTEXT,          -- محتوای سئویی صفحه دسته
+  sort_order    INT DEFAULT 0,
+  is_active     TINYINT(1) DEFAULT 1,
+  created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_parent (parent_id),
+  CONSTRAINT fk_cat_parent FOREIGN KEY (parent_id) REFERENCES categories(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS brands (
+  id         INT AUTO_INCREMENT PRIMARY KEY,
+  slug       VARCHAR(190) NOT NULL UNIQUE,
+  name       VARCHAR(190) NOT NULL,
+  logo_url   VARCHAR(500),
+  about      TEXT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS suppliers (
+  id            INT AUTO_INCREMENT PRIMARY KEY,
+  name          VARCHAR(190) NOT NULL,
+  phone         VARCHAR(30),
+  city          VARCHAR(90),
+  lead_time_days SMALLINT DEFAULT 3,
+  quality_score TINYINT DEFAULT 0,     -- 0..100 بر اساس مرجوعی و تأخیر
+  notes         TEXT,
+  is_active     TINYINT(1) DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS products (
+  id               BIGINT AUTO_INCREMENT PRIMARY KEY,
+  sku              VARCHAR(60) NOT NULL UNIQUE,
+  slug             VARCHAR(220) NOT NULL UNIQUE,
+  title            VARCHAR(220) NOT NULL,
+  short_desc       VARCHAR(500),
+  description_html MEDIUMTEXT,
+  category_id      INT NULL,
+  brand_id         INT NULL,
+  supplier_id      INT NULL,
+  gender           ENUM('boy','girl','unisex') DEFAULT 'unisex',
+  age_min_month    SMALLINT,
+  age_max_month    SMALLINT,
+  season           ENUM('spring','summer','fall','winter','all') DEFAULT 'all',
+  fabric           VARCHAR(120),
+  colors_json      JSON,               -- ["سرمه‌ای","آبی"]
+  features_json    JSON,               -- ["جیب‌دار","کمر کش"]
+  style_tags_json  JSON,
+  base_price       DECIMAL(12,0) NOT NULL,   -- ریال/تومان — واحد را ثابت نگه دارید
+  compare_price    DECIMAL(12,0) NULL,       -- قیمت قبل از تخفیف
+  cost_price       DECIMAL(12,0) NULL,       -- قیمت خرید (داخلی)
+  weight_gram      INT DEFAULT 0,
+  seo_title        VARCHAR(190),
+  seo_desc         VARCHAR(320),
+  faq_json         JSON,                     -- [{"q":"","a":""}]
+  size_chart_json  JSON,
+  ai_confidence    DECIMAL(4,3) DEFAULT NULL,
+  ai_generated     TINYINT(1) DEFAULT 1,
+  content_hash     CHAR(64),                 -- تشخیص محتوای تکراری
+  status           ENUM('draft','review','active','archived') DEFAULT 'draft',
+  published_at     DATETIME NULL,
+  views            INT DEFAULT 0,
+  sales_count      INT DEFAULT 0,
+  rating_avg       DECIMAL(3,2) DEFAULT 0,
+  rating_count     INT DEFAULT 0,
+  created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_status_pub (status, published_at),
+  INDEX idx_cat (category_id),
+  INDEX idx_gender_age (gender, age_min_month, age_max_month),
+  FULLTEXT KEY ft_search (title, short_desc)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS product_variants (
+  id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+  product_id   BIGINT NOT NULL,
+  size_label   VARCHAR(40) NOT NULL,     -- «۶-۷ سال» یا «۱۲۰»
+  color        VARCHAR(60),
+  barcode      VARCHAR(60),
+  price_delta  DECIMAL(12,0) DEFAULT 0,
+  stock        INT DEFAULT 0,
+  reserved     INT DEFAULT 0,            -- رزرو هنگام افزودن به سبد
+  height_cm_min SMALLINT, height_cm_max SMALLINT,
+  weight_kg_min DECIMAL(4,1), weight_kg_max DECIMAL(4,1),
+  UNIQUE KEY uq_variant (product_id, size_label, color),
+  CONSTRAINT fk_var_prod FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS product_media (
+  id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+  product_id  BIGINT NOT NULL,
+  kind        ENUM('image','video') DEFAULT 'image',
+  role        ENUM('main','gallery','story','reel','pin','raw') DEFAULT 'gallery',
+  url         VARCHAR(600) NOT NULL,
+  width       INT, height INT,
+  alt_text    VARCHAR(300),
+  quality_score TINYINT,
+  sort_order  INT DEFAULT 0,
+  created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_prod_role (product_id, role),
+  CONSTRAINT fk_media_prod FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ─────────────────────────────────────────────────────────────────────
+-- ۲) مشتری و سفارش
+-- ─────────────────────────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS customers (
+  id            BIGINT AUTO_INCREMENT PRIMARY KEY,
+  phone         VARCHAR(20) NOT NULL UNIQUE,
+  email         VARCHAR(190),
+  full_name     VARCHAR(190),
+  password_hash VARCHAR(255),
+  city          VARCHAR(90),
+  loyalty_points INT DEFAULT 0,
+  loyalty_tier  ENUM('bronze','silver','gold') DEFAULT 'bronze',
+  rfm_segment   VARCHAR(30),
+  source        VARCHAR(60),            -- کانال جذب
+  accepts_sms   TINYINT(1) DEFAULT 1,
+  created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  last_order_at DATETIME NULL,
+  INDEX idx_segment (rfm_segment)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ★ دارایی طلایی: پروفایل کودکان مشتری — موتور خرید مجدد
+CREATE TABLE IF NOT EXISTS customer_children (
+  id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+  customer_id  BIGINT NOT NULL,
+  nickname     VARCHAR(90),
+  gender       ENUM('boy','girl') NOT NULL,
+  birth_date   DATE NULL,
+  height_cm    SMALLINT NULL,
+  weight_kg    DECIMAL(4,1) NULL,
+  last_size    VARCHAR(40),
+  size_updated_at DATE NULL,
+  next_size_estimate_at DATE NULL,     -- پیش‌بینی زمان نیاز به سایز بعدی
+  CONSTRAINT fk_child_cust FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
+  INDEX idx_next_size (next_size_estimate_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS addresses (
+  id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+  customer_id BIGINT NOT NULL,
+  receiver    VARCHAR(190),
+  phone       VARCHAR(20),
+  province    VARCHAR(90), city VARCHAR(90),
+  postal_code VARCHAR(20),
+  line        VARCHAR(500),
+  is_default  TINYINT(1) DEFAULT 0,
+  CONSTRAINT fk_addr_cust FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS orders (
+  id             BIGINT AUTO_INCREMENT PRIMARY KEY,
+  order_no       VARCHAR(30) NOT NULL UNIQUE,
+  customer_id    BIGINT NULL,
+  address_id     BIGINT NULL,
+  status         ENUM('pending','paid','processing','shipped','delivered','cancelled','returned') DEFAULT 'pending',
+  subtotal       DECIMAL(12,0) NOT NULL,
+  discount       DECIMAL(12,0) DEFAULT 0,
+  shipping_cost  DECIMAL(12,0) DEFAULT 0,
+  tax            DECIMAL(12,0) DEFAULT 0,
+  total          DECIMAL(12,0) NOT NULL,
+  coupon_code    VARCHAR(60),
+  payment_method ENUM('online','cod','wallet') DEFAULT 'online',
+  payment_ref    VARCHAR(120),
+  shipping_method VARCHAR(60),
+  tracking_code  VARCHAR(90),
+  utm_source     VARCHAR(90), utm_medium VARCHAR(90), utm_campaign VARCHAR(120),
+  influencer_code VARCHAR(60),
+  note           TEXT,
+  created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  paid_at        DATETIME NULL,
+  INDEX idx_status_created (status, created_at),
+  INDEX idx_customer (customer_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS order_items (
+  id         BIGINT AUTO_INCREMENT PRIMARY KEY,
+  order_id   BIGINT NOT NULL,
+  product_id BIGINT NOT NULL,
+  variant_id BIGINT NULL,
+  title_snapshot VARCHAR(220),
+  size_label VARCHAR(40),
+  qty        SMALLINT NOT NULL,
+  unit_price DECIMAL(12,0) NOT NULL,
+  total      DECIMAL(12,0) NOT NULL,
+  CONSTRAINT fk_oi_order FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS returns (
+  id         BIGINT AUTO_INCREMENT PRIMARY KEY,
+  order_id   BIGINT NOT NULL,
+  item_id    BIGINT NOT NULL,
+  reason     ENUM('size_small','size_large','quality','wrong_item','changed_mind','damaged','other') NOT NULL,
+  reason_note TEXT,
+  status     ENUM('requested','approved','received','refunded','rejected') DEFAULT 'requested',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_reason (reason)   -- برای اصلاح خودکار جدول سایز
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS reviews (
+  id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+  product_id  BIGINT NOT NULL,
+  customer_id BIGINT NULL,
+  order_id    BIGINT NULL,
+  rating      TINYINT NOT NULL,
+  title       VARCHAR(190),
+  body        TEXT,
+  size_fit    ENUM('small','true','large') NULL,   -- ورودی حیاتی برای توصیه‌گر سایز
+  image_url   VARCHAR(600),
+  status      ENUM('pending','approved','rejected') DEFAULT 'pending',
+  created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_prod_status (product_id, status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ─────────────────────────────────────────────────────────────────────
+-- ۳) اتوماسیون و محتوا
+-- ─────────────────────────────────────────────────────────────────────
+
+-- ورودی خام از فروشنده (عکس‌ها) — نقطه شروع پایپ‌لاین
+CREATE TABLE IF NOT EXISTS ingest_jobs (
+  id            BIGINT AUTO_INCREMENT PRIMARY KEY,
+  source        ENUM('pwa','telegram','panel','api','app') NOT NULL,
+  seller_id     BIGINT NULL,
+  raw_images_json JSON NOT NULL,        -- آدرس فایل‌های خام
+  voice_note_url VARCHAR(600) NULL,
+  hint_text     TEXT,                   -- متن/کپشن فروشنده
+  hint_price    DECIMAL(12,0) NULL,
+  hint_stock    INT NULL,
+  status        ENUM('queued','processing','vision_done','content_done','product_created','published','failed','needs_review') DEFAULT 'queued',
+  product_id    BIGINT NULL,
+  ai_result_json JSON,
+  error_text    TEXT,
+  attempts      TINYINT DEFAULT 0,
+  duration_ms   INT NULL,
+  created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_status (status, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- صف انتشار شبکه‌های اجتماعی
+CREATE TABLE IF NOT EXISTS social_queue (
+  id            BIGINT AUTO_INCREMENT PRIMARY KEY,
+  idempotency_key VARCHAR(190) NOT NULL UNIQUE,   -- product:channel:template
+  channel       VARCHAR(40) NOT NULL,     -- instagram|telegram|bale|eitaa|rubika|pinterest|youtube|aparat|linkedin|whatsapp|x
+  post_type     VARCHAR(40) NOT NULL,     -- post|story|reel|carousel|pin|short|video
+  ref_type      ENUM('product','article','campaign','ugc') NOT NULL,
+  ref_id        BIGINT NULL,
+  caption       MEDIUMTEXT,
+  hashtags      TEXT,
+  media_json    JSON,                     -- آدرس تصاویر/ویدئو
+  template      VARCHAR(60),
+  tone          VARCHAR(40),
+  scheduled_at  DATETIME NOT NULL,
+  status        ENUM('draft','awaiting_review','scheduled','publishing','published','failed','skipped') DEFAULT 'scheduled',
+  attempts      TINYINT DEFAULT 0,
+  external_id   VARCHAR(190),             -- شناسه پست در پلتفرم
+  external_url  VARCHAR(600),
+  error_text    TEXT,
+  published_at  DATETIME NULL,
+  created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_sched (status, scheduled_at),
+  INDEX idx_channel (channel, published_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- آمار عملکرد پست‌ها — ورودی موتور یادگیری
+CREATE TABLE IF NOT EXISTS social_stats (
+  id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+  queue_id     BIGINT NOT NULL,
+  captured_at  DATETIME NOT NULL,
+  impressions  INT DEFAULT 0,
+  reach        INT DEFAULT 0,
+  likes        INT DEFAULT 0,
+  comments     INT DEFAULT 0,
+  shares       INT DEFAULT 0,
+  saves        INT DEFAULT 0,
+  clicks       INT DEFAULT 0,
+  attributed_orders INT DEFAULT 0,
+  attributed_revenue DECIMAL(14,0) DEFAULT 0,
+  INDEX idx_queue (queue_id, captured_at),
+  CONSTRAINT fk_stats_queue FOREIGN KEY (queue_id) REFERENCES social_queue(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- مقالات بلاگ (تولید خودکار)
+CREATE TABLE IF NOT EXISTS articles (
+  id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+  slug        VARCHAR(220) NOT NULL UNIQUE,
+  title       VARCHAR(220) NOT NULL,
+  excerpt     VARCHAR(500),
+  body_html   LONGTEXT,
+  cover_url   VARCHAR(600),
+  cluster     VARCHAR(90),              -- خوشه موضوعی سئو
+  primary_keyword VARCHAR(190),
+  keywords_json JSON,
+  faq_json    JSON,
+  author_name VARCHAR(120),
+  ai_generated TINYINT(1) DEFAULT 1,
+  human_reviewed TINYINT(1) DEFAULT 0,
+  content_hash CHAR(64),
+  status      ENUM('draft','review','published','archived') DEFAULT 'draft',
+  views       INT DEFAULT 0,
+  published_at DATETIME NULL,
+  updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_status_pub (status, published_at),
+  INDEX idx_cluster (cluster)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- بانک موضوعات محتوایی (۳۰۰ موضوع از پیش تعریف‌شده)
+CREATE TABLE IF NOT EXISTS content_bank (
+  id          INT AUTO_INCREMENT PRIMARY KEY,
+  topic       VARCHAR(300) NOT NULL,
+  cluster     VARCHAR(90),
+  keyword     VARCHAR(190),
+  content_type ENUM('guide','trend','health','style','interactive','ugc','fun') NOT NULL,
+  season      VARCHAR(30),
+  priority    TINYINT DEFAULT 5,
+  used_at     DATETIME NULL,
+  article_id  BIGINT NULL,
+  INDEX idx_unused (used_at, priority)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- تنظیمات اتوماسیون (سازگار با کد فعلی ehsansalehi.ir)
+CREATE TABLE IF NOT EXISTS automation_settings (
+  setting_key   VARCHAR(100) PRIMARY KEY,
+  setting_value TEXT,
+  is_secret     TINYINT(1) DEFAULT 0,
+  updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- لاگ مصرف AI برای کنترل هزینه
+CREATE TABLE IF NOT EXISTS ai_usage_log (
+  id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+  task_type    VARCHAR(60) NOT NULL,     -- vision|product_desc|caption|article|video_script
+  model        VARCHAR(90),
+  input_tokens INT, output_tokens INT,
+  cost_usd     DECIMAL(10,5),
+  duration_ms  INT,
+  cached       TINYINT(1) DEFAULT 0,
+  success      TINYINT(1) DEFAULT 1,
+  ref_type     VARCHAR(40), ref_id BIGINT,
+  created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_task_date (task_type, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ─────────────────────────────────────────────────────────────────────
+-- ۴) بازاریابی
+-- ─────────────────────────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS campaigns (
+  id           INT AUTO_INCREMENT PRIMARY KEY,
+  slug         VARCHAR(120) NOT NULL UNIQUE,
+  name         VARCHAR(190) NOT NULL,
+  occasion     VARCHAR(90),              -- back_to_school|nowruz|yalda|...
+  starts_at    DATETIME, ends_at DATETIME,
+  prep_days    SMALLINT DEFAULT 20,      -- چند روز قبل خودکار آماده شود
+  budget       DECIMAL(14,0) DEFAULT 0,
+  spent        DECIMAL(14,0) DEFAULT 0,
+  revenue      DECIMAL(14,0) DEFAULT 0,
+  status       ENUM('planned','preparing','running','ended') DEFAULT 'planned',
+  config_json  JSON
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS coupons (
+  id            INT AUTO_INCREMENT PRIMARY KEY,
+  code          VARCHAR(60) NOT NULL UNIQUE,
+  type          ENUM('percent','fixed','free_shipping') DEFAULT 'percent',
+  value         DECIMAL(12,0) NOT NULL,
+  min_order     DECIMAL(12,0) DEFAULT 0,
+  max_discount  DECIMAL(12,0) NULL,
+  usage_limit   INT NULL, used_count INT DEFAULT 0,
+  per_customer_limit SMALLINT DEFAULT 1,
+  campaign_id   INT NULL,
+  influencer_id INT NULL,
+  starts_at     DATETIME, expires_at DATETIME,
+  is_active     TINYINT(1) DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS influencers (
+  id            INT AUTO_INCREMENT PRIMARY KEY,
+  name          VARCHAR(190),
+  platform      VARCHAR(40),
+  handle        VARCHAR(120),
+  followers     INT,
+  engagement_rate DECIMAL(5,2),
+  tier          ENUM('nano','micro','macro','celeb') DEFAULT 'nano',
+  contact       VARCHAR(190),
+  deal_type     ENUM('product','cash','commission','hybrid') DEFAULT 'product',
+  commission_pct DECIMAL(5,2) DEFAULT 0,
+  coupon_code   VARCHAR(60),
+  total_orders  INT DEFAULT 0,
+  total_revenue DECIMAL(14,0) DEFAULT 0,
+  total_cost    DECIMAL(14,0) DEFAULT 0,
+  status        ENUM('prospect','contacted','active','paused','dropped') DEFAULT 'prospect',
+  INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS backlinks (
+  id            INT AUTO_INCREMENT PRIMARY KEY,
+  source_domain VARCHAR(190) NOT NULL,
+  source_url    VARCHAR(600),
+  target_url    VARCHAR(600),
+  anchor_text   VARCHAR(300),
+  link_type     ENUM('dofollow','nofollow','ugc','sponsored') DEFAULT 'dofollow',
+  tactic        VARCHAR(90),            -- guest_post|directory|pr|social|resource
+  authority     TINYINT NULL,
+  status        ENUM('opportunity','outreach','pending','live','lost','toxic') DEFAULT 'opportunity',
+  first_seen    DATE, last_checked DATE,
+  notes         TEXT,
+  INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS keyword_tracking (
+  id            INT AUTO_INCREMENT PRIMARY KEY,
+  keyword       VARCHAR(190) NOT NULL,
+  cluster       VARCHAR(90),
+  target_url    VARCHAR(600),
+  search_volume INT NULL,
+  difficulty    TINYINT NULL,
+  current_rank  SMALLINT NULL,
+  best_rank     SMALLINT NULL,
+  prev_rank     SMALLINT NULL,
+  checked_at    DATE,
+  UNIQUE KEY uq_kw (keyword)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- رصد قیمت رقبا
+CREATE TABLE IF NOT EXISTS competitor_prices (
+  id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+  product_id  BIGINT NULL,
+  competitor  VARCHAR(120),
+  url         VARCHAR(600),
+  title       VARCHAR(300),
+  price       DECIMAL(12,0),
+  in_stock    TINYINT(1),
+  captured_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_prod_time (product_id, captured_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- تقویم مناسبتی ایران — محرک کمپین خودکار
+CREATE TABLE IF NOT EXISTS occasions (
+  id          INT AUTO_INCREMENT PRIMARY KEY,
+  code        VARCHAR(60) NOT NULL UNIQUE,
+  name_fa     VARCHAR(120) NOT NULL,
+  jalali_month TINYINT, jalali_day TINYINT,
+  is_range    TINYINT(1) DEFAULT 0,
+  range_days  SMALLINT DEFAULT 0,
+  importance  TINYINT DEFAULT 5,
+  content_hint TEXT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ─────────────────────────────────────────────────────────────────────
+-- ۵) عملیات و امنیت
+-- ─────────────────────────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS users (
+  id            BIGINT AUTO_INCREMENT PRIMARY KEY,
+  username      VARCHAR(90) NOT NULL UNIQUE,
+  email         VARCHAR(190),
+  phone         VARCHAR(20),
+  password_hash VARCHAR(255) NOT NULL,
+  role          ENUM('owner','admin','seller','support','viewer') DEFAULT 'viewer',
+  is_active     TINYINT(1) DEFAULT 1,
+  last_login_at DATETIME NULL,
+  created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS audit_log (
+  id         BIGINT AUTO_INCREMENT PRIMARY KEY,
+  user_id    BIGINT NULL,
+  action     VARCHAR(90) NOT NULL,
+  entity     VARCHAR(60), entity_id BIGINT,
+  before_json JSON, after_json JSON,
+  ip         VARCHAR(45),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_entity (entity, entity_id, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS notifications (
+  id         BIGINT AUTO_INCREMENT PRIMARY KEY,
+  channel    ENUM('sms','telegram','push','email','inapp') NOT NULL,
+  recipient  VARCHAR(190) NOT NULL,
+  template   VARCHAR(90),
+  payload_json JSON,
+  status     ENUM('queued','sent','failed') DEFAULT 'queued',
+  scheduled_at DATETIME NOT NULL,
+  sent_at    DATETIME NULL,
+  error_text TEXT,
+  INDEX idx_sched (status, scheduled_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+</code></pre></section><section id="10-decisions-and-questions"><h1 id="_1">سند ۱۰ — تصمیم‌های باز و سؤال‌هایی که قبل از اجرا باید قطعی شود</h1>
+<p>این سند «چک‌لیست تصمیم» است. تا وقتی این‌ها قطعی نشوند، اجرا نباید شروع شود؛ چون هرکدام معماری را تغییر می‌دهند.</p>
+<h2 id="_2">الف) تصمیم‌های کسب‌وکاری</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>سؤال</th>
+<th>گزینه‌ها</th>
+<th>پیشنهاد من</th>
+<th>وضعیت</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A1</td>
+<td>نام برند و دامنه</td>
+<td>فارسی‌محور / لاتین کوتاه / ترکیبی</td>
+<td>لاتین کوتاه قابل تلفظ فارسی + دامنه <code>.ir</code> و <code>.com</code> هم‌زمان</td>
+<td>⬜</td>
+</tr>
+<tr>
+<td>A2</td>
+<td>مدل موجودی</td>
+<td>انبار کامل / انبار سبک + دراپ‌شیپ / فقط دراپ‌شیپ</td>
+<td>انبار سبک روی ۳۰ کد پرفروش + دراپ‌شیپ بقیه</td>
+<td>⬜</td>
+</tr>
+<tr>
+<td>A3</td>
+<td>بازه سنی هدف</td>
+<td>۰-۲ / ۲-۶ / ۶-۱۲ / ۱۲-۱۷ / همه</td>
+<td>فاز ۱: ۲ تا ۱۲ سال (بیشترین تکرار خرید و کمترین سایزبندی دردسرساز)</td>
+<td>⬜</td>
+</tr>
+<tr>
+<td>A4</td>
+<td>پوزیشنینگ قیمتی</td>
+<td>اقتصادی / میان‌رده / پریمیوم</td>
+<td>میان‌رده با کیفیت پریمیوم در عکاسی و بسته‌بندی</td>
+<td>⬜</td>
+</tr>
+<tr>
+<td>A5</td>
+<td>شخص حقیقی یا شرکت</td>
+<td>حقیقی / ثبت شرکت</td>
+<td>شروع حقیقی با جواز کسب اینترنتی، ثبت شرکت در ماه ۶</td>
+<td>⬜</td>
+</tr>
+<tr>
+<td>A6</td>
+<td>فروش B2B عمده</td>
+<td>بله / خیر</td>
+<td>بله از ماه ۴، با پنل جدا و قیمت پلکانی</td>
+<td>⬜</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="_3">ب) تصمیم‌های فنی</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>سؤال</th>
+<th>گزینه‌ها</th>
+<th>پیشنهاد من</th>
+<th>وضعیت</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B1</td>
+<td>پلتفرم فروشگاه</td>
+<td>Next.js اختصاصی (ادامه استک فعلی) / ووکامرس / Medusa</td>
+<td><strong>Next.js اختصاصی</strong> — چون کل کد اتوماسیون شما TypeScript است و ووکامرس اتوماسیون AI را کند می‌کند</td>
+<td>⬜</td>
+</tr>
+<tr>
+<td>B2</td>
+<td>هاست اصلی</td>
+<td>فقط Hostinger / فقط ایران / هیبرید</td>
+<td><strong>هیبرید</strong>: Hostinger برای اپ و AI + لایه ایران برای پرداخت/پیامک/CDN</td>
+<td>⬜</td>
+</tr>
+<tr>
+<td>B3</td>
+<td>پلن Hostinger</td>
+<td>KVM 1 / KVM 2 / KVM 4</td>
+<td>شروع KVM 2، ارتقا به KVM 4 وقتی n8n + رندر ویدئو هم‌زمان شد</td>
+<td>⬜</td>
+</tr>
+<tr>
+<td>B4</td>
+<td>دیتابیس</td>
+<td>MySQL (سازگار با کد فعلی) / PostgreSQL</td>
+<td>MySQL/MariaDB — چون <code>app/lib/mysql.ts</code> و <code>db/index.ts</code> آماده است</td>
+<td>⬜</td>
+</tr>
+<tr>
+<td>B5</td>
+<td>ذخیره تصویر</td>
+<td>فایل‌سیستم VPS / MinIO / ابرآروان Object Storage</td>
+<td>MinIO روی VPS + بکاپ شبانه روی ابرآروان</td>
+<td>⬜</td>
+</tr>
+<tr>
+<td>B6</td>
+<td>اپ موبایل فروشنده</td>
+<td>PWA / React Native / فقط تلگرام‌بات</td>
+<td><strong>فاز ۱: PWA + ربات تلگرام</strong> (سریع‌ترین)، فاز ۲: React Native</td>
+<td>⬜</td>
+</tr>
+<tr>
+<td>B7</td>
+<td>موتور ویدئو</td>
+<td>FFmpeg روی VPS / سرویس ابری / Remotion</td>
+<td>FFmpeg + قالب‌های آماده (رایگان و کنترل کامل)</td>
+<td>⬜</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="ai">ج) تصمیم‌های اتوماسیون و AI</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>سؤال</th>
+<th>پیشنهاد</th>
+<th>وضعیت</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C1</td>
+<td>مدل متن AgentRouter</td>
+<td><code>claude-opus-4-6</code> برای توضیح محصول و مقاله؛ مدل ارزان‌تر برای کپشن‌های تکراری</td>
+<td>⬜</td>
+</tr>
+<tr>
+<td>C2</td>
+<td>تولید تصویر (مدل/ست عکس)</td>
+<td>سرویس تصویر جدا لازم است؛ AgentRouter برای Coding/متن است</td>
+<td>⬜</td>
+</tr>
+<tr>
+<td>C3</td>
+<td>سطح تأیید انسانی</td>
+<td>حالت «Auto» برای کانال‌های داخلی، حالت «Review» برای اینستاگرام در ۳۰ روز اول</td>
+<td>⬜</td>
+</tr>
+<tr>
+<td>C4</td>
+<td>زبان محتوا</td>
+<td>فارسی اصلی + انگلیسی برای پینترست/بک‌لینک بین‌المللی</td>
+<td>⬜</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="_4">د) اطلاعاتی که باید از شما بگیرم تا وارد فاز اجرا شویم</h2>
+<ol>
+<li>نام برند و دامنه انتخابی (یا اجازه بدهید ۱۰ گزینه با بررسی موجود بودن دامنه بیاورم).</li>
+<li>سرمایه اولیه قابل تخصیص (تا بتوانم بین سناریوی A/B/C در سند ۱ انتخاب کنم).</li>
+<li>آیا اینماد و درگاه مستقیم را می‌خواهید یا فعلاً درگاه واسط (زرین‌پال/زیبال) کافی است؟</li>
+<li>کلید API حساب AgentRouter (به‌صورت متغیر محیطی روی سرور — نه در چت، نه در گیت).</li>
+<li>اکانت‌های اجتماعی فعلی که می‌خواهید متصل شوند (آیدی‌ها) و اینکه اینستاگرام Business/Creator هست یا نه.</li>
+<li>تأمین‌کننده‌ها: تولیدکننده دارید یا باید بازار پوشاک را برایتان مدل کنم؟</li>
+</ol>
+<blockquote>
+<p>بعد از پاسخ به این ۶ مورد، فاز اجرا (Sprint 0) طبق سند ۷ شروع می‌شود.</p>
+</blockquote></section>
+</main>
+</div>
+<script>
+const links=[...document.querySelectorAll('nav a')];
+const secs=[...document.querySelectorAll('section')];
+const io=new IntersectionObserver(es=>{
+  es.forEach(e=>{ if(e.isIntersecting){
+    links.forEach(l=>l.classList.toggle('active', l.getAttribute('href')==='#'+e.target.id));
+  }});
+},{rootMargin:'-15% 0px -75% 0px'});
+secs.forEach(s=>io.observe(s));
+</script>
+</body>
+</html>
