@@ -507,3 +507,106 @@ CREATE TABLE IF NOT EXISTS notifications (
   error_text TEXT,
   INDEX idx_sched (status, scheduled_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ─────────────────────────────────────────────────────────────────────
+-- ۶) پرو آنلاین لباس (سند ۱۱)
+-- ─────────────────────────────────────────────────────────────────────
+
+-- پروفایل آواتار هر کودک — دارایی طلایی برای توصیه سایز و خرید مجدد
+CREATE TABLE IF NOT EXISTS tryon_profiles (
+  id            BIGINT AUTO_INCREMENT PRIMARY KEY,
+  customer_id   BIGINT NOT NULL,
+  child_id      BIGINT NULL,            -- ارجاع به customer_children
+  nickname      VARCHAR(90),
+  gender        ENUM('boy','girl') NOT NULL,
+  height_cm     SMALLINT NOT NULL,
+  weight_kg     DECIMAL(4,1),
+  chest_cm      SMALLINT NULL,
+  waist_cm      SMALLINT NULL,
+  inseam_cm     SMALLINT NULL,
+  skin_tone     TINYINT DEFAULT 3,      -- 1..6 برای رندر آواتار
+  hair_style    TINYINT DEFAULT 1,
+  avatar_config JSON,
+  is_default    TINYINT(1) DEFAULT 0,
+  measured_at   DATE,
+  created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_cust (customer_id),
+  CONSTRAINT fk_tryon_cust FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- لایه‌های شفاف و نقاط لنگر هر محصول — خودکار در پایپ‌لاین تولید می‌شود
+CREATE TABLE IF NOT EXISTS tryon_assets (
+  id             BIGINT AUTO_INCREMENT PRIMARY KEY,
+  product_id     BIGINT NOT NULL,
+  variant_id     BIGINT NULL,
+  layer_url      VARCHAR(600) NOT NULL,   -- PNG با پس‌زمینه شفاف
+  layer_z        TINYINT DEFAULT 5,       -- ترتیب لایه: زیرپوش<تیشرت<کاپشن
+  garment_slot   ENUM('top','bottom','dress','outer','shoes','accessory') NOT NULL,
+  anchor_json    JSON,                    -- {"shoulder":[x,y],"waist":[x,y],"length":n}
+  fit_type       ENUM('slim','regular','loose') DEFAULT 'regular',
+  ready          TINYINT(1) DEFAULT 0,
+  created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_prod (product_id, garment_slot),
+  CONSTRAINT fk_tryasset_prod FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- هر بار پرو: ورودی موتور یادگیری و تحلیل نرخ تبدیل
+CREATE TABLE IF NOT EXISTS tryon_sessions (
+  id              BIGINT AUTO_INCREMENT PRIMARY KEY,
+  profile_id      BIGINT NULL,
+  customer_id     BIGINT NULL,
+  session_token   VARCHAR(64),            -- برای کاربر مهمان
+  product_id      BIGINT NOT NULL,
+  variant_id      BIGINT NULL,
+  level           TINYINT DEFAULT 1,      -- کدام سطح پرو استفاده شد
+  recommended_size VARCHAR(40),
+  confidence      DECIMAL(4,3),
+  chosen_size     VARCHAR(40) NULL,
+  added_to_cart   TINYINT(1) DEFAULT 0,
+  purchased       TINYINT(1) DEFAULT 0,
+  shared          TINYINT(1) DEFAULT 0,
+  duration_ms     INT,
+  created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_prod_date (product_id, created_at),
+  INDEX idx_conv (purchased, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- بازخورد تجمعی سایز — الگوریتم را هر ماه دقیق‌تر می‌کند
+CREATE TABLE IF NOT EXISTS size_feedback (
+  id            BIGINT AUTO_INCREMENT PRIMARY KEY,
+  product_id    BIGINT NOT NULL,
+  size_label    VARCHAR(40) NOT NULL,
+  votes_small   INT DEFAULT 0,
+  votes_true    INT DEFAULT 0,
+  votes_large   INT DEFAULT 0,
+  returns_small INT DEFAULT 0,
+  returns_large INT DEFAULT 0,
+  adjustment    DECIMAL(3,2) DEFAULT 0,   -- تعدیل اعمالی الگوریتم: -1..+1
+  updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_prod_size (product_id, size_label)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ─────────────────────────────────────────────────────────────────────
+-- ۷) صف کارها برای فاز cPanel (جایگزین Redis/BullMQ)
+--    با Cron هر ۵ دقیقه پردازش می‌شود؛ در فاز VPS جای خود را به Redis می‌دهد
+-- ─────────────────────────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS job_queue (
+  id            BIGINT AUTO_INCREMENT PRIMARY KEY,
+  queue         VARCHAR(60) NOT NULL DEFAULT 'default',
+  job_type      VARCHAR(60) NOT NULL,   -- image|vision|content|publish|video|tryon_asset
+  payload_json  JSON NOT NULL,
+  priority      TINYINT DEFAULT 5,
+  status        ENUM('pending','running','done','failed','dead') DEFAULT 'pending',
+  attempts      TINYINT DEFAULT 0,
+  max_attempts  TINYINT DEFAULT 3,
+  locked_by     VARCHAR(60) NULL,
+  locked_at     DATETIME NULL,
+  run_after     DATETIME NOT NULL,
+  error_text    TEXT,
+  created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  finished_at   DATETIME NULL,
+  INDEX idx_pick (status, run_after, priority),
+  INDEX idx_type (job_type, status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
