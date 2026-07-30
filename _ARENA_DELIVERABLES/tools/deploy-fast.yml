@@ -1,0 +1,153 @@
+# ═══════════════════════════════════════════════════════════════
+#  دیپلوی سریع به میزبان‌فا — بدون SSH، بدون FTP فایل‌به‌فایل
+#
+#  ⚠️ این فایل را باید دستی در GitHub UI بسازید:
+#     .github/workflows/deploy-fast.yml
+#     (چون GitHub App آرنا مجوز نوشتن در workflows ندارد)
+#
+#  Secrets لازم — یکی از دو دسته:
+#
+#    روش A (ترجیحی) — cPanel API Token:
+#      CPANEL_HOST      cip17.mizbanfadns.net
+#      CPANEL_USER      نام کاربری cPanel
+#      CPANEL_TOKEN     توکن ساخته‌شده در Manage API Tokens
+#      CPANEL_APP_DIR   /home/USERNAME/ehsansalehi.ir
+#
+#    روش B — PHP Receiver:
+#      DEPLOY_URL       https://site.ir/deploy-receive.php
+#      DEPLOY_SECRET    همان مقدار داخل فایل PHP
+#
+#  مشترک:
+#      HEALTH_URL       https://site.ir/api/health
+# ═══════════════════════════════════════════════════════════════
+
+name: Fast Deploy (no SSH)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      method:
+        description: 'روش دیپلوی'
+        type: choice
+        options: [api, php]
+        default: api
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      # ─── ۱) دریافت کد ──────────────────────────────────
+      - uses: actions/checkout@v4
+
+      # ─── ۲) Node با کش ─────────────────────────────────
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      # ─── ۳) کش build نکست ──────────────────────────────
+      - name: Cache Next.js build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ github.workspace }}/.next/cache
+          key: next-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/*.[jt]s','**/*.[jt]sx') }}
+          restore-keys: |
+            next-${{ hashFiles('package-lock.json') }}-
+            next-
+
+      # ─── ۴) نصب پکیج‌ها (اینترنت آزاد، سریع) ───────────
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit --fund=false
+
+      # ─── ۵) ساخت پروژه ─────────────────────────────────
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SITE_URL: https://ehsansalehi.ir
+          NEXT_TELEMETRY_DISABLED: '1'
+
+      # ─── ۶) ساخت بسته فشرده ────────────────────────────
+      #  کلید سرعت: به‌جای هزاران فایل، یک فایل ~۱۵ مگابایتی
+      - name: Create bundle
+        id: bundle
+        run: |
+          set -euo pipefail
+          OUT=.next/standalone
+
+          # فایل‌های استاتیک و public را کنار standalone بگذار
+          cp -r public "$OUT/public"
+          mkdir -p "$OUT/.next"
+          cp -r .next/static "$OUT/.next/static"
+          mkdir -p "$OUT/tmp"
+          date -u +%FT%TZ > "$OUT/tmp/restart.txt"
+
+          # اطلاعات نسخه برای health check
+          cat > "$OUT/deploy-info.json" <<EOF
+          {
+            "commit": "${GITHUB_SHA}",
+            "shortSha": "${GITHUB_SHA:0:7}",
+            "ref": "${GITHUB_REF_NAME}",
+            "runId": "${GITHUB_RUN_ID}",
+            "builtAt": "$(date -u +%FT%TZ)",
+            "node": "$(node -v)"
+          }
+          EOF
+
+          mkdir -p dist
+          BUNDLE="dist/bundle-${GITHUB_RUN_ID}.tar.gz"
+
+          # فشرده‌سازی حداکثری برای کمترین حجم انتقال
+          tar --exclude='./node_modules/.cache' \
+              -C "$OUT" -cf - . | gzip -9 > "$BUNDLE"
+
+          SIZE=$(du -h "$BUNDLE" | cut -f1)
+          echo "path=$BUNDLE" >> "$GITHUB_OUTPUT"
+          echo "::notice::حجم بسته: $SIZE"
+          ls -lh "$BUNDLE"
+
+      # ─── ۷) دیپلوی ─────────────────────────────────────
+      - name: Deploy to cPanel
+        env:
+          DEPLOY_METHOD:  ${{ inputs.method || 'api' }}
+          CPANEL_HOST:    ${{ secrets.CPANEL_HOST }}
+          CPANEL_USER:    ${{ secrets.CPANEL_USER }}
+          CPANEL_TOKEN:   ${{ secrets.CPANEL_TOKEN }}
+          APP_DIR:        ${{ secrets.CPANEL_APP_DIR }}
+          DEPLOY_URL:     ${{ secrets.DEPLOY_URL }}
+          DEPLOY_SECRET:  ${{ secrets.DEPLOY_SECRET }}
+          HEALTH_URL:     ${{ secrets.HEALTH_URL }}
+        run: |
+          chmod +x tools/deploy-cpanel.sh
+          bash tools/deploy-cpanel.sh "${{ steps.bundle.outputs.path }}"
+
+      # ─── ۸) تأیید نهایی نسخه منتشرشده ──────────────────
+      - name: Verify deployed version
+        run: |
+          sleep 5
+          DEPLOYED=$(curl -sS --max-time 20 "${{ secrets.HEALTH_URL }}" \
+            | grep -o '"shortSha":"[^"]*"' | cut -d'"' -f4 || echo "?")
+          EXPECTED="${GITHUB_SHA:0:7}"
+          echo "نسخه روی سایت: $DEPLOYED"
+          echo "نسخه مورد انتظار: $EXPECTED"
+          if [ "$DEPLOYED" = "$EXPECTED" ]; then
+            echo "::notice::✅ نسخه صحیح منتشر شد"
+          else
+            echo "::warning::نسخه‌ها مطابقت ندارند (ممکن است کش باشد)"
+          fi
+
+      # ─── ۹) نگهداری بسته برای بازگشت اضطراری ───────────
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bundle-${{ github.run_id }}
+          path: dist/*.tar.gz
+          retention-days: 7
