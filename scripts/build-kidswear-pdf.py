@@ -41,6 +41,7 @@ DOCS = [
     ("07-roadmap-and-kpi.md", "بخش ۸ — نقشه راه و KPI"),
     ("08-integrations-and-env.md", "بخش ۹ — سرویس‌ها و کلیدها"),
     ("10-decisions-and-questions.md", "بخش ۱۰ — تصمیم‌های باز"),
+    ("12-blockers-and-solutions.md", "بخش ۱۱ — چهار مانع و راه‌حل"),
 ]
 
 # ───────────────────────── palette ─────────────────────────

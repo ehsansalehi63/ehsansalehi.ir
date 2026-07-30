@@ -256,7 +256,7 @@ table code{font-size:12px}
     </div>
   </div>
   <div class="lbl">فهرست اسناد</div>
-  <a href="#readme"><span class="ic">📋</span><span>خلاصه اجرایی</span></a><a href="#01-business-plan"><span class="ic">💼</span><span>۱ · بیزینس‌پلن</span></a><a href="#02-technical-architecture"><span class="ic">🏗️</span><span>۲ · معماری فنی</span></a><a href="#03-automation-pipeline"><span class="ic">⚙️</span><span>۳ · اتوماسیون</span></a><a href="#11-virtual-tryon"><span class="ic">👕</span><span>۴ · پرو آنلاین لباس</span></a><a href="#04-social-media-plan"><span class="ic">📱</span><span>۵ · شبکه‌های اجتماعی</span></a><a href="#05-seo-backlink"><span class="ic">🔍</span><span>۶ · سئو و بک‌لینک</span></a><a href="#06-ads-and-growth"><span class="ic">📈</span><span>۷ · تبلیغات و رشد</span></a><a href="#07-roadmap-and-kpi"><span class="ic">🗺️</span><span>۸ · نقشه راه و KPI</span></a><a href="#08-integrations-and-env"><span class="ic">🔌</span><span>۹ · سرویس‌ها و کلیدها</span></a><a href="#09-data-model"><span class="ic">🗄️</span><span>۱۰ · مدل داده</span></a><a href="#10-decisions-and-questions"><span class="ic">✅</span><span>۱۱ · تصمیم‌های باز</span></a>
+  <a href="#readme"><span class="ic">📋</span><span>خلاصه اجرایی</span></a><a href="#01-business-plan"><span class="ic">💼</span><span>۱ · بیزینس‌پلن</span></a><a href="#02-technical-architecture"><span class="ic">🏗️</span><span>۲ · معماری فنی</span></a><a href="#03-automation-pipeline"><span class="ic">⚙️</span><span>۳ · اتوماسیون</span></a><a href="#11-virtual-tryon"><span class="ic">👕</span><span>۴ · پرو آنلاین لباس</span></a><a href="#04-social-media-plan"><span class="ic">📱</span><span>۵ · شبکه‌های اجتماعی</span></a><a href="#05-seo-backlink"><span class="ic">🔍</span><span>۶ · سئو و بک‌لینک</span></a><a href="#06-ads-and-growth"><span class="ic">📈</span><span>۷ · تبلیغات و رشد</span></a><a href="#07-roadmap-and-kpi"><span class="ic">🗺️</span><span>۸ · نقشه راه و KPI</span></a><a href="#08-integrations-and-env"><span class="ic">🔌</span><span>۹ · سرویس‌ها و کلیدها</span></a><a href="#09-data-model"><span class="ic">🗄️</span><span>۱۰ · مدل داده</span></a><a href="#10-decisions-and-questions"><span class="ic">✅</span><span>۱۱ · تصمیم‌های باز</span></a><a href="#12-blockers-and-solutions"><span class="ic">🚧</span><span>۱۲ · چهار مانع و راه‌حل</span></a>
   <div class="nav-foot">
     نسخه ۲ · مرداد ۱۴۰۵<br>
     شامل پرو آنلاین لباس<br>
@@ -5397,7 +5397,820 @@ CREATE TABLE IF NOT EXISTS job_queue (
 </ol>
 <blockquote>
 <p>بعد از پاسخ به این ۸ مورد، فاز اجرا (Sprint 0) طبق سند ۷ شروع می‌شود.</p>
-</blockquote></section>
+</blockquote></section><section id="12-blockers-and-solutions"><div class="sec-head"><div class="sec-ic">🚧</div><div class="sec-name">۱۲ · چهار مانع و راه‌حل</div></div><h1>سند ۱۲ — چهار مانع اصلی و راه‌حل اجرایی آن‌ها</h1>
+<p>این سند قبل از شروع اجرا نوشته شده تا موانعی که پروژه را زمین می‌زنند، از قبل حل شوند.</p>
+<h2>خلاصه در یک نگاه</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>مانع</th>
+<th>ریشه واقعی مشکل</th>
+<th>راه‌حل</th>
+<th>قطعیت</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>۱</td>
+<td>SSH از میزبان‌فا نداریم</td>
+<td>هاست اشتراکی معمولاً SSH نمی‌دهد</td>
+<td><strong>cPanel API Token روی HTTPS</strong> — جایگزین کامل SSH</td>
+<td>✅ ۱۰۰٪ شدنی</td>
+</tr>
+<tr>
+<td>۲</td>
+<td>گیت‌هاب روی میزبان‌فا خیلی کند است</td>
+<td>تحریم و throttle روی IP ایران</td>
+<td><strong>معکوس کردن جهت جریان</strong> — هاست هرگز به گیت‌هاب وصل نشود</td>
+<td>✅ ۱۰۰٪ شدنی</td>
+</tr>
+<tr>
+<td>۳</td>
+<td>API اینستاگرام در دسترس نیست</td>
+<td>دو مشکل جدا: IP ایران + App Review متا</td>
+<td><strong>موتور انتشار روی هاستینگر</strong> + مسیر پلکانی</td>
+<td>⚠️ ۷۰٪ خودکار، ۳۰٪ نیمه‌خودکار</td>
+</tr>
+<tr>
+<td>۴</td>
+<td>همه‌چیز با ایجنت هوش مصنوعی</td>
+<td>نیاز به ساختار قابل اجرا و قابل تأیید توسط ماشین</td>
+<td><strong>قرارداد ایجنت + اسکریپت‌های قطعی + Self-verify</strong></td>
+<td>✅ ۱۰۰٪ شدنی</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote>
+<p><strong>بینش کلیدی:</strong> مشکل ۱، ۲ و بخش بزرگی از ۳، همگی یک ریشه دارند: <em>ما داریم از سرور ایرانی به دنیای بیرون وصل می‌شویم.</em> راه‌حل هر سه یکی است: <strong>هرگز این کار را نکن.</strong> بگذار سرور خارجی به سرور ایرانی وصل شود، نه برعکس.</p>
+</blockquote>
+<hr />
+<h1>مانع ۱ — نداشتن SSH روی میزبان‌فا</h1>
+<h2>۱٫۱ چرا SSH نمی‌دهند و چرا اصرار نکنیم</h2>
+<p>هاست اشتراکی معمولاً SSH را غیرفعال می‌کند چون یک کاربر می‌تواند منابع بقیه را مصرف کند. حتی اگر بدهند، معمولاً <strong>jailed shell</strong> با ابزار محدود است. پس به‌جای جنگیدن با هاست، مسیری می‌سازیم که اصلاً SSH لازم نداشته باشد.</p>
+<h2>۱٫۲ اول این سه گزینه را از پشتیبانی بخواهید (رایگان، شاید جواب بدهد)</h2>
+<p>به ترتیب اولویت از پشتیبانی میزبان‌فا بپرسید:</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>درخواست</th>
+<th>متن پیشنهادی تیکت</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>الف) Terminal داخل cPanel</strong></td>
+<td>«لطفاً ویژگی Terminal را در cPanel اکانت من فعال کنید. نیازی به دسترسی SSH از بیرون ندارم، فقط ترمینال داخل پنل کافی است.»</td>
+</tr>
+<tr>
+<td><strong>ب) SSH با کلید</strong></td>
+<td>«لطفاً SSH Access را با احراز هویت کلید عمومی (نه پسورد) برای اکانت من فعال کنید. کلید public را ضمیمه کرده‌ام. پورت و آدرس را اعلام بفرمایید.»</td>
+</tr>
+<tr>
+<td><strong>ج) API Token</strong></td>
+<td>«لطفاً امکان ساخت cPanel API Token را در بخش Manage API Tokens فعال کنید.»</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>نکته مهم:</strong> گزینه (ج) از هر دوی قبلی مهم‌تر است. اگر فقط یکی را بدهند، همین را بخواهید.</p>
+<h2>۱٫۳ راه‌حل اصلی: cPanel API Token — جایگزین کامل SSH</h2>
+<p>cPanel یک API کامل روی HTTPS (پورت ۲۰۸۳) دارد که تقریباً هر کاری که با SSH می‌کردیم را انجام می‌دهد — <strong>بدون نیاز به SSH</strong>.</p>
+<h3>ساخت توکن</h3>
+<pre><code>cPanel → Security → Manage API Tokens → Create
+نام: github-deploy
+دسترسی: Full (یا محدود به Fileman + Archive اگر ممکن بود)
+→ توکن ۳۲ کاراکتری را کپی کنید (فقط یک بار نشان داده می‌شود)
+</code></pre>
+<h3>کارهایی که با API می‌شود کرد</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>کار</th>
+<th>Endpoint</th>
+<th>معادل SSH</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>آپلود فایل</td>
+<td><code>UAPI Fileman::upload_files</code></td>
+<td><code>scp</code></td>
+</tr>
+<tr>
+<td>استخراج tar.gz</td>
+<td><code>UAPI Archive::extract_archive</code></td>
+<td><code>tar -xzf</code></td>
+</tr>
+<tr>
+<td>ساخت پوشه</td>
+<td><code>UAPI Fileman::mkdir</code></td>
+<td><code>mkdir</code></td>
+</tr>
+<tr>
+<td>حذف فایل</td>
+<td><code>UAPI Fileman::trash_files</code></td>
+<td><code>rm</code></td>
+</tr>
+<tr>
+<td>ری‌استارت اپ Node</td>
+<td>نوشتن در <code>tmp/restart.txt</code></td>
+<td><code>touch tmp/restart.txt</code></td>
+</tr>
+<tr>
+<td>مدیریت Cron</td>
+<td><code>UAPI Cron::add_line</code></td>
+<td><code>crontab -e</code></td>
+</tr>
+<tr>
+<td>بکاپ دیتابیس</td>
+<td><code>UAPI Backup::…</code></td>
+<td><code>mysqldump</code></td>
+</tr>
+<tr>
+<td>خواندن لاگ</td>
+<td><code>UAPI Fileman::get_file_content</code></td>
+<td><code>cat</code></td>
+</tr>
+</tbody>
+</table></div>
+<h3>نمونه فراخوانی (تست دستی)</h3>
+<pre><code class="language-bash"># تست اتصال — باید لیست فایل‌ها را برگرداند
+curl -sS -H 'Authorization: cpanel USERNAME:APITOKEN' \
+  'https://HOST:2083/execute/Fileman/list_files?dir=%2Fhome%2FUSERNAME'
+
+# آپلود بسته
+curl -sS -H 'Authorization: cpanel USERNAME:APITOKEN' \
+  -F 'dir=/home/USERNAME/incoming' \
+  -F 'file-1=@bundle.tar.gz' \
+  'https://HOST:2083/execute/Fileman/upload_files'
+
+# استخراج روی سرور
+curl -sS -H 'Authorization: cpanel USERNAME:APITOKEN' \
+  --data-urlencode 'sourcefiles=/home/USERNAME/incoming/bundle.tar.gz' \
+  --data-urlencode 'destdir=/home/USERNAME/app' \
+  'https://HOST:2083/execute/Archive/extract_archive'
+</code></pre>
+<h2>۱٫۴ راه‌حل پشتیبان: PHP Deploy Receiver</h2>
+<p>اگر حتی API Token هم ندادند، یک فایل PHP کوچک روی هاست می‌گذاریم که نقش «گیرنده دیپلوی» را بازی می‌کند. فقط FTP لازم است (که همه هاست‌ها می‌دهند).</p>
+<p>فایل <code>_deploy/receive.php</code> در بسته تحویلی هست. کارش:<br />
+1. درخواست را با امضای HMAC اعتبارسنجی می‌کند (بدون امضای درست، ۴۰۳)<br />
+2. فایل tar.gz را می‌گیرد<br />
+3. بکاپ نسخه فعلی را می‌سازد<br />
+4. استخراج می‌کند و <code>.env</code> را دست‌نخورده نگه می‌دارد<br />
+5. <code>tmp/restart.txt</code> را لمس می‌کند تا اپ Node ری‌استارت شود<br />
+6. Health check می‌زند و نتیجه را JSON برمی‌گرداند<br />
+7. اگر خطا بود، <strong>خودکار به نسخه قبل برمی‌گردد</strong></p>
+<p><strong>امنیت:</strong> بدون <code>DEPLOY_SECRET</code> هیچ‌کاری نمی‌کند، محدود به IP‌های GitHub Actions قابل تنظیم است، و بعد از هر دیپلوی لاگ می‌نویسد.</p>
+<h2>۱٫۵ اولویت پیاده‌سازی</h2>
+<pre><code>۱) تیکت بزنید برای API Token          ← بهترین حالت
+۲) اگر ندادند: PHP Receiver           ← همیشه کار می‌کند
+۳) اگر SSH دادند: عالی، هر سه را داریم
+</code></pre>
+<p><strong>نتیجه: مانع ۱ به‌طور کامل قابل حل است و SSH اصلاً ضروری نیست.</strong></p>
+<hr />
+<h1>مانع ۲ — کندی شدید گیت‌هاب روی میزبان‌فا</h1>
+<h2>۲٫۱ ریشه واقعی مشکل</h2>
+<p>گیت‌هاب، npm registry و بسیاری از سرویس‌های توسعه، ترافیک از IP ایران را throttle یا مسدود می‌کنند. وقتی روی هاست <code>git pull</code> یا <code>npm install</code> می‌زنید، ممکن است ساعت‌ها طول بکشد یا timeout بخورد.</p>
+<h2>۲٫۲ راه‌حل بنیادی: معکوس کردن جهت جریان</h2>
+<p><strong>قانون طلایی این پروژه:</strong></p>
+<blockquote>
+<p>❌ هرگز روی هاست میزبان‌فا دستور <code>git</code>، <code>npm install</code> یا <code>docker pull</code> اجرا نکنید.<br />
+✅ هاست فقط یک فایل آماده دریافت می‌کند و آن را باز می‌کند.</p>
+</blockquote>
+<pre><code>  ❌ روش غلط (کند و شکننده)
+  ┌──────────┐  git pull   ┌──────────┐
+  │ میزبان‌فا │ ─────────►  │ گیت‌هاب  │   ← ترافیک از ایران به بیرون
+  │          │  npm install│  npm     │      = تحریم، کندی، timeout
+  └──────────┘             └──────────┘
+
+  ✅ روش درست (سریع و پایدار)
+  ┌──────────┐   build     ┌──────────┐  push یک فایل  ┌──────────┐
+  │ گیت‌هاب  │ ─────────►  │ Actions  │ ────────────►  │ میزبان‌فا │
+  │          │  npm ci     │ (ابری)   │  ~۱۵ مگابایت   │          │
+  └──────────┘             └──────────┘                └──────────┘
+                            ↑ اینجا اینترنت آزاد است      ↑ فقط دریافت
+</code></pre>
+<p>همه کارهای سنگین (نصب پکیج، build، بهینه‌سازی) روی سرورهای GitHub Actions انجام می‌شود که اینترنت آزاد دارند. هاست ایرانی فقط <strong>یک فایل فشرده</strong> می‌گیرد.</p>
+<h2>۲٫۳ مشکل دوم: FTP فایل‌به‌فایل هم کند است</h2>
+<p>روش فعلی شما (<code>FTP-Deploy-Action</code>) هزاران فایل را یکی‌یکی sync می‌کند. روی هاست اشتراکی این فاجعه است.</p>
+<h3>مقایسه روش‌ها</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>روش</th>
+<th>تعداد اتصال</th>
+<th>زمان تخمینی</th>
+<th>پایداری</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>❌ FTP فایل‌به‌فایل (فعلی)</td>
+<td>۳٬۰۰۰+</td>
+<td>۱۵-۴۰ دقیقه</td>
+<td>ضعیف — نصفه می‌ماند</td>
+</tr>
+<tr>
+<td>⚠️ rsync روی SSH</td>
+<td>۱</td>
+<td>۲-۴ دقیقه</td>
+<td>خوب (ولی SSH لازم)</td>
+</tr>
+<tr>
+<td>✅ <strong>یک tar.gz + استخراج با API</strong></td>
+<td><strong>۲</strong></td>
+<td><strong>۴۰-۹۰ ثانیه</strong></td>
+<td><strong>عالی</strong></td>
+</tr>
+</tbody>
+</table></div>
+<h3>چرا این‌قدر تفاوت دارد</h3>
+<p>یک اتصال FTP روی شبکه پرتأخیر، برای هر فایل باید handshake کند. با ۳٬۰۰۰ فایل یعنی ۳٬۰۰۰ رفت‌وبرگشت. با tar.gz فقط یک آپلود داریم و استخراج <strong>روی خود سرور</strong> انجام می‌شود که سریع است.</p>
+<h2>۲٫۴ بهینه‌سازی‌های تکمیلی</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>تکنیک</th>
+<th>تأثیر</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>حذف <code>node_modules</code> از بسته</strong></td>
+<td>حجم از ۸۰ مگ به ۱۵ مگ — Next.js standalone فقط پکیج‌های لازم را کنار می‌گذارد</td>
+</tr>
+<tr>
+<td><strong>دیپلوی افزایشی (Delta)</strong></td>
+<td>فقط فایل‌های تغییرکرده در بسته باشند — حجم به ۲-۵ مگ</td>
+</tr>
+<tr>
+<td><strong>فشرده‌سازی حداکثری</strong></td>
+<td><code>tar -czf</code> با <code>-9</code> یا استفاده از <code>zstd</code></td>
+</tr>
+<tr>
+<td><strong>کش GitHub Actions</strong></td>
+<td>build از ۶ دقیقه به ۹۰ ثانیه</td>
+</tr>
+<tr>
+<td><strong>دیپلوی از هاستینگر به‌عنوان رله</strong></td>
+<td>اگر GitHub→میزبان‌فا کند بود: GitHub→هاستینگر→میزبان‌فا</td>
+</tr>
+</tbody>
+</table></div>
+<h2>۲٫۵ اگر مجبور شدید روی هاست npm بزنید</h2>
+<p>فقط در حالت اضطراری — با آینه ایرانی:</p>
+<pre><code class="language-bash">npm config set registry https://mirror-npm.runflare.com
+# یا
+npm config set registry https://registry.npmmirror.com
+npm config set strict-ssl false     # فقط اگر خطای گواهی داد
+</code></pre>
+<p>و DNS شکن یا ۴۰۳ روی سرور. ولی <strong>این حالت نباید در معماری ما پیش بیاید.</strong></p>
+<h2>۲٫۶ ابزار تحویلی</h2>
+<p>در بسته این فایل‌ها هست:<br />
+- <code>.github/workflows/deploy-fast.yml</code> — بیلد و دیپلوی سریع بدون SSH<br />
+- <code>scripts/deploy-via-cpanel-api.sh</code> — آپلود و استخراج با API<br />
+- <code>_deploy/receive.php</code> — گیرنده PHP (پشتیبان)</p>
+<p><strong>نتیجه: زمان دیپلوی از ۱۵-۴۰ دقیقه به زیر ۹۰ ثانیه می‌رسد.</strong></p>
+<hr />
+<h1>مانع ۳ — عدم دسترسی به API اینستاگرام</h1>
+<p>این پیچیده‌ترین مانع است و باید صادقانه با آن روبه‌رو شویم. <strong>دو مشکل کاملاً جدا</strong> وجود دارد که اغلب با هم اشتباه گرفته می‌شوند.</p>
+<h2>۳٫۱ مشکل الف: IP ایران</h2>
+<p>سرورهای متا درخواست از IP ایران را رد می‌کنند.</p>
+<p><strong>راه‌حل: قطعی و ساده.</strong> موتور انتشار روی <strong>هاستینگر (خارج از ایران)</strong> اجرا می‌شود، نه روی میزبان‌فا. این دقیقاً همان معماری دومرحله‌ای است که در سند ۲ طراحی کردیم. پس این نیمه‌ی مشکل، <strong>از قبل حل شده است</strong>.</p>
+<pre><code>میزبان‌فا (ایران)              هاستینگر (خارج)           متا
+  سایت، سفارش    ──HTTPS──►    موتور انتشار    ──API──►   اینستاگرام
+  دیتابیس                       AgentRouter                فیسبوک
+</code></pre>
+<h2>۳٫۲ مشکل ب: App Review متا (مانع اصلی)</h2>
+<p>این بخش سخت است. برای انتشار خودکار روی اینستاگرام، متا این‌ها را الزامی کرده:</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>پیش‌نیاز</th>
+<th>توضیح</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>اکانت <strong>Professional</strong> (Business یا Creator)</td>
+<td>اکانت شخصی اصلاً کار نمی‌کند</td>
+</tr>
+<tr>
+<td><strong>صفحه فیسبوک</strong> متصل</td>
+<td>حتی اگر هرگز در فیسبوک پست نکنید</td>
+</tr>
+<tr>
+<td>اپ در Meta for Developers</td>
+<td>از نوع Business</td>
+</tr>
+<tr>
+<td>مجوز <code>instagram_business_basic</code></td>
+<td>نیازمند App Review</td>
+</tr>
+<tr>
+<td>مجوز <code>instagram_business_content_publish</code></td>
+<td>نیازمند App Review جداگانه</td>
+</tr>
+<tr>
+<td><strong>App Review</strong></td>
+<td>۲ تا ۴ هفته، با ویدئوی نمایش عملکرد و صفحه حریم خصوصی</td>
+</tr>
+<tr>
+<td><strong>Business Verification</strong></td>
+<td>تأیید هویت کسب‌وکار با مدارک</td>
+</tr>
+</tbody>
+</table></div>
+<p>محدودیت‌ها بعد از تأیید: <strong>۲۵ پست در ۲۴ ساعت</strong> برای هر اکانت و ۲۰۰ فراخوانی API در ساعت.</p>
+<h3>⚠️ ریسک واقعی که باید بدانید</h3>
+<p>برای یک کسب‌وکار ایرانی، <strong>Business Verification متا ممکن است رد شود</strong> — به دلیل تحریم‌ها و اینکه متا مدارک ایرانی را نمی‌پذیرد. این ریسک واقعی است و نباید کل پروژه را به آن گره بزنیم.</p>
+<p><strong>پس معماری را طوری می‌سازیم که اگر اینستاگرام هرگز خودکار نشد، پروژه همچنان کار کند.</strong></p>
+<h2>۳٫۳ راه‌حل: مدل چهار لایه‌ای انتشار</h2>
+<p>کانال‌ها را بر اساس «قطعیت خودکارسازی» دسته‌بندی می‌کنیم:</p>
+<h3>🟢 لایه ۱ — کاملاً خودکار، بدون هیچ مانعی (از روز اول)</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>کانال</th>
+<th>وضعیت</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>تلگرام</td>
+<td>✅ Bot API آزاد، کد شما آماده است</td>
+</tr>
+<tr>
+<td>بله</td>
+<td>✅ Bot API، بدون محدودیت</td>
+</tr>
+<tr>
+<td>ایتا</td>
+<td>✅ Bot API، بدون محدودیت</td>
+</tr>
+<tr>
+<td>روبیکا</td>
+<td>✅ Bot API، بدون محدودیت</td>
+</tr>
+<tr>
+<td>سایت و بلاگ</td>
+<td>✅ کد خودمان</td>
+</tr>
+<tr>
+<td>پیامک</td>
+<td>✅ پنل ایرانی</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>این‌ها ۱۰۰٪ خودکارند و هیچ وابستگی به متا ندارند.</strong> برای بازار ایران، همین‌ها موتور اصلی فروش‌اند.</p>
+<h3>🟡 لایه ۲ — خودکار با کمی کار (هفته ۳-۶)</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>کانال</th>
+<th>پیش‌نیاز</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>پینترست</td>
+<td>API ساده، ثبت‌نام آسان، بدون App Review سنگین</td>
+</tr>
+<tr>
+<td>یوتیوب</td>
+<td>Google Cloud + OAuth — نسبتاً آسان</td>
+</tr>
+<tr>
+<td>آپارات</td>
+<td>آپلود با API یا اتوماسیون سبک</td>
+</tr>
+<tr>
+<td>لینکدین</td>
+<td>کد شما از قبل آماده است</td>
+</tr>
+<tr>
+<td>واتساپ</td>
+<td>Green API یا Business API</td>
+</tr>
+</tbody>
+</table></div>
+<h3>🟠 لایه ۳ — اینستاگرام نیمه‌خودکار (از روز اول کار می‌کند) ⭐</h3>
+<p><strong>این مهم‌ترین ایده این سند است.</strong></p>
+<p>سیستم <strong>همه‌چیز را کاملاً آماده می‌کند</strong> و فقط آخرین کلیک با انسان است:</p>
+<pre><code>محصول ساخته می‌شود
+   ↓
+تصویر/کاروسل/ریلز رندر می‌شود
+   ↓
+کپشن + هشتگ تولید می‌شود
+   ↓
+همه در «صف انتشار اینستاگرام» می‌رود
+   ↓
+📱 پیام در تلگرام مدیر:
+   [تصویر آماده]
+   کپشن آماده (قابل کپی با یک لمس)
+   دکمه‌ها: ✅ منتشر شد   ✏️ ویرایش   ❌ رد
+   ↓
+مدیر تصویر را ذخیره می‌کند، کپشن را کپی می‌کند،
+در اینستاگرام پیست می‌کند — ۲۰ ثانیه کار
+   ↓
+دکمه «منتشر شد» را می‌زند → سیستم ثبت می‌کند
+</code></pre>
+<p><strong>زمان انسانی: ۲۰ تا ۳۰ ثانیه برای هر پست.</strong> با ۲ پست در روز یعنی <strong>یک دقیقه در روز</strong>. این عملاً یعنی اتوماسیون، بدون هیچ وابستگی به متا.</p>
+<p>مزیت بزرگ: <strong>از روز اول کار می‌کند</strong>، بدون انتظار ۴ هفته‌ای، بدون ریسک رد شدن.</p>
+<h3>🔵 لایه ۴ — اینستاگرام کاملاً خودکار (اگر App Review پاس شد)</h3>
+<p>اگر تأیید متا گرفته شد، فقط یک متغیر عوض می‌شود:</p>
+<pre><code class="language-bash">INSTAGRAM_MODE=auto      # به‌جای semi
+</code></pre>
+<p>و همان صف، به‌جای فرستادن به تلگرام، مستقیم منتشر می‌کند. <strong>بقیه کد تغییر نمی‌کند.</strong></p>
+<h2>۳٫۴ مسیر تلاش برای App Review (موازی، بدون توقف پروژه)</h2>
+<p>اگر خواستید تلاش کنید، ترتیب درست این است:</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>گام</th>
+<th>کار</th>
+<th>زمان</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>۱</td>
+<td>اکانت اینستاگرام را به Professional (Business) تبدیل کنید</td>
+<td>۵ دقیقه</td>
+</tr>
+<tr>
+<td>۲</td>
+<td>یک صفحه فیسبوک بسازید و به اینستاگرام وصل کنید</td>
+<td>۱۵ دقیقه</td>
+</tr>
+<tr>
+<td>۳</td>
+<td>اپ Business در <code>developers.facebook.com</code> بسازید</td>
+<td>۳۰ دقیقه</td>
+</tr>
+<tr>
+<td>۴</td>
+<td>صفحه حریم خصوصی و شرایط استفاده روی سایت</td>
+<td>۱ ساعت</td>
+</tr>
+<tr>
+<td>۵</td>
+<td>با ۲۵ کاربر تستی، جریان کامل را پیاده کنید</td>
+<td>۲-۳ روز</td>
+</tr>
+<tr>
+<td>۶</td>
+<td>ویدئوی نمایش عملکرد ضبط کنید (اجباری)</td>
+<td>۱ ساعت</td>
+</tr>
+<tr>
+<td>۷</td>
+<td>درخواست <code>instagram_business_content_publish</code></td>
+<td>۲-۴ هفته انتظار</td>
+</tr>
+<tr>
+<td>۸</td>
+<td>Business Verification با مدارک</td>
+<td>⚠️ ریسک رد شدن</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>در تمام این مدت، پروژه با لایه ۳ کار می‌کند و فروش دارد.</strong></p>
+<h2>۳٫۵ گزینه‌های جایگزین (اگر App Review رد شد)</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>گزینه</th>
+<th>مزیت</th>
+<th>ریسک</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>سرویس واسط (Buffer، Later، Publer)</td>
+<td>خودشان تأیید متا دارند</td>
+<td>هزینه دلاری + پرداخت از ایران سخت</td>
+</tr>
+<tr>
+<td>اپ موبایل با Share Extension</td>
+<td>یک لمس، بدون کپی-پیست</td>
+<td>نیاز به توسعه اپ</td>
+</tr>
+<tr>
+<td><strong>باقی ماندن روی لایه ۳</strong></td>
+<td>✅ قابل اتکا، بدون هزینه، بدون ریسک</td>
+<td>۱ دقیقه کار روزانه</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>توصیه صادقانه من:</strong> لایه ۳ را بسازید و آن را کافی بدانید. تلاش برای App Review را موازی انجام دهید ولی <strong>هیچ برنامه‌ای را به آن گره نزنید.</strong></p>
+<h2>۳٫۶ جمع‌بندی مانع ۳</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>کانال</th>
+<th>خودکار؟</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>تلگرام، بله، ایتا، روبیکا، سایت، پیامک</td>
+<td>✅ ۱۰۰٪ از روز اول</td>
+</tr>
+<tr>
+<td>پینترست، یوتیوب، آپارات، لینکدین، واتساپ</td>
+<td>✅ ۱۰۰٪ از هفته ۳</td>
+</tr>
+<tr>
+<td>اینستاگرام</td>
+<td>🟠 ۹۵٪ خودکار + ۲۰ ثانیه کار انسانی</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>یعنی ~۹۷٪ کل بار انتشار خودکار است.</strong></p>
+<hr />
+<h1>مانع ۴ — طراحی و اجرای کل پروژه توسط ایجنت هوش مصنوعی</h1>
+<h2>۴٫۱ چه چیزی ایجنت را موفق یا شکست‌خورده می‌کند</h2>
+<p>ایجنت وقتی خوب کار می‌کند که بتواند <strong>خودش نتیجه کارش را ببیند و تأیید کند</strong>. ایجنتی که کور کار می‌کند، خراب‌کاری می‌کند.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>ایجنت شکست می‌خورد وقتی</th>
+<th>ایجنت موفق می‌شود وقتی</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>❌ کار دستی لازم باشد</td>
+<td>✅ هر کار یک دستور دارد</td>
+</tr>
+<tr>
+<td>❌ نتواند خروجی را تست کند</td>
+<td>✅ endpoint سلامت دارد</td>
+</tr>
+<tr>
+<td>❌ محیط غیرقابل پیش‌بینی</td>
+<td>✅ محیط قطعی و مستند</td>
+</tr>
+<tr>
+<td>❌ خطاها بی‌صدا باشند</td>
+<td>✅ خطا با پیام روشن برمی‌گردد</td>
+</tr>
+<tr>
+<td>❌ نداند چه کاری مجاز است</td>
+<td>✅ قوانین صریح در AGENTS.md</td>
+</tr>
+</tbody>
+</table></div>
+<h2>۴٫۲ پنج ستون معماری ایجنت‌محور</h2>
+<h3>ستون ۱ — همه‌چیز یک دستور دارد</h3>
+<p>هیچ کاری نباید «توی پنل برو و کلیک کن» باشد.</p>
+<pre><code class="language-bash">npm run setup          # آماده‌سازی محیط از صفر
+npm run dev            # اجرای محلی
+npm run build          # ساخت
+npm run deploy         # دیپلوی کامل + تأیید
+npm run verify         # تست سلامت همه‌چیز
+npm run seed           # داده نمونه
+npm run agent:task     # اجرای یک وظیفه از صف
+npm run doctor         # تشخیص مشکلات محیط
+</code></pre>
+<h3>ستون ۲ — خود-تأییدی (Self-Verification)</h3>
+<p>هر تغییری که ایجنت می‌دهد، باید بتواند بلافاصله تأیید کند:</p>
+<pre><code>POST تغییر → npm run verify → آیا سبز شد؟
+                   ↓ نه
+              rollback خودکار + گزارش خطا
+</code></pre>
+<p>Endpointهای تأیید:<br />
+| مسیر | چه چیزی را تأیید می‌کند |<br />
+|---|---|<br />
+| <code>/api/health</code> | اپ زنده است، نسخه و کامیت فعلی |<br />
+| <code>/api/health?db=1</code> | دیتابیس وصل است |<br />
+| <code>/api/health?deep=1</code> | همه سرویس‌ها: AI، ذخیره‌سازی، صف |<br />
+| <code>/api/admin/integrations-test</code> | همه توکن‌های شبکه‌های اجتماعی سالم‌اند |<br />
+| <code>/api/admin/ai-test</code> | AgentRouter پاسخ می‌دهد + تأخیر |</p>
+<h3>ستون ۳ — قرارداد ایجنت (AGENTS.md)</h3>
+<p>یک فایل در ریشه پروژه که به ایجنت می‌گوید چه بکند و چه نکند:</p>
+<pre><code class="language-markdown">## مجاز
+- ویرایش app/، lib/، components/، docs/
+- ساخت migration جدید در db/migrations/
+- اجرای npm run verify بعد از هر تغییر
+
+## ممنوع (بدون تأیید صریح انسان)
+- تغییر .env یا هر فایل حاوی کلید
+- حذف یا تغییر migration های اجراشده
+- دیپلوی روی production
+- تغییر قیمت محصولات یا موجودی
+- ارسال پیام واقعی به مشتریان
+- هر عملیات مالی
+
+## قوانین
+- هر PR باید npm run verify را پاس کند
+- هیچ کلیدی در کد hardcode نشود
+- هر تابع جدید باید تست داشته باشد
+- پیام‌های کامیت فارسی یا انگلیسی روشن
+</code></pre>
+<h3>ستون ۴ — محیط قطعی (Deterministic)</h3>
+<pre><code>.nvmrc                  → نسخه دقیق Node
+package-lock.json       → نسخه دقیق پکیج‌ها
+db/migrations/          → شماره‌گذاری‌شده و بازگشت‌پذیر
+docs/RUNBOOK.md         → هر عملیات با دستور دقیق
+scripts/doctor.sh       → تشخیص انحراف محیط
+</code></pre>
+<h3>ستون ۵ — صف وظایف قابل خواندن توسط ماشین</h3>
+<p>به‌جای اینکه هر بار توضیح بدهید، وظایف در قالب ساختاریافته باشند:</p>
+<pre><code class="language-yaml"># tasks/T-042.yml
+id: T-042
+title: افزودن توصیه‌گر سایز به صفحه محصول
+priority: high
+files:
+  - app/(shop)/products/[slug]/page.tsx
+  - lib/tryon/fit-engine.ts
+acceptance:
+  - دکمه «پرو کن» در صفحه محصول دیده شود
+  - با ورود قد و وزن، سایز پیشنهادی برگردد
+  - npm run verify سبز باشد
+  - Lighthouse بالای ۹۰ بماند
+forbidden:
+  - تغییر ساختار جدول products
+</code></pre>
+<h2>۴٫۳ تقسیم کار: ایجنت چه کند، انسان چه کند</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>✅ ایجنت انجام می‌دهد</th>
+<th>❌ فقط انسان</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>نوشتن و ریفکتور کد</td>
+<td>خرید دامنه و هاست</td>
+</tr>
+<tr>
+<td>ساخت migration دیتابیس</td>
+<td>ثبت اینماد و مدارک قانونی</td>
+</tr>
+<tr>
+<td>تولید محتوا و کپشن</td>
+<td>تأیید نهایی قیمت محصولات</td>
+</tr>
+<tr>
+<td>ساخت و اجرای تست</td>
+<td>ساخت اکانت شبکه‌های اجتماعی</td>
+</tr>
+<tr>
+<td>دیپلوی به staging</td>
+<td>دیپلوی نهایی production</td>
+</tr>
+<tr>
+<td>رفع باگ و بهینه‌سازی</td>
+<td>مذاکره با تأمین‌کننده</td>
+</tr>
+<tr>
+<td>نوشتن مستندات</td>
+<td>تصمیم استراتژیک</td>
+</tr>
+<tr>
+<td>تحلیل داده و گزارش</td>
+<td>پاسخ به شکایت جدی مشتری</td>
+</tr>
+</tbody>
+</table></div>
+<h2>۴٫۴ گاردریل‌های ایمنی (بسیار مهم)</h2>
+<p>چون این پروژه با پول واقعی و مشتری واقعی سروکار دارد:</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>گاردریل</th>
+<th>پیاده‌سازی</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>حالت خشک (Dry-run)</strong></td>
+<td>هر عملیات انتشار یا پیامک، اول در حالت شبیه‌سازی</td>
+</tr>
+<tr>
+<td><strong>سقف مصرف</strong></td>
+<td>حداکثر هزینه AI روزانه، حداکثر پیامک روزانه</td>
+</tr>
+<tr>
+<td><strong>کلید قرمز</strong></td>
+<td><code>AUTOMATION_MODE=PAUSE</code> همه‌چیز را فوراً متوقف می‌کند</td>
+</tr>
+<tr>
+<td><strong>لاگ حسابرسی</strong></td>
+<td>هر تغییر قیمت، موجودی و انتشار ثبت شود</td>
+</tr>
+<tr>
+<td><strong>بازگشت خودکار</strong></td>
+<td>اگر health check بعد از دیپلوی قرمز شد، rollback</td>
+</tr>
+<tr>
+<td><strong>جداسازی محیط</strong></td>
+<td>staging کاملاً جدا از production با دیتابیس جدا</td>
+</tr>
+<tr>
+<td><strong>بدون دسترسی مالی</strong></td>
+<td>ایجنت هرگز به درگاه پرداخت یا حساب بانکی دسترسی ندارد</td>
+</tr>
+</tbody>
+</table></div>
+<h2>۴٫۵ چرخه کاری با ایجنت</h2>
+<pre><code>۱) شما: «این کار را بکن»  (یا یک فایل task)
+        ↓
+۲) ایجنت: می‌خواند، برنامه می‌دهد، تأیید می‌گیرد
+        ↓
+۳) ایجنت: کد می‌نویسد در یک برنچ جدا
+        ↓
+۴) ایجنت: npm run verify — خودش تست می‌کند
+        ↓
+۵) ایجنت: دیپلوی روی staging + health check
+        ↓
+۶) شما: نگاه می‌کنید، تأیید می‌کنید
+        ↓
+۷) دیپلوی روی production + تأیید نهایی
+        ↓
+۸) اگر قرمز شد → rollback خودکار
+</code></pre>
+<hr />
+<h1>🚦 برنامه عملیاتی: ۷ روز آینده</h1>
+<p>قبل از نوشتن حتی یک خط کد فروشگاه، این‌ها را قطعی کنیم:</p>
+<h2>روز ۱ — تیکت‌ها و تشخیص</h2>
+<ul>
+<li>[ ] تیکت به میزبان‌فا: درخواست <strong>API Token</strong> (اولویت ۱)، Terminal، SSH</li>
+<li>[ ] اجرای <code>scripts/diagnose-host.sh</code> روی هاست (از طریق cPanel Terminal یا PHP)</li>
+<li>[ ] ثبت نتایج: نسخه Node، دسترسی به گیت‌هاب، سرعت، محدودیت CPU</li>
+</ul>
+<h2>روز ۲ — مسیر دیپلوی بدون SSH</h2>
+<ul>
+<li>[ ] ساخت API Token (اگر دادند) و تست <code>Fileman::list_files</code></li>
+<li>[ ] اگر ندادند: آپلود <code>_deploy/receive.php</code> با FTP و تست</li>
+<li>[ ] اولین دیپلوی آزمایشی با یک فایل ساده</li>
+</ul>
+<h2>روز ۳ — سنجش سرعت</h2>
+<ul>
+<li>[ ] اندازه‌گیری زمان دیپلوی با روش جدید (هدف: زیر ۹۰ ثانیه)</li>
+<li>[ ] تست health check خودکار</li>
+<li>[ ] تست rollback خودکار</li>
+</ul>
+<h2>روز ۴ — هاستینگر و موتور انتشار</h2>
+<ul>
+<li>[ ] خرید/راه‌اندازی هاست هاستینگر</li>
+<li>[ ] تست دسترسی به AgentRouter از هاستینگر</li>
+<li>[ ] تست دسترسی به <code>graph.facebook.com</code> از هاستینگر</li>
+</ul>
+<h2>روز ۵ — کانال‌های لایه ۱</h2>
+<ul>
+<li>[ ] ساخت ربات تلگرام و تست انتشار واقعی</li>
+<li>[ ] ساخت ربات بله، ایتا، روبیکا و تست</li>
+<li>[ ] تست پنل پیامک</li>
+</ul>
+<h2>روز ۶ — اینستاگرام</h2>
+<ul>
+<li>[ ] تبدیل اکانت به Business + اتصال صفحه فیسبوک</li>
+<li>[ ] ساخت اپ در Meta for Developers</li>
+<li>[ ] پیاده‌سازی <strong>لایه ۳ (نیمه‌خودکار)</strong> و تست</li>
+<li>[ ] شروع فرآیند App Review (موازی، بدون توقف)</li>
+</ul>
+<h2>روز ۷ — زیرساخت ایجنت</h2>
+<ul>
+<li>[ ] نوشتن <code>AGENTS.md</code> و <code>RUNBOOK.md</code></li>
+<li>[ ] ساخت <code>npm run verify</code> و <code>npm run doctor</code></li>
+<li>[ ] راه‌اندازی محیط staging</li>
+<li>[ ] تنظیم گاردریل‌ها و کلید قرمز</li>
+</ul>
+<p><strong>بعد از این ۷ روز، اجرای فروشگاه شروع می‌شود — بدون هیچ مانع مسدودکننده‌ای.</strong></p>
+<hr />
+<h1>✅ جمع‌بندی نهایی</h1>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>مانع</th>
+<th>وضعیت بعد از راه‌حل</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>۱. SSH</td>
+<td>✅ <strong>حل شد</strong> — اصلاً لازم نیست، cPanel API جایگزین کامل است</td>
+</tr>
+<tr>
+<td>۲. کندی گیت‌هاب</td>
+<td>✅ <strong>حل شد</strong> — هاست هرگز به گیت‌هاب وصل نمی‌شود؛ ۹۰ ثانیه به‌جای ۴۰ دقیقه</td>
+</tr>
+<tr>
+<td>۳. API اینستاگرام</td>
+<td>🟠 <strong>مدیریت شد</strong> — ۹۷٪ انتشار خودکار، اینستاگرام با ۱ دقیقه کار روزانه</td>
+</tr>
+<tr>
+<td>۴. ایجنت هوش مصنوعی</td>
+<td>✅ <strong>حل شد</strong> — با ۵ ستون معماری و گاردریل‌های ایمنی</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>هیچ‌کدام از این چهار مورد، مانع مسدودکننده (blocker) نیستند.</strong> سه‌تای اول کاملاً حل می‌شوند و چهارمی فقط نیاز به انضباط ساختاری دارد.</p>
+<p>تنها ریسک باقی‌مانده، App Review متاست که با طراحی لایه ۳، <strong>از مسیر بحرانی پروژه خارج شده است</strong>.</p></section>
 </main>
 </div>
 

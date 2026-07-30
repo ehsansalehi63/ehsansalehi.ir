@@ -29,6 +29,7 @@ DOCS = [
     ("08-integrations-and-env.md", "۹ · سرویس‌ها و کلیدها", "🔌"),
     ("09-data-model.sql", "۱۰ · مدل داده", "🗄️"),
     ("10-decisions-and-questions.md", "۱۱ · تصمیم‌های باز", "✅"),
+    ("12-blockers-and-solutions.md", "۱۲ · چهار مانع و راه‌حل", "🚧"),
 ]
 
 FONT_FILES = [
