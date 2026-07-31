@@ -1,0 +1,17 @@
+{
+  "name": "social-relay",
+  "version": "1.0.0",
+  "private": true,
+  "description": "رله انتشار شبکه‌های اجتماعی — روی هاستینگر اجرا می‌شود تا محدودیت IP ایران دور زده شود",
+  "main": "server.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "health": "curl -s http://localhost:${PORT:-3001}/health"
+  },
+  "dependencies": {}
+}
