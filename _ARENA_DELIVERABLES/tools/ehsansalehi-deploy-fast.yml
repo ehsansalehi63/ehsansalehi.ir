@@ -1,0 +1,155 @@
+# ═══════════════════════════════════════════════════════════════
+#  دیپلوی سریع ehsansalehi.ir — جایگزین FTP فایل‌به‌فایل
+#
+#  ⚠️ این فایل را دستی در GitHub UI بسازید یا جایگزین کنید:
+#     .github/workflows/deploy-mizbanfa.yml
+#     (GitHub App آرنا مجوز نوشتن در پوشه workflows ندارد)
+#
+#  چه چیزی عوض می‌شود:
+#    قبل: ۳٬۰۰۰+ فایل یکی‌یکی با FTP  →  ۱۵ تا ۴۰ دقیقه، نصفه‌کاره می‌ماند
+#    بعد: یک فایل tar.gz + استخراج روی سرور  →  زیر ۹۰ ثانیه
+#
+#  Secrets لازم (یکی از دو دسته):
+#    روش A — cPanel API Token (ترجیحی):
+#      CPANEL_HOST, CPANEL_USER, CPANEL_TOKEN, CPANEL_APP_DIR
+#    روش B — PHP Receiver:
+#      DEPLOY_URL, DEPLOY_SECRET
+#    مشترک:
+#      HEALTH_URL = https://ehsansalehi.ir/api/deploy/health
+#
+#  روش C (پشتیبان) — اگر هیچ‌کدام نبود، FTP فقط یک فایل می‌فرستد
+#    FTP_SERVER, FTP_USERNAME, FTP_PASSWORD
+# ═══════════════════════════════════════════════════════════════
+
+name: Deploy ehsansalehi.ir (fast)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      method:
+        description: 'روش دیپلوی'
+        type: choice
+        options: [api, php, ftp]
+        default: api
+
+concurrency:
+  group: deploy-ehsansalehi
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Cache Next.js build
+        uses: actions/cache@v4
+        with:
+          path: .next/cache
+          key: next-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/*.[jt]s','**/*.[jt]sx') }}
+          restore-keys: |
+            next-${{ hashFiles('package-lock.json') }}-
+            next-
+
+      # نصب پکیج‌ها روی سرور گیت‌هاب (اینترنت آزاد) — نه روی میزبان‌فا
+      - name: Install
+        run: npm ci --prefer-offline --no-audit --fund=false
+
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SITE_URL: https://ehsansalehi.ir
+          NEXT_TELEMETRY_DISABLED: '1'
+
+      # ★ کلید سرعت: یک فایل به‌جای هزاران فایل
+      - name: Create bundle
+        id: bundle
+        run: |
+          set -euo pipefail
+          OUT=.next/standalone
+
+          cp -r public "$OUT/public"
+          mkdir -p "$OUT/.next"
+          cp -r .next/static "$OUT/.next/static"
+          mkdir -p "$OUT/tmp"
+          date -u +%FT%TZ > "$OUT/tmp/restart.txt"
+
+          cat > "$OUT/deploy-info.json" <<EOF
+          {
+            "commit": "${GITHUB_SHA}",
+            "shortSha": "${GITHUB_SHA:0:7}",
+            "ref": "${GITHUB_REF_NAME}",
+            "runId": "${GITHUB_RUN_ID}",
+            "builtAt": "$(date -u +%FT%TZ)",
+            "node": "$(node -v)"
+          }
+          EOF
+
+          mkdir -p dist
+          B="dist/bundle-${GITHUB_RUN_ID}.tar.gz"
+          tar -C "$OUT" -cf - . | gzip -9 > "$B"
+
+          echo "path=$B" >> "$GITHUB_OUTPUT"
+          echo "::notice::حجم بسته: $(du -h "$B" | cut -f1)"
+
+      # ─── روش A و B: بدون SSH، سریع ───────────────────
+      - name: Deploy (API or PHP receiver)
+        if: ${{ (inputs.method || 'api') != 'ftp' }}
+        env:
+          DEPLOY_METHOD: ${{ inputs.method || 'api' }}
+          CPANEL_HOST:   ${{ secrets.CPANEL_HOST }}
+          CPANEL_USER:   ${{ secrets.CPANEL_USER }}
+          CPANEL_TOKEN:  ${{ secrets.CPANEL_TOKEN }}
+          APP_DIR:       ${{ secrets.CPANEL_APP_DIR }}
+          DEPLOY_URL:    ${{ secrets.DEPLOY_URL }}
+          DEPLOY_SECRET: ${{ secrets.DEPLOY_SECRET }}
+          HEALTH_URL:    ${{ secrets.HEALTH_URL }}
+        run: |
+          chmod +x tools/deploy-cpanel.sh
+          bash tools/deploy-cpanel.sh "${{ steps.bundle.outputs.path }}"
+
+      # ─── روش C: FTP ولی فقط یک فایل (نه هزاران) ──────
+      - name: Deploy (FTP single file fallback)
+        if: ${{ (inputs.method || 'api') == 'ftp' }}
+        run: |
+          sudo apt-get install -y lftp -qq
+          lftp -c "
+            set ftp:ssl-allow true;
+            set ssl:verify-certificate false;
+            set net:timeout 30;
+            open -u '${{ secrets.FTP_USERNAME }}','${{ secrets.FTP_PASSWORD }}' '${{ secrets.FTP_SERVER }}';
+            mkdir -p /ehsansalehi.ir/incoming;
+            put -O /ehsansalehi.ir/incoming '${{ steps.bundle.outputs.path }}' -o bundle.tar.gz;
+            bye
+          "
+          echo "::notice::بسته آپلود شد — استخراج را با cPanel File Manager یا Cron انجام دهید"
+
+      - name: Verify deployed version
+        if: ${{ (inputs.method || 'api') != 'ftp' }}
+        run: |
+          sleep 6
+          BODY=$(curl -sS --max-time 25 "${{ secrets.HEALTH_URL }}" || echo '{}')
+          echo "$BODY"
+          GOT=$(echo "$BODY" | grep -o '"shortSha":"[^"]*"' | cut -d'"' -f4 || echo "?")
+          WANT="${GITHUB_SHA:0:7}"
+          if [ "$GOT" = "$WANT" ]; then
+            echo "::notice::✅ نسخه $WANT روی سایت فعال است"
+          else
+            echo "::warning::نسخه سایت ($GOT) با کامیت ($WANT) فرق دارد"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bundle-${{ github.run_id }}
+          path: dist/*.tar.gz
+          retention-days: 7

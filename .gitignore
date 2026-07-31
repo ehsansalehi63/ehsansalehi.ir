@@ -44,3 +44,18 @@ Build
 # generated deploy metadata
 /public/deploy-info.json
 /deploy-artifacts/
+
+# ═══ آرشیوها و بسته‌های دیپلوی (هرگز در گیت نباشند) ═══
+*.tar.gz
+*.tgz
+*.zip
+!KidsWear-BusinessPlan.zip
+deploy-artifacts/
+dist/
+node_modules.tar.gz
+
+# فایل‌های زائد
+prebuild-install@*
+.DS_Store
+*.log
+.sync-state-*.json
