@@ -1,6 +1,7 @@
 import { pool } from './db';
 import { sendToLinkedIn } from './linkedinPoster';
 import { addWatermarkToImage } from './watermark';
+import { publishViaRelay, isRelayConfigured } from './relayClient';
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
 const TELEGRAM_CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID || '';
@@ -24,12 +25,12 @@ const WHATSAPP_RECIPIENT_ID = process.env.WHATSAPP_RECIPIENT_ID || process.env.W
 const INSTAGRAM_ACCESS_TOKEN = process.env.INSTAGRAM_ACCESS_TOKEN || process.env.FB_PAGE_ACCESS_TOKEN || '';
 const INSTAGRAM_ACCOUNT_ID = process.env.INSTAGRAM_ACCOUNT_ID || '';
 
-// نسخه Graph API — قابل تنظیم برای مهاجرت بدون تغییر کد
+// نسخه Graph API — قابل تغییر بدون دست زدن به کد
 const IG_GRAPH = `https://graph.facebook.com/${process.env.META_API_VERSION || 'v21.0'}`;
 
 // حالت انتشار اینستاگرام:
-//   auto = انتشار مستقیم با Graph API (نیازمند App Review متا)
-//   semi = ارسال به تلگرام مدیر برای انتشار یک‌لمسی (بدون وابستگی به متا)
+//   auto = تلاش برای انتشار خودکار (رله یا مستقیم)
+//   semi = ارسال به تلگرام مدیر برای انتشار یک‌لمسی
 //   off  = غیرفعال
 const INSTAGRAM_MODE = (process.env.INSTAGRAM_MODE || 'auto') as 'auto' | 'semi' | 'off';
 
@@ -358,10 +359,7 @@ export async function sendToWhatsAppChannel(
   }
 }
 
-/**
- * انتظار برای آماده شدن کانتینر رسانه در اینستاگرام.
- * متا کانتینر را async پردازش می‌کند؛ انتشار قبل از FINISHED خطا می‌دهد.
- */
+/** انتظار تا کانتینر رسانه در متا به وضعیت FINISHED برسد */
 async function waitForInstagramContainer(
   containerId: string,
   token: string,
@@ -379,7 +377,7 @@ async function waitForInstagramContainer(
         return { ready: false, error: data.status || data.status_code };
       }
     } catch {
-      // خطای موقت شبکه — دوباره تلاش می‌کنیم
+      // خطای گذرای شبکه — دوباره تلاش می‌کنیم
     }
     await new Promise((r) => setTimeout(r, 3000));
   }
@@ -387,9 +385,8 @@ async function waitForInstagramContainer(
 }
 
 /**
- * ارسال پست به تلگرام مدیر برای انتشار دستی در اینستاگرام.
- * وقتی استفاده می‌شود که Graph API در دسترس نباشد (تحریم، توکن منقضی، App Review).
- * کپشن در بلوک <pre> می‌رود تا با یک لمس کپی شود.
+ * ارسال پست آماده به تلگرام مدیر برای انتشار دستی در اینستاگرام.
+ * تضمین می‌کند هیچ پستی گم نشود، حتی وقتی API در دسترس نیست.
  */
 async function instagramFallbackToTelegram(
   title: string,
@@ -408,12 +405,8 @@ async function instagramFallbackToTelegram(
     return { success: false, error: `اینستاگرام ناموفق (${reason}) و تلگرام مدیر هم تنظیم نشده` };
   }
 
-  const esc = (t: string) => t.replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] as string));
-  const text =
-    `📸 <b>آماده انتشار دستی در اینستاگرام</b>\n` +
-    `<i>دلیل: ${esc(reason)}</i>\n\n` +
-    `👇 روی متن زیر بزنید تا کپی شود:\n\n` +
-    `<pre>${esc(caption)}</pre>`;
+  const esc = (t: string) =>
+    t.replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] as string));
 
   try {
     if (imageUrl) {
@@ -423,11 +416,18 @@ async function instagramFallbackToTelegram(
         body: JSON.stringify({
           chat_id: adminChat,
           photo: resolveImageUrl(imageUrl),
-          caption: `🖼 تصویر: ${title.slice(0, 200)}`,
+          caption: `🖼 ${title.slice(0, 200)}`,
         }),
         signal: AbortSignal.timeout(30000),
       });
     }
+
+    const text =
+      `📸 <b>آماده انتشار دستی در اینستاگرام</b>\n` +
+      `<i>دلیل: ${esc(reason)}</i>\n\n` +
+      `👇 روی متن زیر بزنید تا کپی شود:\n\n` +
+      `<pre>${esc(caption)}</pre>`;
+
     const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -436,10 +436,10 @@ async function instagramFallbackToTelegram(
     });
     const j = await res.json();
     if (j.ok) {
-      console.log('📩 اینستاگرام: به حالت نیمه‌خودکار منتقل شد (تلگرام مدیر)');
+      console.log('📩 اینستاگرام: به حالت نیمه‌خودکار منتقل شد');
       return { success: true };
     }
-    return { success: false, error: `ارسال به تلگرام مدیر ناموفق: ${JSON.stringify(j)}` };
+    return { success: false, error: `تلگرام مدیر: ${JSON.stringify(j)}` };
   } catch (e: any) {
     return { success: false, error: `fallback تلگرام: ${e?.message || e}` };
   }
@@ -455,14 +455,32 @@ export async function sendToInstagram(
     `🔥 ${title}\n\n📰 ${summary}\n\n🔗 ${link}\n\n` +
     `#TechNews #AI #Crypto #EhsanSalehi #فناوری #رمزارز #هوش_مصنوعی`;
 
-  // حالت nonapi: مستقیم به تلگرام مدیر (وقتی می‌دانیم API در دسترس نیست)
   if (INSTAGRAM_MODE === 'off') {
-    return { success: false, error: 'انتشار اینستاگرام غیرفعال است (INSTAGRAM_MODE=off)' };
+    return { success: false, error: 'انتشار اینستاگرام غیرفعال است' };
   }
   if (INSTAGRAM_MODE === 'semi') {
     return instagramFallbackToTelegram(title, caption, imageUrl, 'حالت نیمه‌خودکار فعال است');
   }
 
+  // ── مسیر ۱: رله روی هاستینگر ────────────────────────────
+  // متا از IP ایران در دسترس نیست، پس اگر رله تنظیم شده اول از آن استفاده می‌کنیم.
+  if (isRelayConfigured()) {
+    const relayed = await publishViaRelay({
+      channel: 'instagram',
+      kind: 'image',
+      mediaUrls: [resolveImageUrl(imageUrl)],
+      caption,
+      link,
+    });
+    if (relayed.ok) {
+      console.log('✅ اینستاگرام از طریق رله منتشر شد:', relayed.result?.id);
+      return { success: true };
+    }
+    console.warn('⚠️ رله اینستاگرام ناموفق:', relayed.error);
+    return instagramFallbackToTelegram(title, caption, imageUrl, `رله ناموفق: ${relayed.error}`);
+  }
+
+  // ── مسیر ۲: تلاش مستقیم (اگر رله تنظیم نشده) ────────────
   const igToken =
     INSTAGRAM_ACCESS_TOKEN ||
     (await getAutomationSetting('instagram_access_token')) ||
@@ -476,38 +494,30 @@ export async function sendToInstagram(
   try {
     const fullImageUrl = resolveImageUrl(imageUrl);
 
-    // مرحله ۱: ساخت کانتینر — توکن در body می‌رود نه در URL (امنیت لاگ)
+    // توکن در body می‌رود نه در URL — جلوگیری از نشت در لاگ سرور
     const createRes = await fetch(`${IG_GRAPH}/${igAccount}/media`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        image_url: fullImageUrl,
-        caption,
-        access_token: igToken,
-      }),
+      body: new URLSearchParams({ image_url: fullImageUrl, caption, access_token: igToken }),
       signal: AbortSignal.timeout(45000),
     });
     const createData = await createRes.json();
 
     if (!createRes.ok || !createData.id) {
       const msg = createData?.error?.message || JSON.stringify(createData);
-      return instagramFallbackToTelegram(title, caption, imageUrl, `ساخت مدیا ناموفق: ${msg}`);
+      return instagramFallbackToTelegram(title, caption, imageUrl, `ساخت مدیا: ${msg}`);
     }
 
-    // مرحله ۲: انتظار تا کانتینر آماده شود (قبلاً نبود و باعث خطا می‌شد)
+    // انتظار برای آماده شدن کانتینر — بدون این، انتشار تقریباً همیشه خطا می‌دهد
     const wait = await waitForInstagramContainer(createData.id, igToken);
     if (!wait.ready) {
-      return instagramFallbackToTelegram(title, caption, imageUrl, `کانتینر آماده نشد: ${wait.error}`);
+      return instagramFallbackToTelegram(title, caption, imageUrl, `کانتینر: ${wait.error}`);
     }
 
-    // مرحله ۳: انتشار
     const publishRes = await fetch(`${IG_GRAPH}/${igAccount}/media_publish`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        creation_id: createData.id,
-        access_token: igToken,
-      }),
+      body: new URLSearchParams({ creation_id: createData.id, access_token: igToken }),
       signal: AbortSignal.timeout(45000),
     });
     const publishData = await publishRes.json();
@@ -516,16 +526,10 @@ export async function sendToInstagram(
       console.log('✅ اینستاگرام: پست منتشر شد (ID:', publishData.id, ')');
       return { success: true };
     }
-
     const msg = publishData?.error?.message || JSON.stringify(publishData);
-    return instagramFallbackToTelegram(title, caption, imageUrl, `انتشار ناموفق: ${msg}`);
+    return instagramFallbackToTelegram(title, caption, imageUrl, `انتشار: ${msg}`);
   } catch (error: any) {
-    return instagramFallbackToTelegram(
-      title,
-      caption,
-      imageUrl,
-      `خطای شبکه: ${error?.message || error}`
-    );
+    return instagramFallbackToTelegram(title, caption, imageUrl, `شبکه: ${error?.message || error}`);
   }
 }
 

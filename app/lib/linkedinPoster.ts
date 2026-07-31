@@ -1,5 +1,6 @@
 import { pool } from './db';
 import { addWatermarkToImage } from './watermark';
+import { publishViaRelay, isRelayConfigured } from './relayClient';
 
 async function getAutomationSetting(key: string): Promise<string> {
   try {
@@ -16,6 +17,22 @@ export async function sendToLinkedIn(
   imageUrl: string | null,
   link: string
 ): Promise<{ success: boolean; error?: string }> {
+  // لینکدین از IP ایران timeout می‌خورد — اگر رله تنظیم شده از آن استفاده کن
+  if (isRelayConfigured()) {
+    const relayed = await publishViaRelay({
+      channel: 'linkedin',
+      caption: `${title}\n\n${summary}`,
+      link,
+      mediaUrls: imageUrl ? [imageUrl] : [],
+    });
+    if (relayed.ok) {
+      console.log('✅ لینکدین از طریق رله منتشر شد');
+      return { success: true };
+    }
+    console.warn('⚠️ رله لینکدین ناموفق، تلاش مستقیم:', relayed.error);
+    // ادامه می‌دهیم و مستقیم تلاش می‌کنیم
+  }
+
   const accessToken = process.env.LINKEDIN_ACCESS_TOKEN || await getAutomationSetting('linkedin_access_token') || '';
   let authorUrn = (process.env.LINKEDIN_AUTHOR_URN || await getAutomationSetting('linkedin_author_urn') || 'urn:li:person:ZTB9aAQEHQ').trim();
 
