@@ -63,9 +63,10 @@ LINKEDIN_AUTHOR_URN=urn:li:person:XXXX
 FB_PAGE_ACCESS_TOKEN=
 FB_PAGE_ID=
 
-# ═══ پروکسی AI (اختیاری) ═══
-OPENAI_API_KEY=
+# ═══ دروازه هوش مصنوعی ═══
+OPENAI_API_KEY=<کلید واقعی AgentRouter>
 OPENAI_BASE_URL=https://agentrouter.org/v1
+AI_GATEWAY_KEY=<رمز دلخواه برای اجازه دسترسی سایت>
 ```
 
 برای ساخت `RELAY_SECRET`:
@@ -116,11 +117,45 @@ curl -s -X POST https://YOUR-RELAY-DOMAIN/diagnose \
 
 ---
 
+## 🤖 دروازه هوش مصنوعی (OpenAI-compatible)
+
+AgentRouter از IP ایران در دسترس نیست. به‌جای تغییر کد سایت، رله **دقیقاً مثل یک endpoint استاندارد OpenAI** رفتار می‌کند.
+
+در سایت اصلی (میزبان‌فا) فقط این سه متغیر:
+
+```bash
+OPENAI_BASE_URL=https://YOUR-RELAY-DOMAIN/v1
+OPENAI_API_KEY=<همان AI_GATEWAY_KEY>
+OPENAI_MODEL=claude-opus-4-6
+```
+
+پکیج `openai` بدون هیچ تغییر کدی از رله استفاده می‌کند.
+
+### چرا این طراحی امن‌تر است
+
+| مورد | توضیح |
+|---|---|
+| کلید واقعی AgentRouter | فقط روی رله می‌ماند — هرگز به سرور ایران نمی‌رود |
+| کلید سایت (`AI_GATEWAY_KEY`) | فقط اجازه عبور می‌دهد؛ اگر لو رفت راحت عوض می‌شود |
+| احراز هویت | هدر استاندارد `Authorization` (نه HMAC) چون پکیج openai نمی‌تواند امضا بسازد |
+
+### تست
+
+```bash
+curl -s -X POST https://YOUR-RELAY-DOMAIN/v1/chat/completions \
+  -H "Authorization: Bearer YOUR_AI_GATEWAY_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"model":"claude-opus-4-6","messages":[{"role":"user","content":"بگو سلام"}]}'
+```
+
+---
+
 ## مسیرهای API
 
 | مسیر | کاربرد | احراز هویت |
 |---|---|---|
 | `GET /health` | زنده بودن | ندارد |
+| `POST /v1/chat/completions` | دروازه AI (OpenAI-compatible) | Bearer |
 | `POST /publish` | انتشار در اینستاگرام، لینکدین، فیسبوک | HMAC |
 | `POST /fetch` | دریافت محتوای تحریم‌شده | HMAC |
 | `POST /ai` | پروکسی AgentRouter | HMAC |

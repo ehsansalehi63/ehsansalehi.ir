@@ -367,6 +367,86 @@ async function proxyAI(p) {
   return r.data;
 }
 
+/**
+ * ───────────────────────────────────────────────────────────────────
+ *  پروکسی شفاف OpenAI-compatible
+ *
+ *  چرا؟ AgentRouter از IP ایران در دسترس نیست. به‌جای تغییر کد سایت،
+ *  رله را طوری می‌سازیم که *دقیقاً* مثل یک endpoint استاندارد OpenAI
+ *  رفتار کند. آنگاه در سایت فقط کافی است:
+ *
+ *      OPENAI_BASE_URL=https://relay.example.com/v1
+ *
+ *  و پکیج openai بدون هیچ تغییری از رله استفاده می‌کند.
+ *
+ *  ⚠️ این مسیر با کلید خودِ سایت (Bearer) احراز هویت می‌شود، نه HMAC —
+ *     چون پکیج openai نمی‌تواند امضای HMAC بسازد.
+ * ───────────────────────────────────────────────────────────────────
+ */
+async function openaiPassthrough(req, res, subPath, rawBody) {
+  // کلید از هدر Authorization سایت می‌آید؛ اگر نبود از env رله
+  const authHeader = req.headers['authorization'] || '';
+  const incomingKey = authHeader.replace(/^Bearer\s+/i, '').trim();
+
+  // دروازه امنیتی: کلید ورودی باید با AI_GATEWAY_KEY یا کلید واقعی یکی باشد
+  const gateKey = process.env.AI_GATEWAY_KEY || '';
+  if (gateKey) {
+    if (!incomingKey || !safeEqual(incomingKey, gateKey)) {
+      json(res, 401, { error: { message: 'کلید دروازه AI نامعتبر است', type: 'invalid_request_error' } });
+      return;
+    }
+  } else if (!incomingKey) {
+    json(res, 401, { error: { message: 'هدر Authorization لازم است', type: 'invalid_request_error' } });
+    return;
+  }
+
+  // کلید واقعی upstream: همیشه از env رله (کلید سایت هرگز به بیرون نمی‌رود)
+  const upstreamKey = CFG.aiKey || incomingKey;
+  if (!upstreamKey) {
+    json(res, 500, { error: { message: 'OPENAI_API_KEY روی رله تنظیم نشده', type: 'server_error' } });
+    return;
+  }
+
+  const target = `${CFG.aiBase}${subPath}`;
+  const t0 = Date.now();
+
+  try {
+    const upstream = await fetch(target, {
+      method: req.method,
+      headers: {
+        Authorization: `Bearer ${upstreamKey}`,
+        'Content-Type': 'application/json',
+        Accept: req.headers['accept'] || 'application/json',
+      },
+      body: ['GET', 'HEAD'].includes(req.method) ? undefined : (rawBody || undefined),
+      signal: AbortSignal.timeout(180000),
+    });
+
+    const text = await upstream.text();
+    const ms = Date.now() - t0;
+
+    if (upstream.ok) {
+      log('info', 'AI پروکسی شد', { path: subPath, ms });
+    } else {
+      log('warn', 'AI خطا داد', { path: subPath, status: upstream.status, ms });
+    }
+
+    // پاسخ را بدون دستکاری برگردان تا پکیج openai آن را بشناسد
+    res.writeHead(upstream.status, {
+      'Content-Type': upstream.headers.get('content-type') || 'application/json',
+      'Cache-Control': 'no-store',
+      'X-Relay-Upstream-Ms': String(ms),
+    });
+    res.end(text);
+  } catch (e) {
+    const msg = e?.message || String(e);
+    log('error', 'AI پروکسی ناموفق', { path: subPath, error: msg });
+    json(res, 502, {
+      error: { message: `رله نتوانست به AI وصل شود: ${msg}`, type: 'upstream_error' },
+    });
+  }
+}
+
 // ═════════════════════════════════════════════════════════════════════
 //  تشخیص وضعیت رله
 // ═════════════════════════════════════════════════════════════════════
@@ -427,7 +507,27 @@ async function handle(req, res) {
       time: new Date().toISOString(),
       uptimeMin: +(process.uptime() / 60).toFixed(1),
       secretConfigured: Boolean(SECRET),
+      aiGateway: {
+        enabled: Boolean(CFG.aiKey),
+        upstream: CFG.aiBase,
+        gateKeySet: Boolean(process.env.AI_GATEWAY_KEY),
+      },
     });
+  }
+
+  // ── پروکسی شفاف OpenAI: /v1/... ────────────────────────────
+  // این مسیر HMAC نمی‌خواهد چون پکیج openai نمی‌تواند امضا بسازد.
+  // به‌جایش با AI_GATEWAY_KEY محافظت می‌شود.
+  if (path.startsWith('/v1/')) {
+    let raw = '';
+    if (!['GET', 'HEAD'].includes(req.method)) {
+      try {
+        raw = await readBody(req);
+      } catch (e) {
+        return json(res, 413, { error: { message: e.message, type: 'invalid_request_error' } });
+      }
+    }
+    return openaiPassthrough(req, res, path, raw);
   }
 
   if (req.method !== 'POST') {
@@ -496,7 +596,7 @@ async function handle(req, res) {
         return json(res, 404, {
           ok: false,
           error: 'مسیر یافت نشد',
-          available: ['/health', '/publish', '/fetch', '/ai', '/instagram/refresh-token', '/diagnose', '/logs'],
+          available: ['/health', '/v1/chat/completions (OpenAI-compatible)', '/publish', '/fetch', '/ai', '/instagram/refresh-token', '/diagnose', '/logs'],
         });
     }
   } catch (e) {
