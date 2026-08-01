@@ -45,6 +45,7 @@ Build
 /public/deploy-info.json
 /deploy-artifacts/
 
+<<<<<<< HEAD
 # ═══ آرشیوها و بسته‌های دیپلوی (هرگز در گیت نباشند) ═══
 *.tar.gz
 *.tgz
@@ -59,3 +60,8 @@ prebuild-install@*
 .DS_Store
 *.log
 .sync-state-*.json
+=======
+# فایل تنظیمات رله شامل کلیدهای حساس است
+relay-php/relay-config.php
+_ARENA_DELIVERABLES/relay-php-upload/relay-config.php
+>>>>>>> af679f1 (feat(relay): add PHP version of the relay - works on shared hosting without any configuration)

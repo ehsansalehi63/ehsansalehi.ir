@@ -90,6 +90,7 @@ OPENAI_BASE_URL=https://agentrouter.org/v1
 OPENAI_API_KEY=
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 OPENAI_MODEL=claude-opus-4-6
 =======
 OPENAI_MODEL=claude-opus-5
@@ -97,6 +98,9 @@ OPENAI_MODEL=claude-opus-5
 =======
 OPENAI_MODEL=claude-opus-4-6
 >>>>>>> 7471b9a (fix(relay): normalize duplicate slashes in request path (//health now works))
+=======
+OPENAI_MODEL=claude-opus-4-6
+>>>>>>> af679f1 (feat(relay): add PHP version of the relay - works on shared hosting without any configuration)
 AI_MODEL_CHEAP=            # مدل ارزان برای کپشن‌های ساده
 AI_DAILY_BUDGET_USD=5      # سقف مصرف روزانه
 AI_CACHE_TTL=86400
@@ -107,6 +111,7 @@ ANTHROPIC_BASE_URL=https://agentrouter.org
 ANTHROPIC_AUTH_TOKEN=
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 ANTHROPIC_MODEL=claude-opus-4-6
 =======
 ANTHROPIC_MODEL=claude-opus-5
@@ -114,6 +119,9 @@ ANTHROPIC_MODEL=claude-opus-5
 =======
 ANTHROPIC_MODEL=claude-opus-4-6
 >>>>>>> 7471b9a (fix(relay): normalize duplicate slashes in request path (//health now works))
+=======
+ANTHROPIC_MODEL=claude-opus-4-6
+>>>>>>> af679f1 (feat(relay): add PHP version of the relay - works on shared hosting without any configuration)
 
 # ─── سرویس تصویر و ویدئو ──────────────────────────────
 IMAGE_GEN_PROVIDER=
