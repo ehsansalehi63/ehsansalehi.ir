@@ -9,7 +9,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "echo 'No build step required for the relay'",
+    "build": "node -e \"const f=require('fs');f.mkdirSync('.next/static',{recursive:true});f.writeFileSync('.next/BUILD_ID','relay');f.writeFileSync('.next/routes-manifest.json',JSON.stringify({version:3,pages404:false,basePath:'',redirects:[],rewrites:[],headers:[],staticRoutes:[],dynamicRoutes:[],dataRoutes:[]}));console.log('relay: placeholder .next created')\"",
     "postinstall": "echo 'No dependencies to install'",
     "start": "node server.js",
     "dev": "node --watch server.js",

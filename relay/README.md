@@ -16,33 +16,42 @@
 
 ---
 
-## ⚠️ مهم: خطای «Next.js framework» را چطور رفع کنیم
+## ⚠️ رفع خطای «framework = next»
 
-اگر هنگام ساخت اپ این خطا را دیدید:
+اگر یکی از این دو خطا را دیدید:
 
-> *The project is configured as a Next.js framework but lacks a `build` script...*
+> *The project is configured as a Next.js framework but lacks a `build` script*
+> *…failed when looking for the `.next` output directory*
 
-**علت:** هاستینگر `package.json` **ریشه مخزن** را دیده (که Next.js است) نه پوشه `relay` را.
+**علت:** هاستینگر هنگام ساخت اپ، `package.json` ریشه مخزن (که Next.js است) را دیده
+و framework را روی `next` **ذخیره کرده**. این تنظیم با آپلود مجدد فایل‌ها عوض نمی‌شود.
 
-**دو راه‌حل:**
+### ✅ راه‌حل قطعی: اپ را حذف و از نو بسازید
 
-### راه ۱ — آپلود ZIP (ساده‌ترین و مطمئن‌ترین) ⭐
-فایل `relay-hostinger.zip` را آپلود کنید. چون فقط شامل فایل‌های رله است،
-هاستینگر هیچ ردی از Next.js نمی‌بیند.
+۱. اپ فعلی را در hPanel **Delete** کنید
+۲. **Add Website → Node.js Web App** بزنید
+۳. روش **Upload files** (ZIP) را انتخاب کنید — نه گیت‌هاب
+۴. هنگام تنظیم، این مقادیر را بگذارید:
 
-| تنظیم | مقدار |
+| فیلد | مقدار |
 |---|---|
-| Framework | **Other** یا **Node.js** (هرگز Next.js) |
-| Build command | خالی بگذارید یا `npm run build` |
+| Framework / Preset | **Other** یا **Node.js** — ⛔ هرگز `Next.js` |
+| Build command | خالی، یا `npm run build` |
 | Entry / Startup file | `server.js` |
-| Output directory | خالی بگذارید |
+| Output directory | **خالی بگذارید** |
 
-### راه ۲ — از گیت‌هاب
-حتماً `Root directory` را روی `relay` بگذارید و Framework را **Other** انتخاب کنید.
-اگر پنل اجازه تغییر Framework نداد، از راه ۱ استفاده کنید.
+### 🛟 اگر پنل اجازه تغییر framework نداد
 
-> نسخه فعلی `package.json` رله از قبل یک `build` script بی‌اثر دارد،
-> پس حتی اگر پنل اصرار به اجرای build کند، بدون خطا رد می‌شود.
+بسته آپلودی از قبل برای این حالت آماده شده است:
+
+- `package.json` یک `build` script دارد که یک پوشه `.next` ساختگی می‌سازد
+- فایل `next.config.js` هم موجود است
+
+پس حتی اگر پنل اصرار داشته باشد پروژه Next.js است، build بدون خطا رد می‌شود
+و اپ با `server.js` بالا می‌آید. این یک راه‌حل موقت ولی کاملاً کارآمد است.
+
+> اگر پنل بعد از build سایت را از `.next` سرو کرد و ۴۰۴ گرفتید،
+> یعنی حتماً باید اپ را با framework = Other از نو بسازید.
 
 ---
 
@@ -64,12 +73,13 @@ Websites → Manage → Node.js App (یا Web Apps) → Create Application
 
 ### گام ۲ — آپلود فایل‌ها
 
-چهار فایل لازم است:
+پنج فایل در بسته `relay-hostinger.zip` هست:
 ```
-relay/server.js      ← سرور اصلی
-relay/app.js         ← نقطه ورود جایگزین (بعضی پنل‌ها دنبال این می‌گردند)
-relay/package.json   ← شامل build script بی‌اثر
-relay/.nvmrc         ← نسخه Node
+server.js         ← سرور اصلی رله
+app.js            ← نقطه ورود جایگزین (بعضی پنل‌ها دنبال این می‌گردند)
+package.json      ← شامل build script که پوشه .next ساختگی می‌سازد
+next.config.js    ← فقط برای عبور از تشخیص اشتباه پنل
+.nvmrc            ← نسخه Node
 ```
 
 با File Manager یا SSH آپلود کنید. **نیازی به `npm install` نیست** — رله عمداً بدون dependency نوشته شده تا روی هاست‌های محدود بدون دردسر اجرا شود.
