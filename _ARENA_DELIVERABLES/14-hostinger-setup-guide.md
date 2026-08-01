@@ -37,7 +37,11 @@ curl -s -o /dev/null -w "AgentRouter: %{http_code} در %{time_total}s\n" https:
 ```bash
 OPENAI_BASE_URL=https://agentrouter.org/v1
 OPENAI_API_KEY=<کلید AgentRouter شما>
+<<<<<<< HEAD
 OPENAI_MODEL=claude-opus-4-6
+=======
+OPENAI_MODEL=claude-opus-5
+>>>>>>> 8b4e4d1 (feat(relay): auto-route claude-* models to Anthropic endpoint, fix double /v1 path, update model to claude-opus-5)
 ```
 
 > ⚠️ توجه: `/v1` در انتها **الزامی است** برای حالت OpenAI-compatible.
@@ -53,7 +57,11 @@ curl -s -H "Authorization: Bearer YOUR_CRON_SECRET" \
 
 در خروجی دنبال این بگردید:
 ```json
+<<<<<<< HEAD
 "openai": { "ok": true, "detail": { "model": "claude-opus-4-6" } }
+=======
+"openai": { "ok": true, "detail": { "model": "claude-opus-5" } }
+>>>>>>> 8b4e4d1 (feat(relay): auto-route claude-* models to Anthropic endpoint, fix double /v1 path, update model to claude-opus-5)
 ```
 
 اگر `model` عوض شده بود → ✅ **هوش مصنوعی حل شد.**

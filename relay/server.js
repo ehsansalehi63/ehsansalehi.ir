@@ -44,8 +44,21 @@ const CFG = {
   fbPageId: process.env.FB_PAGE_ID || '',
   aiKey: process.env.OPENAI_API_KEY || '',
   aiBase: (process.env.OPENAI_BASE_URL || 'https://agentrouter.org/v1').replace(/\/+$/, ''),
+<<<<<<< HEAD
 };
 
+=======
+  // مدل‌های Claude در AgentRouter روی endpoint سازگار با Anthropic هستند (بدون /v1)
+  anthropicBase: (process.env.ANTHROPIC_BASE_URL || 'https://agentrouter.org').replace(/\/+$/, ''),
+  anthropicVersion: process.env.ANTHROPIC_VERSION || '2023-06-01',
+};
+
+/** آیا این مدل باید از مسیر Anthropic برود؟ */
+function isAnthropicModel(model) {
+  return typeof model === 'string' && /^claude[-.]/i.test(model.trim());
+}
+
+>>>>>>> 8b4e4d1 (feat(relay): auto-route claude-* models to Anthropic endpoint, fix double /v1 path, update model to claude-opus-5)
 // ─── لاگ حلقوی در حافظه (بدون فایل، بدون دیتابیس) ────────────────────
 const logs = [];
 function log(level, msg, extra) {
@@ -367,6 +380,90 @@ async function proxyAI(p) {
   return r.data;
 }
 
+<<<<<<< HEAD
+=======
+
+// ─── پل OpenAI ↔ Anthropic ───────────────────────────────────────────
+// مدل‌های claude-* فقط روی endpoint سازگار با Anthropic در دسترس‌اند،
+// ولی کد سایت با پکیج openai حرف می‌زند. این پل ترجمه می‌کند.
+
+/** OpenAI chat.completions → Anthropic messages */
+function openaiToAnthropic(body) {
+  const messages = Array.isArray(body.messages) ? body.messages : [];
+  const flatten = (c) =>
+    typeof c === 'string'
+      ? c
+      : Array.isArray(c)
+        ? c.map((x) => (x && x.type === 'text' ? x.text : '')).join('')
+        : String(c == null ? '' : c);
+
+  const systemParts = messages.filter((m) => m.role === 'system').map((m) => flatten(m.content));
+  const convo = messages
+    .filter((m) => m.role === 'user' || m.role === 'assistant')
+    .map((m) => ({ role: m.role, content: flatten(m.content) }));
+
+  const out = {
+    model: body.model,
+    max_tokens: body.max_tokens || body.max_completion_tokens || 4096, // در Anthropic اجباری است
+    messages: convo.length ? convo : [{ role: 'user', content: '' }],
+  };
+  if (systemParts.length) out.system = systemParts.join('\n\n');
+  if (typeof body.temperature === 'number') out.temperature = body.temperature;
+  if (typeof body.top_p === 'number') out.top_p = body.top_p;
+  if (body.stop) out.stop_sequences = Array.isArray(body.stop) ? body.stop : [body.stop];
+  return out;
+}
+
+/** Anthropic messages → OpenAI chat.completions */
+function anthropicToOpenai(data, model) {
+  const text = Array.isArray(data && data.content)
+    ? data.content.filter((c) => c.type === 'text').map((c) => c.text).join('')
+    : '';
+  const stopMap = { end_turn: 'stop', max_tokens: 'length', stop_sequence: 'stop' };
+  const inTok = (data && data.usage && data.usage.input_tokens) || 0;
+  const outTok = (data && data.usage && data.usage.output_tokens) || 0;
+
+  return {
+    id: (data && data.id) || 'chatcmpl-' + Date.now(),
+    object: 'chat.completion',
+    created: Math.floor(Date.now() / 1000),
+    model: (data && data.model) || model,
+    choices: [{
+      index: 0,
+      message: { role: 'assistant', content: text },
+      finish_reason: stopMap[data && data.stop_reason] || 'stop',
+    }],
+    usage: { prompt_tokens: inTok, completion_tokens: outTok, total_tokens: inTok + outTok },
+  };
+}
+
+/** ارسال به Anthropic و بازگرداندن پاسخ در قالب OpenAI */
+async function callAnthropicBridge(reqBody, key) {
+  const payload = openaiToAnthropic(reqBody);
+  const res = await fetch(CFG.anthropicBase + '/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key': key,
+      Authorization: 'Bearer ' + key,
+      'anthropic-version': CFG.anthropicVersion,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(180000),
+  });
+
+  const text = await res.text();
+  let data;
+  try { data = JSON.parse(text); } catch { data = { raw: text.slice(0, 400) }; }
+
+  if (!res.ok) {
+    const msg = (data && data.error && data.error.message) || data.raw || ('HTTP ' + res.status);
+    return { ok: false, status: res.status, error: msg };
+  }
+  return { ok: true, data: anthropicToOpenai(data, reqBody.model) };
+}
+
+>>>>>>> 8b4e4d1 (feat(relay): auto-route claude-* models to Anthropic endpoint, fix double /v1 path, update model to claude-opus-5)
 /**
  * ───────────────────────────────────────────────────────────────────
  *  پروکسی شفاف OpenAI-compatible
@@ -407,9 +504,57 @@ async function openaiPassthrough(req, res, subPath, rawBody) {
     return;
   }
 
+<<<<<<< HEAD
   const target = `${CFG.aiBase}${subPath}`;
   const t0 = Date.now();
 
+=======
+  const t0 = Date.now();
+
+  // ── مسیریابی هوشمند بر اساس مدل ──────────────────────────
+  // مدل‌های claude-* در AgentRouter فقط روی endpoint سازگار با Anthropic
+  // در دسترس‌اند. اینجا خودکار تشخیص می‌دهیم و ترجمه می‌کنیم.
+  if (subPath === '/v1/chat/completions' && rawBody) {
+    let parsed = null;
+    try { parsed = JSON.parse(rawBody); } catch { /* بگذار مسیر عادی خطا بدهد */ }
+
+    if (parsed && isAnthropicModel(parsed.model)) {
+      if (parsed.stream) {
+        json(res, 400, {
+          error: {
+            message: 'حالت stream برای مدل‌های Claude از طریق رله پشتیبانی نمی‌شود؛ stream:false بگذارید',
+            type: 'invalid_request_error',
+          },
+        });
+        return;
+      }
+      const bridged = await callAnthropicBridge(parsed, upstreamKey);
+      const ms = Date.now() - t0;
+      if (bridged.ok) {
+        log('info', 'AI از مسیر Anthropic', { model: parsed.model, ms });
+        res.writeHead(200, {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-store',
+          'X-Relay-Route': 'anthropic',
+          'X-Relay-Upstream-Ms': String(ms),
+        });
+        res.end(JSON.stringify(bridged.data));
+      } else {
+        log('warn', 'Anthropic خطا داد', { model: parsed.model, status: bridged.status, ms });
+        json(res, bridged.status || 502, {
+          error: { message: bridged.error, type: 'upstream_error' },
+        });
+      }
+      return;
+    }
+  }
+
+  // aiBase معمولاً به /v1 ختم می‌شود و subPath هم با /v1 شروع می‌شود؛
+  // بدون این اصلاح مسیر به /v1/v1/... تبدیل می‌شد.
+  const base = CFG.aiBase.replace(/\/v1$/, '');
+  const target = `${base}${subPath}`;
+
+>>>>>>> 8b4e4d1 (feat(relay): auto-route claude-* models to Anthropic endpoint, fix double /v1 path, update model to claude-opus-5)
   try {
     const upstream = await fetch(target, {
       method: req.method,
@@ -435,6 +580,10 @@ async function openaiPassthrough(req, res, subPath, rawBody) {
     res.writeHead(upstream.status, {
       'Content-Type': upstream.headers.get('content-type') || 'application/json',
       'Cache-Control': 'no-store',
+<<<<<<< HEAD
+=======
+      'X-Relay-Route': 'openai',
+>>>>>>> 8b4e4d1 (feat(relay): auto-route claude-* models to Anthropic endpoint, fix double /v1 path, update model to claude-opus-5)
       'X-Relay-Upstream-Ms': String(ms),
     });
     res.end(text);
@@ -510,6 +659,10 @@ async function handle(req, res) {
       aiGateway: {
         enabled: Boolean(CFG.aiKey),
         upstream: CFG.aiBase,
+<<<<<<< HEAD
+=======
+        anthropicUpstream: CFG.anthropicBase,
+>>>>>>> 8b4e4d1 (feat(relay): auto-route claude-* models to Anthropic endpoint, fix double /v1 path, update model to claude-opus-5)
         gateKeySet: Boolean(process.env.AI_GATEWAY_KEY),
       },
     });

@@ -88,7 +88,11 @@ S3_SECRET_KEY=
 # ─── AgentRouter (OpenAI-compatible) ──────────────────
 OPENAI_BASE_URL=https://agentrouter.org/v1
 OPENAI_API_KEY=
+<<<<<<< HEAD
 OPENAI_MODEL=claude-opus-4-6
+=======
+OPENAI_MODEL=claude-opus-5
+>>>>>>> 8b4e4d1 (feat(relay): auto-route claude-* models to Anthropic endpoint, fix double /v1 path, update model to claude-opus-5)
 AI_MODEL_CHEAP=            # مدل ارزان برای کپشن‌های ساده
 AI_DAILY_BUDGET_USD=5      # سقف مصرف روزانه
 AI_CACHE_TTL=86400
@@ -97,7 +101,11 @@ AI_CACHE_TTL=86400
 # توجه: بدون /v1
 ANTHROPIC_BASE_URL=https://agentrouter.org
 ANTHROPIC_AUTH_TOKEN=
+<<<<<<< HEAD
 ANTHROPIC_MODEL=claude-opus-4-6
+=======
+ANTHROPIC_MODEL=claude-opus-5
+>>>>>>> 8b4e4d1 (feat(relay): auto-route claude-* models to Anthropic endpoint, fix double /v1 path, update model to claude-opus-5)
 
 # ─── سرویس تصویر و ویدئو ──────────────────────────────
 IMAGE_GEN_PROVIDER=

@@ -126,11 +126,33 @@ AgentRouter از IP ایران در دسترس نیست. به‌جای تغیی�
 ```bash
 OPENAI_BASE_URL=https://YOUR-RELAY-DOMAIN/v1
 OPENAI_API_KEY=<همان AI_GATEWAY_KEY>
+<<<<<<< HEAD
 OPENAI_MODEL=claude-opus-4-6
+=======
+OPENAI_MODEL=claude-opus-5
+>>>>>>> 8b4e4d1 (feat(relay): auto-route claude-* models to Anthropic endpoint, fix double /v1 path, update model to claude-opus-5)
 ```
 
 پکیج `openai` بدون هیچ تغییر کدی از رله استفاده می‌کند.
 
+<<<<<<< HEAD
+=======
+### 🔀 مسیریابی خودکار مدل
+
+AgentRouter دو endpoint جدا دارد و رله **خودکار** تشخیص می‌دهد کدام را صدا بزند:
+
+| مدل | مسیر واقعی | یادداشت |
+|---|---|---|
+| `claude-opus-5`, `claude-*` | `https://agentrouter.org/v1/messages` (Anthropic) | رله درخواست و پاسخ را ترجمه می‌کند |
+| `gpt-5.6`, `gpt-5.5`, `glm-5.2` | `https://agentrouter.org/v1/chat/completions` (OpenAI) | مستقیم پروکسی می‌شود |
+
+شما فقط `OPENAI_MODEL` را تنظیم می‌کنید؛ بقیه خودکار است.
+برای دیدن اینکه کدام مسیر رفته، هدر پاسخ `X-Relay-Route` را ببینید.
+
+> ⚠️ **حالت stream** برای مدل‌های Claude از طریق رله پشتیبانی نمی‌شود.
+> اگر `stream: true` بفرستید، خطای روشن ۴۰۰ می‌گیرید. کد فعلی سایت stream استفاده نمی‌کند.
+
+>>>>>>> 8b4e4d1 (feat(relay): auto-route claude-* models to Anthropic endpoint, fix double /v1 path, update model to claude-opus-5)
 ### چرا این طراحی امن‌تر است
 
 | مورد | توضیح |
@@ -145,7 +167,11 @@ OPENAI_MODEL=claude-opus-4-6
 curl -s -X POST https://YOUR-RELAY-DOMAIN/v1/chat/completions \
   -H "Authorization: Bearer YOUR_AI_GATEWAY_KEY" \
   -H 'Content-Type: application/json' \
+<<<<<<< HEAD
   -d '{"model":"claude-opus-4-6","messages":[{"role":"user","content":"بگو سلام"}]}'
+=======
+  -d '{"model":"claude-opus-5","messages":[{"role":"user","content":"بگو سلام"}]}'
+>>>>>>> 8b4e4d1 (feat(relay): auto-route claude-* models to Anthropic endpoint, fix double /v1 path, update model to claude-opus-5)
 ```
 
 ---
