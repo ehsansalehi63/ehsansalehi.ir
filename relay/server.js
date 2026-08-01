@@ -44,10 +44,6 @@ const CFG = {
   fbPageId: process.env.FB_PAGE_ID || '',
   aiKey: process.env.OPENAI_API_KEY || '',
   aiBase: (process.env.OPENAI_BASE_URL || 'https://agentrouter.org/v1').replace(/\/+$/, ''),
-<<<<<<< HEAD
-};
-
-=======
   // مدل‌های Claude در AgentRouter روی endpoint سازگار با Anthropic هستند (بدون /v1)
   anthropicBase: (process.env.ANTHROPIC_BASE_URL || 'https://agentrouter.org').replace(/\/+$/, ''),
   anthropicVersion: process.env.ANTHROPIC_VERSION || '2023-06-01',
@@ -58,7 +54,6 @@ function isAnthropicModel(model) {
   return typeof model === 'string' && /^claude[-.]/i.test(model.trim());
 }
 
->>>>>>> 8b4e4d1 (feat(relay): auto-route claude-* models to Anthropic endpoint, fix double /v1 path, update model to claude-opus-5)
 // ─── لاگ حلقوی در حافظه (بدون فایل، بدون دیتابیس) ────────────────────
 const logs = [];
 function log(level, msg, extra) {
@@ -380,8 +375,6 @@ async function proxyAI(p) {
   return r.data;
 }
 
-<<<<<<< HEAD
-=======
 
 // ─── پل OpenAI ↔ Anthropic ───────────────────────────────────────────
 // مدل‌های claude-* فقط روی endpoint سازگار با Anthropic در دسترس‌اند،
@@ -463,7 +456,6 @@ async function callAnthropicBridge(reqBody, key) {
   return { ok: true, data: anthropicToOpenai(data, reqBody.model) };
 }
 
->>>>>>> 8b4e4d1 (feat(relay): auto-route claude-* models to Anthropic endpoint, fix double /v1 path, update model to claude-opus-5)
 /**
  * ───────────────────────────────────────────────────────────────────
  *  پروکسی شفاف OpenAI-compatible
@@ -504,11 +496,6 @@ async function openaiPassthrough(req, res, subPath, rawBody) {
     return;
   }
 
-<<<<<<< HEAD
-  const target = `${CFG.aiBase}${subPath}`;
-  const t0 = Date.now();
-
-=======
   const t0 = Date.now();
 
   // ── مسیریابی هوشمند بر اساس مدل ──────────────────────────
@@ -554,7 +541,6 @@ async function openaiPassthrough(req, res, subPath, rawBody) {
   const base = CFG.aiBase.replace(/\/v1$/, '');
   const target = `${base}${subPath}`;
 
->>>>>>> 8b4e4d1 (feat(relay): auto-route claude-* models to Anthropic endpoint, fix double /v1 path, update model to claude-opus-5)
   try {
     const upstream = await fetch(target, {
       method: req.method,
@@ -580,10 +566,7 @@ async function openaiPassthrough(req, res, subPath, rawBody) {
     res.writeHead(upstream.status, {
       'Content-Type': upstream.headers.get('content-type') || 'application/json',
       'Cache-Control': 'no-store',
-<<<<<<< HEAD
-=======
       'X-Relay-Route': 'openai',
->>>>>>> 8b4e4d1 (feat(relay): auto-route claude-* models to Anthropic endpoint, fix double /v1 path, update model to claude-opus-5)
       'X-Relay-Upstream-Ms': String(ms),
     });
     res.end(text);
@@ -659,10 +642,7 @@ async function handle(req, res) {
       aiGateway: {
         enabled: Boolean(CFG.aiKey),
         upstream: CFG.aiBase,
-<<<<<<< HEAD
-=======
         anthropicUpstream: CFG.anthropicBase,
->>>>>>> 8b4e4d1 (feat(relay): auto-route claude-* models to Anthropic endpoint, fix double /v1 path, update model to claude-opus-5)
         gateKeySet: Boolean(process.env.AI_GATEWAY_KEY),
       },
     });
