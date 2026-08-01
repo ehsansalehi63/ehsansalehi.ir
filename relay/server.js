@@ -641,6 +641,7 @@ async function handle(req, res) {
       time: new Date().toISOString(),
       uptimeMin: +(process.uptime() / 60).toFixed(1),
       secretConfigured: Boolean(SECRET),
+      listening: { host: HOST, port: PORT },
       aiGateway: {
         enabled: Boolean(CFG.aiKey),
         upstream: CFG.aiBase,
@@ -752,8 +753,12 @@ const server = http.createServer((req, res) => {
 server.headersTimeout = 190000;
 server.requestTimeout = 180000;
 
-server.listen(PORT, () => {
-  log('info', `رله روی پورت ${PORT} فعال شد`);
+// روی 0.0.0.0 گوش می‌دهیم تا reverse proxy پنل‌های میزبانی بتواند وصل شود.
+// اگر فقط روی localhost گوش کنیم، برخی پنل‌ها ۴۰۴ یا 502 می‌دهند.
+const HOST = process.env.HOST || '0.0.0.0';
+
+server.listen(PORT, HOST, () => {
+  log('info', `رله روی ${HOST}:${PORT} فعال شد`);
   if (!SECRET) {
     log('error', '⚠️  RELAY_SECRET تنظیم نشده — همه درخواست‌ها رد می‌شوند!');
   }
