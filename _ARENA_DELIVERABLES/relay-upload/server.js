@@ -628,7 +628,13 @@ const CHANNELS = {
 
 async function handle(req, res) {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+<<<<<<< HEAD
   const path = url.pathname.replace(/\/+$/, '') || '/';
+=======
+  // اسلش‌های تکراری را یکی کن و اسلش انتهایی را حذف کن.
+  // بدون این، آدرسی مثل //health به '/' تبدیل می‌شد و 404 می‌گرفت.
+  const path = url.pathname.replace(/\/{2,}/g, '/').replace(/\/+$/, '') || '/';
+>>>>>>> 7471b9a (fix(relay): normalize duplicate slashes in request path (//health now works))
 
   // سلامت — بدون احراز هویت تا مانیتورینگ ساده باشد
   if (path === '/health' || path === '/') {

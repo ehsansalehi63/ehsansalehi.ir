@@ -203,19 +203,27 @@ AgentRouter دو حالت سازگاری دارد:
 OPENAI_BASE_URL=https://agentrouter.org/v1
 OPENAI_API_KEY=<AgentRouter API Key>
 <<<<<<< HEAD
+<<<<<<< HEAD
 OPENAI_MODEL=claude-opus-4-6
 =======
 OPENAI_MODEL=claude-opus-5
 >>>>>>> 8b4e4d1 (feat(relay): auto-route claude-* models to Anthropic endpoint, fix double /v1 path, update model to claude-opus-5)
+=======
+OPENAI_MODEL=claude-opus-4-6
+>>>>>>> 7471b9a (fix(relay): normalize duplicate slashes in request path (//health now works))
 
 # حالت Anthropic-compatible — مخصوص Claude Code CLI (بدون /v1)
 ANTHROPIC_BASE_URL=https://agentrouter.org
 ANTHROPIC_AUTH_TOKEN=<AgentRouter API Key>
 <<<<<<< HEAD
+<<<<<<< HEAD
 ANTHROPIC_MODEL=claude-opus-4-6
 =======
 ANTHROPIC_MODEL=claude-opus-5
 >>>>>>> 8b4e4d1 (feat(relay): auto-route claude-* models to Anthropic endpoint, fix double /v1 path, update model to claude-opus-5)
+=======
+ANTHROPIC_MODEL=claude-opus-4-6
+>>>>>>> 7471b9a (fix(relay): normalize duplicate slashes in request path (//health now works))
 ```
 
 مستندات AgentRouter تأکید می‌کند Base URL حالت Claude Code **نباید** `/v1` داشته باشد و نباید با حالت OpenAI-compatible قاطی شود.

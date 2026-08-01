@@ -30,10 +30,14 @@
 | # | سؤال | پیشنهاد | وضعیت |
 |---|---|---|---|
 <<<<<<< HEAD
+<<<<<<< HEAD
 | C1 | مدل متن AgentRouter | `claude-opus-4-6` برای توضیح محصول و مقاله؛ مدل ارزان‌تر برای کپشن‌های تکراری | ⬜ |
 =======
 | C1 | مدل متن AgentRouter | `claude-opus-5` برای توضیح محصول و مقاله؛ مدل ارزان‌تر برای کپشن‌های تکراری | ⬜ |
 >>>>>>> 8b4e4d1 (feat(relay): auto-route claude-* models to Anthropic endpoint, fix double /v1 path, update model to claude-opus-5)
+=======
+| C1 | مدل متن AgentRouter | `claude-opus-4-6` برای توضیح محصول و مقاله؛ مدل ارزان‌تر برای کپشن‌های تکراری | ⬜ |
+>>>>>>> 7471b9a (fix(relay): normalize duplicate slashes in request path (//health now works))
 | C2 | تولید تصویر (مدل/ست عکس) | سرویس تصویر جدا لازم است؛ AgentRouter برای Coding/متن است | ⬜ |
 | C3 | سطح تأیید انسانی | حالت «Auto» برای کانال‌های داخلی، حالت «Review» برای اینستاگرام در ۳۰ روز اول | ⬜ |
 | C4 | زبان محتوا | فارسی اصلی + انگلیسی برای پینترست/بک‌لینک بین‌المللی | ⬜ |
