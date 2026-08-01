@@ -114,6 +114,8 @@ if [ -n "$SECRET" ]; then
     ok "امضای HMAC پذیرفته شد"
     echo
     echo "  دسترسی از هاستینگر به سرویس‌های خارجی:"
+    echo
+    # نمایش بدون وابستگی به python3 (روی هاست اشتراکی معمولاً نصب نیست)
     if command -v python3 >/dev/null 2>&1; then
       echo "$D" | python3 -c '
 import json,sys
@@ -125,6 +127,19 @@ for r in d.get("reachability", []):
     mark = "OK " if r.get("ok") else "XX "
     print("    [%s] %-24s %5s ms  %s" % (mark, r.get("name","?"), r.get("ms","?"), r.get("error","")))
 '
+    else
+      # روش سازگار با هر شل: هر آبجکت را جدا کن و با sed/grep بخوان
+      echo "$D" \
+        | tr '}' '\n' \
+        | grep '"name"' \
+        | while IFS= read -r line; do
+            nm=$(sed -n 's/.*"name"[^"]*"\([^"]*\)".*/\1/p' <<<"$line")
+            st=$(sed -n 's/.*"ok"[^a-z]*\(true\|false\).*/\1/p' <<<"$line")
+            ms=$(sed -n 's/.*"ms"[^0-9]*\([0-9]*\).*/\1/p' <<<"$line")
+            er=$(sed -n 's/.*"error"[^"]*"\([^"]*\)".*/\1/p' <<<"$line")
+            [ "$st" = "true" ] && m="OK " || m="XX "
+            printf "    [%s] %-24s %5s ms  %s\n" "$m" "$nm" "${ms:-?}" "$er"
+          done
     fi
   else
     bad "امضا رد شد"
