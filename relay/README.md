@@ -16,6 +16,36 @@
 
 ---
 
+## ⚠️ مهم: خطای «Next.js framework» را چطور رفع کنیم
+
+اگر هنگام ساخت اپ این خطا را دیدید:
+
+> *The project is configured as a Next.js framework but lacks a `build` script...*
+
+**علت:** هاستینگر `package.json` **ریشه مخزن** را دیده (که Next.js است) نه پوشه `relay` را.
+
+**دو راه‌حل:**
+
+### راه ۱ — آپلود ZIP (ساده‌ترین و مطمئن‌ترین) ⭐
+فایل `relay-hostinger.zip` را آپلود کنید. چون فقط شامل فایل‌های رله است،
+هاستینگر هیچ ردی از Next.js نمی‌بیند.
+
+| تنظیم | مقدار |
+|---|---|
+| Framework | **Other** یا **Node.js** (هرگز Next.js) |
+| Build command | خالی بگذارید یا `npm run build` |
+| Entry / Startup file | `server.js` |
+| Output directory | خالی بگذارید |
+
+### راه ۲ — از گیت‌هاب
+حتماً `Root directory` را روی `relay` بگذارید و Framework را **Other** انتخاب کنید.
+اگر پنل اجازه تغییر Framework نداد، از راه ۱ استفاده کنید.
+
+> نسخه فعلی `package.json` رله از قبل یک `build` script بی‌اثر دارد،
+> پس حتی اگر پنل اصرار به اجرای build کند، بدون خطا رد می‌شود.
+
+---
+
 ## نصب روی هاستینگر (پلن Business)
 
 ### گام ۱ — ساخت اپ Node.js
@@ -34,10 +64,12 @@ Websites → Manage → Node.js App (یا Web Apps) → Create Application
 
 ### گام ۲ — آپلود فایل‌ها
 
-فقط دو فایل لازم است:
+چهار فایل لازم است:
 ```
-relay/server.js
-relay/package.json
+relay/server.js      ← سرور اصلی
+relay/app.js         ← نقطه ورود جایگزین (بعضی پنل‌ها دنبال این می‌گردند)
+relay/package.json   ← شامل build script بی‌اثر
+relay/.nvmrc         ← نسخه Node
 ```
 
 با File Manager یا SSH آپلود کنید. **نیازی به `npm install` نیست** — رله عمداً بدون dependency نوشته شده تا روی هاست‌های محدود بدون دردسر اجرا شود.
