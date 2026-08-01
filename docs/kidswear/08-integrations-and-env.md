@@ -91,6 +91,7 @@ OPENAI_API_KEY=
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 OPENAI_MODEL=claude-opus-4-6
 =======
 OPENAI_MODEL=claude-opus-5
@@ -101,6 +102,9 @@ OPENAI_MODEL=claude-opus-4-6
 =======
 OPENAI_MODEL=claude-opus-4-6
 >>>>>>> af679f1 (feat(relay): add PHP version of the relay - works on shared hosting without any configuration)
+=======
+OPENAI_MODEL=claude-opus-4-6
+>>>>>>> 55c9d3e (tools: add check-relay-php.sh to verify PHP relay deployment on Hostinger)
 AI_MODEL_CHEAP=            # مدل ارزان برای کپشن‌های ساده
 AI_DAILY_BUDGET_USD=5      # سقف مصرف روزانه
 AI_CACHE_TTL=86400
@@ -109,6 +113,7 @@ AI_CACHE_TTL=86400
 # توجه: بدون /v1
 ANTHROPIC_BASE_URL=https://agentrouter.org
 ANTHROPIC_AUTH_TOKEN=
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -122,6 +127,9 @@ ANTHROPIC_MODEL=claude-opus-4-6
 =======
 ANTHROPIC_MODEL=claude-opus-4-6
 >>>>>>> af679f1 (feat(relay): add PHP version of the relay - works on shared hosting without any configuration)
+=======
+ANTHROPIC_MODEL=claude-opus-4-6
+>>>>>>> 55c9d3e (tools: add check-relay-php.sh to verify PHP relay deployment on Hostinger)
 
 # ─── سرویس تصویر و ویدئو ──────────────────────────────
 IMAGE_GEN_PROVIDER=

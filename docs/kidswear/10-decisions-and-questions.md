@@ -32,6 +32,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 | C1 | مدل متن AgentRouter | `claude-opus-4-6` برای توضیح محصول و مقاله؛ مدل ارزان‌تر برای کپشن‌های تکراری | ⬜ |
 =======
 | C1 | مدل متن AgentRouter | `claude-opus-5` برای توضیح محصول و مقاله؛ مدل ارزان‌تر برای کپشن‌های تکراری | ⬜ |
@@ -42,6 +43,9 @@
 =======
 | C1 | مدل متن AgentRouter | `claude-opus-4-6` برای توضیح محصول و مقاله؛ مدل ارزان‌تر برای کپشن‌های تکراری | ⬜ |
 >>>>>>> af679f1 (feat(relay): add PHP version of the relay - works on shared hosting without any configuration)
+=======
+| C1 | مدل متن AgentRouter | `claude-opus-4-6` برای توضیح محصول و مقاله؛ مدل ارزان‌تر برای کپشن‌های تکراری | ⬜ |
+>>>>>>> 55c9d3e (tools: add check-relay-php.sh to verify PHP relay deployment on Hostinger)
 | C2 | تولید تصویر (مدل/ست عکس) | سرویس تصویر جدا لازم است؛ AgentRouter برای Coding/متن است | ⬜ |
 | C3 | سطح تأیید انسانی | حالت «Auto» برای کانال‌های داخلی، حالت «Review» برای اینستاگرام در ۳۰ روز اول | ⬜ |
 | C4 | زبان محتوا | فارسی اصلی + انگلیسی برای پینترست/بک‌لینک بین‌المللی | ⬜ |
