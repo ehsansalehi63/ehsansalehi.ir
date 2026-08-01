@@ -1,0 +1,25 @@
+{
+  "name": "social-relay",
+  "version": "1.0.1",
+  "private": true,
+  "description": "رله انتشار شبکه‌های اجتماعی — روی هاستینگر اجرا می‌شود تا محدودیت IP ایران دور زده شود",
+  "main": "server.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "node -e \"const f=require('fs');f.mkdirSync('.next/static',{recursive:true});f.writeFileSync('.next/BUILD_ID','relay');f.writeFileSync('.next/routes-manifest.json',JSON.stringify({version:3,pages404:false,basePath:'',redirects:[],rewrites:[],headers:[],staticRoutes:[],dynamicRoutes:[],dataRoutes:[]}));console.log('relay: placeholder .next created')\"",
+    "postinstall": "echo 'No dependencies to install'",
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "health": "curl -s http://localhost:${PORT:-3001}/health"
+  },
+  "keywords": [
+    "relay",
+    "proxy",
+    "social"
+  ],
+  "dependencies": {},
+  "devDependencies": {}
+}

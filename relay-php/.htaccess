@@ -1,0 +1,23 @@
+# مسیریابی رله
+#
+# بدون این فایل، آدرس /v1/chat/completions به relay.php نمی‌رسد و
+# وب‌سرور صفحه ۴۰۴ خودش را نشان می‌دهد.
+
+RewriteEngine On
+
+# هدر Authorization را به PHP منتقل کن (بعضی سرورها حذفش می‌کنند)
+RewriteCond %{HTTP:Authorization} ^(.*)
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%1]
+
+# دروازه AI
+RewriteRule ^v1/(.*)$ relay.php [QSA,L]
+
+# مسیرهای رله: /health، /publish، /diagnose و غیره
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(health|publish|fetch|diagnose|instagram/refresh-token)/?$ relay.php?path=$1 [QSA,L]
+
+# محافظت از فایل تنظیمات
+<Files "relay-config.php">
+    Require all denied
+</Files>

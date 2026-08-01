@@ -28,6 +28,9 @@ export function middleware(request: NextRequest) {
     pathname === '/api/admin/traffic-ai' ||
     pathname === '/api/admin/automation' ||
     pathname === '/api/admin/master-control' ||
+    // تشخیص وضعیت هاست — خودش با CRON_SECRET محافظت می‌شود
+    pathname === '/api/admin/diagnose' ||
+    pathname === '/api/admin/relay-test' ||
     pathname === '/api/track-visit' ||
     pathname.startsWith('/api/news');
 

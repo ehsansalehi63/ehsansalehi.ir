@@ -1,6 +1,7 @@
 import { pool } from './db';
 import { sendToLinkedIn } from './linkedinPoster';
 import { addWatermarkToImage } from './watermark';
+import { publishViaRelay, isRelayConfigured } from './relayClient';
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
 const TELEGRAM_CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID || '';
@@ -23,6 +24,15 @@ const WHATSAPP_RECIPIENT_ID = process.env.WHATSAPP_RECIPIENT_ID || process.env.W
 
 const INSTAGRAM_ACCESS_TOKEN = process.env.INSTAGRAM_ACCESS_TOKEN || process.env.FB_PAGE_ACCESS_TOKEN || '';
 const INSTAGRAM_ACCOUNT_ID = process.env.INSTAGRAM_ACCOUNT_ID || '';
+
+// نسخه Graph API — قابل تغییر بدون دست زدن به کد
+const IG_GRAPH = `https://graph.facebook.com/${process.env.META_API_VERSION || 'v21.0'}`;
+
+// حالت انتشار اینستاگرام:
+//   auto = تلاش برای انتشار خودکار (رله یا مستقیم)
+//   semi = ارسال به تلگرام مدیر برای انتشار یک‌لمسی
+//   off  = غیرفعال
+const INSTAGRAM_MODE = (process.env.INSTAGRAM_MODE || 'auto') as 'auto' | 'semi' | 'off';
 
 const DEFAULT_IMAGE = 'https://ehsansalehi.ir/images/og-image.jpg';
 
@@ -349,46 +359,177 @@ export async function sendToWhatsAppChannel(
   }
 }
 
+/** انتظار تا کانتینر رسانه در متا به وضعیت FINISHED برسد */
+async function waitForInstagramContainer(
+  containerId: string,
+  token: string,
+  maxTries = 20
+): Promise<{ ready: boolean; error?: string }> {
+  for (let i = 0; i < maxTries; i++) {
+    try {
+      const res = await fetch(
+        `${IG_GRAPH}/${containerId}?fields=status_code,status&access_token=${encodeURIComponent(token)}`,
+        { signal: AbortSignal.timeout(15000) }
+      );
+      const data = await res.json();
+      if (data.status_code === 'FINISHED') return { ready: true };
+      if (data.status_code === 'ERROR' || data.status_code === 'EXPIRED') {
+        return { ready: false, error: data.status || data.status_code };
+      }
+    } catch {
+      // خطای گذرای شبکه — دوباره تلاش می‌کنیم
+    }
+    await new Promise((r) => setTimeout(r, 3000));
+  }
+  return { ready: false, error: 'کانتینر در زمان مجاز آماده نشد' };
+}
+
+/**
+ * ارسال پست آماده به تلگرام مدیر برای انتشار دستی در اینستاگرام.
+ * تضمین می‌کند هیچ پستی گم نشود، حتی وقتی API در دسترس نیست.
+ */
+async function instagramFallbackToTelegram(
+  title: string,
+  caption: string,
+  imageUrl: string | null,
+  reason: string
+): Promise<{ success: boolean; error?: string }> {
+  const token = TELEGRAM_BOT_TOKEN || (await getAutomationSetting('telegram_bot_token'));
+  const adminChat =
+    process.env.ADMIN_TELEGRAM_CHAT_ID ||
+    (await getAutomationSetting('admin_telegram_chat_id')) ||
+    TELEGRAM_CHANNEL_ID ||
+    (await getAutomationSetting('telegram_channel_id'));
+
+  if (!token || !adminChat) {
+    return { success: false, error: `اینستاگرام ناموفق (${reason}) و تلگرام مدیر هم تنظیم نشده` };
+  }
+
+  const esc = (t: string) =>
+    t.replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] as string));
+
+  try {
+    if (imageUrl) {
+      await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: adminChat,
+          photo: resolveImageUrl(imageUrl),
+          caption: `🖼 ${title.slice(0, 200)}`,
+        }),
+        signal: AbortSignal.timeout(30000),
+      });
+    }
+
+    const text =
+      `📸 <b>آماده انتشار دستی در اینستاگرام</b>\n` +
+      `<i>دلیل: ${esc(reason)}</i>\n\n` +
+      `👇 روی متن زیر بزنید تا کپی شود:\n\n` +
+      `<pre>${esc(caption)}</pre>`;
+
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: adminChat, text, parse_mode: 'HTML' }),
+      signal: AbortSignal.timeout(30000),
+    });
+    const j = await res.json();
+    if (j.ok) {
+      console.log('📩 اینستاگرام: به حالت نیمه‌خودکار منتقل شد');
+      return { success: true };
+    }
+    return { success: false, error: `تلگرام مدیر: ${JSON.stringify(j)}` };
+  } catch (e: any) {
+    return { success: false, error: `fallback تلگرام: ${e?.message || e}` };
+  }
+}
+
 export async function sendToInstagram(
   title: string,
   summary: string,
   imageUrl: string | null,
   link: string
 ): Promise<{ success: boolean; error?: string }> {
-  const igToken = INSTAGRAM_ACCESS_TOKEN || await getAutomationSetting('instagram_access_token') || await getAutomationSetting('fb_access_token');
-  const igAccount = INSTAGRAM_ACCOUNT_ID || await getAutomationSetting('instagram_account_id');
+  const caption =
+    `🔥 ${title}\n\n📰 ${summary}\n\n🔗 ${link}\n\n` +
+    `#TechNews #AI #Crypto #EhsanSalehi #فناوری #رمزارز #هوش_مصنوعی`;
+
+  if (INSTAGRAM_MODE === 'off') {
+    return { success: false, error: 'انتشار اینستاگرام غیرفعال است' };
+  }
+  if (INSTAGRAM_MODE === 'semi') {
+    return instagramFallbackToTelegram(title, caption, imageUrl, 'حالت نیمه‌خودکار فعال است');
+  }
+
+  // ── مسیر ۱: رله روی هاستینگر ────────────────────────────
+  // متا از IP ایران در دسترس نیست، پس اگر رله تنظیم شده اول از آن استفاده می‌کنیم.
+  if (isRelayConfigured()) {
+    const relayed = await publishViaRelay({
+      channel: 'instagram',
+      kind: 'image',
+      mediaUrls: [resolveImageUrl(imageUrl)],
+      caption,
+      link,
+    });
+    if (relayed.ok) {
+      console.log('✅ اینستاگرام از طریق رله منتشر شد:', relayed.result?.id);
+      return { success: true };
+    }
+    console.warn('⚠️ رله اینستاگرام ناموفق:', relayed.error);
+    return instagramFallbackToTelegram(title, caption, imageUrl, `رله ناموفق: ${relayed.error}`);
+  }
+
+  // ── مسیر ۲: تلاش مستقیم (اگر رله تنظیم نشده) ────────────
+  const igToken =
+    INSTAGRAM_ACCESS_TOKEN ||
+    (await getAutomationSetting('instagram_access_token')) ||
+    (await getAutomationSetting('fb_access_token'));
+  const igAccount = INSTAGRAM_ACCOUNT_ID || (await getAutomationSetting('instagram_account_id'));
 
   if (!igToken || !igAccount) {
-    return { success: false, error: 'توکن INSTAGRAM_ACCESS_TOKEN یا INSTAGRAM_ACCOUNT_ID تنظیم نشده است' };
+    return instagramFallbackToTelegram(title, caption, imageUrl, 'توکن یا شناسه اینستاگرام تنظیم نشده');
   }
 
   try {
     const fullImageUrl = resolveImageUrl(imageUrl);
-    const caption = `🔥 ${title}\n\n📰 ${summary}\n\n🔗 لینک در بیو یا سایت ehsansalehi.ir\n\n#TechNews #AI #Crypto #EhsanSalehi #فناوری #رمزارز #هوش_مصنوعی`;
 
-    // مرحله ۱: ایجاد کانتینر تصویر در اینستاگرام
-    const createUrl = `https://graph.facebook.com/v19.0/${igAccount}/media?image_url=${encodeURIComponent(fullImageUrl)}&caption=${encodeURIComponent(caption)}&access_token=${igToken}`;
-    const createRes = await fetch(createUrl, { method: 'POST' });
+    // توکن در body می‌رود نه در URL — جلوگیری از نشت در لاگ سرور
+    const createRes = await fetch(`${IG_GRAPH}/${igAccount}/media`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ image_url: fullImageUrl, caption, access_token: igToken }),
+      signal: AbortSignal.timeout(45000),
+    });
     const createData = await createRes.json();
 
     if (!createRes.ok || !createData.id) {
-      return { success: false, error: `اینستاگرام ساخت مدیا: ${JSON.stringify(createData)}` };
+      const msg = createData?.error?.message || JSON.stringify(createData);
+      return instagramFallbackToTelegram(title, caption, imageUrl, `ساخت مدیا: ${msg}`);
     }
 
-    const creationId = createData.id;
+    // انتظار برای آماده شدن کانتینر — بدون این، انتشار تقریباً همیشه خطا می‌دهد
+    const wait = await waitForInstagramContainer(createData.id, igToken);
+    if (!wait.ready) {
+      return instagramFallbackToTelegram(title, caption, imageUrl, `کانتینر: ${wait.error}`);
+    }
 
-    // مرحله ۲: انتشار کانتینر
-    const publishUrl = `https://graph.facebook.com/v19.0/${igAccount}/media_publish?creation_id=${creationId}&access_token=${igToken}`;
-    const publishRes = await fetch(publishUrl, { method: 'POST' });
+    const publishRes = await fetch(`${IG_GRAPH}/${igAccount}/media_publish`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ creation_id: createData.id, access_token: igToken }),
+      signal: AbortSignal.timeout(45000),
+    });
     const publishData = await publishRes.json();
 
     if (publishRes.ok && publishData.id) {
-      console.log('✅ اینستاگرام: پست با موفقیت منتشر شد (ID:', publishData.id, ')');
+      console.log('✅ اینستاگرام: پست منتشر شد (ID:', publishData.id, ')');
       return { success: true };
     }
-    return { success: false, error: `اینستاگرام انتشار مدیا: ${JSON.stringify(publishData)}` };
+    const msg = publishData?.error?.message || JSON.stringify(publishData);
+    return instagramFallbackToTelegram(title, caption, imageUrl, `انتشار: ${msg}`);
   } catch (error: any) {
-    return { success: false, error: `اینستاگرام Exception: ${error?.message || error}` };
+    return instagramFallbackToTelegram(title, caption, imageUrl, `شبکه: ${error?.message || error}`);
   }
 }
 
