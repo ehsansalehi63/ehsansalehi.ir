@@ -11,83 +11,30 @@
 
 ### ۱) پوش کامیت‌های لوکال ✅
 - مرج برنچ `arena/019fb245` به برنچ فعلی
-- حل کانفلیکت ورک‌فلو `deploy-mizbanfa.yml`
 - پوش موفق به `origin/arena/019fc27e-ehsansalehi-ir`
 - PR #6 ایجاد شد
 
-### ۲) بازنویسی ورک‌فلوها با SSH ✅
-| ورک‌فلو | کارکرد | وضعیت |
-|---|---|---|
-| `deploy-mizbanfa.yml` | دیپلوی سایت به میزبان‌فا (SSH + FTP پشتیبان) | ✅ آماده |
-| `deploy-relay-hostinger.yml` | دیپلوی رله PHP به هاستینگر (SSH) | ✅ آماده |
-| `deploy-all.yml` | دیپلوی یکپارچه (سایت + رله + تست) | ✅ آماده |
-| `test-chain.yml` | تست روزانه زنجیره سایت↔رله | ✅ آماده |
+### ۲) بازنویسی ورک‌فلوها ✅
 
-**اکشن‌های SSH استفاده‌شده:**
-- `appleboy/scp-action@v0.1.7` — آپلود فایل
-- `appleboy/ssh-action@v1.2.2` — اجرای دستور روی سرور
+**قانون:** FTP فقط میزبان‌فا (سایت) | SSH فقط هاستینگر (رله)
 
-**Secrets لازم (همه آماده در GitHub):**
+| ورک‌فلو | پروتکل | مقصد | کارکرد |
+|---|---|---|---|
+| `deploy-mizbanfa.yml` | **FTP** | میزبان‌فا | دیپلوی سایت Next.js |
+| `deploy-relay-hostinger.yml` | **SSH** | هاستینگر | دیپلوی رله PHP (شبکه‌های اجتماعی + هوش مصنوعی) |
+| `deploy-all.yml` | FTP + SSH | هر دو | بیلد → سایت(FTP) → رله(SSH) → تست |
+| `test-chain.yml` | SSH | هاستینگر | تست روزانه زنجیره + دسترسی |
 
-| Secret | کاربرد | منبع |
-|---|---|---|
-| `SSH_IP` | آدرس IP هاستینگر | ✅ در GitHub Secrets |
-| `SSH_PORT` | پورت SSH | ✅ در GitHub Secrets |
-| `SSH_USERNAME` | نام کاربری SSH | ✅ در GitHub Secrets |
-| `SSH_PASSWORD` | رمز عبور SSH | ✅ در GitHub Secrets |
-| `FTP_SERVER` | آدرس FTP میزبان‌فا | ✅ در GitHub Secrets |
-| `FTP_USERNAME` | نام کاربری FTP | ✅ در GitHub Secrets |
-| `FTP_PASSWORD` | رمز FTP | ✅ در GitHub Secrets |
-| `HEALTH_URL` | https://ehsansalehi.ir/api/deploy/health | ✅ در GitHub Secrets |
-| `RELAY_URL` | آدرس رله هاستینگر | ✅ در GitHub Secrets |
-| `RELAY_SECRET` | رمز مشترک HMAC | ✅ در GitHub Secrets |
-| `CRON_SECRET` | کلید تست سرتاسری | ✅ در GitHub Secrets |
+**اکشن‌های SSH (هاستینگر فقط):**
+- `appleboy/scp-action@v0.1.7` — آپلود فایل‌های رله
+- `appleboy/ssh-action@v1.2.2` — اجرای دستور روی هاستینگر
+
+**اکشن FTP (میزبان‌فا فقط):**
+- `SamKirkland/FTP-Deploy-Action@v4.3.5` — همگام‌سازی فایل‌های سایت
 
 ### ۳) اسکریپت تست زنجیره ✅
-- `tools/test-chain.sh` — ۷ تست سرتاسری:
-  1. سایت اصلی بالا است؟
-  2. Health endpoint سایت کار می‌کند؟
-  3. رله هاستینگر بالا است؟
-  4. امضای HMAC پذیرفته می‌شود؟
-  5. تست endpoint سرتاسری (relay-test)
-  6. تست اتصال سرویس‌ها (integrations-test)
-  7. تست اتصال SSH به هاستینگر
-
-### ۴) وضعیت دیپلوی فعلی
-- آخرین ورک‌فلو روی main: `Fast Deploy (no SSH)` — **شکست** در مرحله `Deploy to cPanel`
-- دلیل: cPanel API Token تنظیم نشده
-- راه‌حل: ورک‌فلو جدید SSH از این مشکل رد می‌شود
-
----
-
-## ⚠️ کار باقیمانده — نصب ورک‌فلوها
-
-GitHub App آرنا اجازه نوشتن در `.github/workflows/` را ندارد. **سه راه:**
-
-### راه الف — دستی در GitHub UI (ساده‌ترین)
-1. بروید به: https://github.com/ehsansalehi63/ehsansalehi.ir/new/main/.github/workflows
-2. فایل‌های زیر را بسازید و محتوایشان را از `workflows/` کپی کنید:
-   - `deploy-mizbanfa.yml` ← جایگزین فایل قبلی
-   - `deploy-relay-hostinger.yml` ← فایل جدید
-   - `deploy-all.yml` ← فایل جدید
-   - `test-chain.yml` ← جایگزین فایل قبلی
-
-### راه ب — با توکن شخصی
-```bash
-export GITHUB_TOKEN=ghp_XXXXX   # توکن شخصی شما
-bash workflows/setup-github.sh
-```
-
-### راه ج — مرج PR و سپس نصب
-1. PR #6 را مرج کنید
-2. در لوکال:
-```bash
-git pull origin main
-bash workflows/install.sh
-git add .github/workflows/
-git commit -m 'ci: install SSH-based workflows'
-git push
-```
+- `tools/test-chain.sh` — ۷ تست سرتاسری
+- `test-chain.yml` — تست روزانه + تست SSH و دسترسی از هاستینگر
 
 ---
 
@@ -96,34 +43,79 @@ git push
 ```
 Push to main
     │
-    ├── deploy-mizbanfa.yml ─────► سایت (میزبان‌فا) از طریق SSH
+    ├── deploy-mizbanfa.yml ──── FTP ────► میزبان‌فا (سایت)
     │     1. بیلد Next.js
-    │     2. ساخت tar.gz (~15 مگابایت)
-    │     3. SCP بسته به هاست
-    │     4. SSH: استخراج + ری‌استارت
-    │     5. تأیید نسخه
+    │     2. آماده‌سازی standalone
+    │     3. FTP sync به میزبان‌فا
+    │     4. تأیید نسخه
     │
-    ├── deploy-relay-hostinger.yml ─► رله PHP (هاستینگر) از طریق SSH
+    ├── deploy-relay-hostinger.yml ── SSH ──► هاستینگر (رله)
     │     1. SCP فایل‌های relay.php + .htaccess
-    │     2. تست /health
-    │     3. بررسی امنیتی relay-config.php
+    │     2. ساخت relay-config.php (اگر نبود)
+    │     3. تست /health
+    │     4. بررسی امنیتی relay-config.php
     │
-    └── deploy-all.yml ─────────► هر دو + تست زنجیره
+    └── deploy-all.yml ───────── FTP + SSH ──► هر دو + تست
           1. بیلد
-          2. دیپلوی سایت
-          3. دیپلوی رله
-          4. تست سرتاسری
+          2. سایت → FTP → میزبان‌فا
+          3. رله → SSH → هاستینگر
+          4. تست سرتاسری زنجیره
 ```
 
 ---
 
-## 📋 چک‌لیست نهایی
+## 🔑 Secrets لازم
+
+| Secret | پروتکل | مقصد |
+|---|---|---|
+| `FTP_SERVER` | FTP | میزبان‌فا — آدرس FTP |
+| `FTP_USERNAME` | FTP | میزبان‌فا — نام کاربری |
+| `FTP_PASSWORD` | FTP | میزبان‌فا — رمز |
+| `SSH_IP` | SSH | هاستینگر — آدرس IP |
+| `SSH_PORT` | SSH | هاستینگر — پورت |
+| `SSH_USERNAME` | SSH | هاستینگر — نام کاربری |
+| `SSH_PASSWORD` | SSH | هاستینگر — رمز |
+| `HEALTH_URL` | — | https://ehsansalehi.ir/api/deploy/health |
+| `RELAY_URL` | — | آدرس رله هاستینگر |
+| `RELAY_SECRET` | — | رمز مشترک HMAC |
+| `CRON_SECRET` | — | کلید تست سرتاسری |
+
+---
+
+## ⚠️ نصب ورک‌فلوها
+
+GitHub App آرنا اجازه نوشتن در `.github/workflows/` را ندارد.
+
+**سه راه:**
+
+### راه الف — دستی در GitHub UI (ساده‌ترین)
+1. https://github.com/ehsansalehi63/ehsansalehi.ir/new/main/.github/workflows
+2. فایل‌ها را از `workflows/` کپی کنید
+
+### راه ب — با توکن شخصی
+```bash
+export GITHUB_TOKEN=ghp_XXXXX
+bash workflows/setup-github.sh
+```
+
+### راه ج — مرج PR و سپس نصب
+```bash
+git pull origin main
+bash workflows/install.sh
+git add .github/workflows/
+git commit -m 'ci: install workflows'
+git push
+```
+
+---
+
+## 📋 چک‌لیست
 
 - [x] کامیت‌ها پوش شدند
-- [x] ورک‌فلوها با SSH بازنویسی شدند
+- [x] ورک‌فلوها با FTP (میزبان‌فا) + SSH (هاستینگر) بازنویسی شدند
 - [x] اسکریپت تست زنجیره نوشته شد
 - [x] PR #6 ایجاد شد
-- [ ] ورک‌فلوها در `.github/workflows/` نصب شوند (دستی یا با توکن)
-- [ ] Secrets تأیید شوند
-- [ ] تست اولیه ورک‌فلو `test-chain` اجرا شود
-- [ ] تست اولیه دیپلوی `deploy-mizbanfa` اجرا شود
+- [ ] ورک‌فلوها در `.github/workflows/` نصب شوند
+- [ ] تست اولیه دیپلوی سایت (FTP)
+- [ ] تست اولیه دیپلوی رله (SSH)
+- [ ] تست زنجیره کامل

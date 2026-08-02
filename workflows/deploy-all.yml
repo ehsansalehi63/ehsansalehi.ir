@@ -1,26 +1,27 @@
 # ═══════════════════════════════════════════════════════════════
-#  دیپلوی کامل — سایت + رله
+#  دیپلوی کامل — سایت (FTP) + رله (SSH)
 #
-#  این ورک‌فلو هر دو هاست را دیپلوی می‌کند:
-#    ۱) سایت اصلی (میزبان‌فا) — از طریق SSH
-#    ۲) رله PHP (هاستینگر) — از طریق SSH
+#  FTP → میزبان‌فا (سایت اصلی Next.js)
+#  SSH → هاستینگر (رله PHP — شبکه‌های اجتماعی + هوش مصنوعی)
 #
 #  Secrets لازم:
-#    میزبان‌فا:
-#      FTP_SERVER       آدرس FTP میزبان‌فا
-#      FTP_USERNAME     نام کاربری FTP
+#    میزبان‌فا (FTP):
+#      FTP_SERVER       آدرس FTP
+#      FTP_USERNAME     نام کاربری
 #      FTP_PASSWORD     رمز FTP
-#    هاستینگر:
-#      SSH_IP           آدرس IP هاستینگر
+#    هاستینگر (SSH):
+#      SSH_IP           آدرس IP
 #      SSH_PORT         پورت SSH
-#      SSH_USERNAME     نام کاربری SSH
-#      SSH_PASSWORD     رمز عبور SSH
+#      SSH_USERNAME     نام کاربری
+#      SSH_PASSWORD     رمز عبور
 #    مشترک:
 #      HEALTH_URL       https://ehsansalehi.ir/api/deploy/health
 #      RELAY_URL        آدرس رله هاستینگر
+#      RELAY_SECRET     رمز مشترک HMAC
+#      CRON_SECRET      کلید تست سرتاسری
 # ═══════════════════════════════════════════════════════════════
 
-name: Deploy All (Site + Relay)
+name: Deploy All (Site FTP + Relay SSH)
 
 on:
   push:
@@ -36,8 +37,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    outputs:
-      bundle-path: ${{ steps.bundle.outputs.path }}
 
     steps:
       - uses: actions/checkout@v4
@@ -65,8 +64,7 @@ jobs:
           NEXT_PUBLIC_SITE_URL: https://ehsansalehi.ir
           NEXT_TELEMETRY_DISABLED: '1'
 
-      - name: Create bundle
-        id: bundle
+      - name: Prepare standalone output
         run: |
           set -euo pipefail
           OUT=.next/standalone
@@ -85,78 +83,37 @@ jobs:
             "node": "$(node -v)"
           }
           EOF
-          mkdir -p dist
-          BUNDLE="dist/bundle-${GITHUB_RUN_ID}.tar.gz"
-          tar --exclude='./node_modules/.cache' \
-              -C "$OUT" -cf - . | gzip -9 > "$BUNDLE"
-          SIZE=$(du -h "$BUNDLE" | cut -f1)
-          echo "path=$BUNDLE" >> "$GITHUB_OUTPUT"
-          echo "::notice::حجم بسته: $SIZE"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: bundle
-          path: dist/*.tar.gz
-          retention-days: 7
+          name: standalone
+          path: .next/standalone/
+          retention-days: 1
 
-  # ─── مرحله ۲: دیپلوی سایت به میزبان‌فا ─────────────────
+  # ─── مرحله ۲: دیپلوی سایت به میزبان‌فا (FTP) ───────────
   deploy-site:
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
     steps:
-      - uses: actions/checkout@v4
-
       - uses: actions/download-artifact@v4
         with:
-          name: bundle
-          path: dist/
+          name: standalone
+          path: .next/standalone/
 
-      - name: Find bundle file
-        id: find
-        run: echo "path=$(ls dist/*.tar.gz | head -1)" >> "$GITHUB_OUTPUT"
-
-      # ─── روش ۱: SSH (ترجیحی) ────────────────────────────
-      - name: Deploy site via SSH to Mizbanfa
-        uses: appleboy/scp-action@v0.1.7
+      - name: Sync via FTP to Mizbanfa
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          host: ${{ secrets.SSH_IP }}
-          port: ${{ secrets.SSH_PORT }}
-          username: ${{ secrets.SSH_USERNAME }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          source: ${{ steps.find.outputs.path }}
-          target: ~/incoming/
-          strip_components: 1
-
-      - name: Extract and restart via SSH
-        uses: appleboy/ssh-action@v1.2.2
-        with:
-          host: ${{ secrets.SSH_IP }}
-          port: ${{ secrets.SSH_PORT }}
-          username: ${{ secrets.SSH_USERNAME }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          script: |
-            set -e
-            APP_DIR="$HOME/ehsansalehi.ir"
-            BUNDLE=$(ls -t ~/incoming/bundle-*.tar.gz 2>/dev/null | head -1)
-            
-            if [ -z "$BUNDLE" ]; then
-              echo "❌ بسته یافت نشد"
-              exit 1
-            fi
-            
-            echo "📦 استخراج بسته: $BUNDLE"
-            mkdir -p "$APP_DIR"
-            [ -f "$APP_DIR/.env" ] && cp "$APP_DIR/.env" "$APP_DIR/.env.bak"
-            tar -xzf "$BUNDLE" -C "$APP_DIR"
-            [ -f "$APP_DIR/.env.bak" ] && mv "$APP_DIR/.env.bak" "$APP_DIR/.env"
-            
-            echo "🔄 ری‌استارت..."
-            date -u +%FT%TZ > "$APP_DIR/tmp/restart.txt"
-            rm -f "$BUNDLE"
-            
-            echo "✅ دیپلوی سایت کامل شد: $(date -u +%FT%TZ)"
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ./ehsansalehi.ir/
+          local-dir: .next/standalone/
+          state-name: .sync-state-${{ github.run_id }}.json
+          timeout: 120000
+          security: loose
+          passive: true
 
       - name: Verify site health
         run: |
@@ -172,7 +129,7 @@ jobs:
             echo "::warning::نسخه‌ها مطابقت ندارند (ممکن است کش باشد)"
           fi
 
-  # ─── مرحله ۳: دیپلوی رله PHP به هاستینگر ───────────────
+  # ─── مرحله ۳: دیپلوی رله PHP به هاستینگر (SSH) ─────────
   deploy-relay:
     needs: build
     runs-on: ubuntu-latest
@@ -181,7 +138,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Deploy PHP relay to Hostinger via SSH
+      - name: Upload PHP relay via SSH
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_IP }}
@@ -198,14 +155,15 @@ jobs:
           RELAY_DOMAIN="${{ vars.RELAY_DOMAIN || 'darkslategrey-woodcock-525023.hostingersite.com' }}"
           echo "🔍 تست رله: https://$RELAY_DOMAIN/health"
           HTTP=$(curl -sS -o /tmp/relay-health.json -w "%{http_code}" \
-            --max-time 15 "https://$RELAY_DOMAIN/health" 2>&1 || echo "000")
+            --max-time 15 "https://$RELAY_DOMAIN/health" 2>/dev/null || true)
+          HTTP=${HTTP:-000}
           if [ "$HTTP" = "200" ]; then
             echo "::notice::✅ رله PHP سالم است"
           else
             echo "::warning::⚠️ رله پاسخ 200 نداد (HTTP $HTTP)"
           fi
 
-  # ─── مرحله ۴: تست سرتاسری ──────────────────────────────
+  # ─── مرحله ۴: تست سرتاسری زنجیره ──────────────────────
   test-chain:
     needs: [deploy-site, deploy-relay]
     runs-on: ubuntu-latest

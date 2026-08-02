@@ -1,32 +1,25 @@
 # ═══════════════════════════════════════════════════════════════
-#  دیپلوی سریع به میزبان‌فا — از طریق SSH
+#  دیپلوی سایت به میزبان‌فا — از طریق FTP
+#
+#  FTP فقط برای میزبان‌فا (سایت اصلی Next.js)
+#  SSH فقط برای هاستینگر (رله) — ورک‌فلو جدا
 #
 #  Secrets لازم:
-#    SSH_IP           آدرس IP سرور میزبان‌فا
-#    SSH_PORT         پورت SSH (معمولاً 22)
-#    SSH_USERNAME     نام کاربری SSH
-#    SSH_PASSWORD     رمز عبور SSH
-#    FTP_SERVER       آدرس FTP میزبان‌فا (برای دیپلوی قدیمی)
+#    FTP_SERVER       آدرس FTP میزبان‌فا
 #    FTP_USERNAME     نام کاربری FTP
 #    FTP_PASSWORD     رمز FTP
-#    HEALTH_URL       https://ehsansalehi.ir/api/health
+#    HEALTH_URL       https://ehsansalehi.ir/api/deploy/health
 # ═══════════════════════════════════════════════════════════════
 
-name: Deploy to Mizbanfa (SSH)
+name: Deploy Site to Mizbanfa (FTP)
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
-    inputs:
-      method:
-        description: 'روش دیپلوی'
-        type: choice
-        options: [ssh, ftp]
-        default: ssh
 
 concurrency:
-  group: deploy-production
+  group: deploy-site
   cancel-in-progress: false
 
 jobs:
@@ -48,8 +41,7 @@ jobs:
       - name: Cache Next.js build
         uses: actions/cache@v4
         with:
-          path: |
-            ${{ github.workspace }}/.next/cache
+          path: ${{ github.workspace }}/.next/cache
           key: next-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/*.[jt]s','**/*.[jt]sx') }}
           restore-keys: |
             next-${{ hashFiles('package-lock.json') }}-
@@ -66,10 +58,8 @@ jobs:
           NEXT_PUBLIC_SITE_URL: https://ehsansalehi.ir
           NEXT_TELEMETRY_DISABLED: '1'
 
-      # ─── ۶) ساخت بسته فشرده ────────────────────────────
-      #  کلید سرعت: به‌جای هزاران فایل، یک فایل ~۱۵ مگابایتی
-      - name: Create bundle
-        id: bundle
+      # ─── ۶) آماده‌سازی خروجی standalone ─────────────────
+      - name: Prepare standalone output
         run: |
           set -euo pipefail
           OUT=.next/standalone
@@ -93,69 +83,8 @@ jobs:
           }
           EOF
 
-          mkdir -p dist
-          BUNDLE="dist/bundle-${GITHUB_RUN_ID}.tar.gz"
-
-          # فشرده‌سازی حداکثری برای کمترین حجم انتقال
-          tar --exclude='./node_modules/.cache' \
-              -C "$OUT" -cf - . | gzip -9 > "$BUNDLE"
-
-          SIZE=$(du -h "$BUNDLE" | cut -f1)
-          echo "path=$BUNDLE" >> "$GITHUB_OUTPUT"
-          echo "::notice::حجم بسته: $SIZE"
-          ls -lh "$BUNDLE"
-
-      # ─── ۷) دیپلوی SSH ─────────────────────────────────
-      - name: Deploy via SSH
-        if: ${{ inputs.method == 'ssh' || inputs.method == '' }}
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SSH_IP }}
-          port: ${{ secrets.SSH_PORT }}
-          username: ${{ secrets.SSH_USERNAME }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          source: ${{ steps.bundle.outputs.path }}
-          target: ~/incoming/
-          strip_components: 1
-
-      - name: Extract and restart via SSH
-        if: ${{ inputs.method == 'ssh' || inputs.method == '' }}
-        uses: appleboy/ssh-action@v1.2.2
-        with:
-          host: ${{ secrets.SSH_IP }}
-          port: ${{ secrets.SSH_PORT }}
-          username: ${{ secrets.SSH_USERNAME }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          script: |
-            set -e
-            APP_DIR="$HOME/ehsansalehi.ir"
-            BUNDLE="$HOME/incoming/bundle-${{ github.run_id }}.tar.gz"
-            
-            echo "📦 استخراج بسته..."
-            mkdir -p "$APP_DIR"
-            # بکاپ سریع از فایل‌های مهم
-            if [ -f "$APP_DIR/.env" ]; then
-              cp "$APP_DIR/.env" "$APP_DIR/.env.bak"
-            fi
-            # استخراج بسته
-            tar -xzf "$BUNDLE" -C "$APP_DIR"
-            # برگرداندن .env
-            if [ -f "$APP_DIR/.env.bak" ]; then
-              mv "$APP_DIR/.env.bak" "$APP_DIR/.env"
-            fi
-            
-            echo "🔄 ری‌استارت اپ..."
-            # توش touch به فایل restart.txt اپ نکست را می‌فهماند ری‌استارت شود
-            date -u +%FT%TZ > "$APP_DIR/tmp/restart.txt"
-            
-            # پاکسازی فایل موقت
-            rm -f "$BUNDLE"
-            
-            echo "✅ دیپلوی کامل شد: $(date -u +%FT%TZ)"
-
-      # ─── ۷-ب) دیپلوی FTP (پشتیبان) ─────────────────────
-      - name: Deploy via FTP (fallback)
-        if: ${{ inputs.method == 'ftp' }}
+      # ─── ۷) دیپلوی FTP به میزبان‌فا ─────────────────────
+      - name: Sync via FTP to Mizbanfa
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
@@ -182,11 +111,3 @@ jobs:
           else
             echo "::warning::نسخه‌ها مطابقت ندارند (ممکن است کش باشد)"
           fi
-
-      # ─── ۹) نگهداری بسته برای بازگشت اضطراری ───────────
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: bundle-${{ github.run_id }}
-          path: dist/*.tar.gz
-          retention-days: 7
