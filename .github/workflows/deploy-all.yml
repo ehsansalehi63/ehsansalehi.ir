@@ -1,10 +1,11 @@
 # ═══════════════════════════════════════════════════════════════
-#  دیپلوی کامل — سایت (FTP) + رله (SSH)
+#  دیپلوی کامل: سایت (FTP→میزبان‌فا) + رله (SSH→هاستینگر) + تست زنجیره
 #
-#  FTP → میزبان‌فا (سایت اصلی Next.js)
-#  SSH → هاستینگر (رله PHP — شبکه‌های اجتماعی + هوش مصنوعی)
+#  FTP  → میزبان‌فا (سایت اصلی Next.js)
+#  SSH  → هاستینگر (رله PHP — شبکه‌های اجتماعی + هوش مصنوعی)
+#  تست  → زنجیره سایت↔رله پس از دیپلوی
 #
-#  Secrets لازم:
+#  Secrets لازم (همه در GitHub Secrets تنظیم شده‌اند):
 #    میزبان‌فا (FTP):
 #      FTP_SERVER       آدرس FTP
 #      FTP_USERNAME     نام کاربری
@@ -18,7 +19,7 @@
 #      HEALTH_URL       https://ehsansalehi.ir/api/deploy/health
 #      RELAY_URL        آدرس رله هاستینگر
 #      RELAY_SECRET     رمز مشترک HMAC
-#      CRON_SECRET      کلید تست سرتاسری
+#      CRON_SECRET      کلید تست سرتاسری سایت
 # ═══════════════════════════════════════════════════════════════
 
 name: Deploy All (Site FTP + Relay SSH)
@@ -138,7 +139,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Upload PHP relay via SSH
+      # آپلود فایل‌های رله PHP از طریق SSH/SCP
+      - name: Upload PHP relay files via SSH (scp-action)
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_IP }}
@@ -149,18 +151,69 @@ jobs:
           target: ~/public_html/
           strip_components: 1
 
+      # مطمئن شو relay-config.php وجود دارد (اگر نبود نمونه بساز)
+      - name: Ensure relay-config.php exists (SSH)
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.SSH_IP }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: |
+            CONFIG_FILE="$HOME/public_html/relay-config.php"
+            if [ ! -f "$CONFIG_FILE" ]; then
+              cat > "$CONFIG_FILE" <<'PHPCONFIG'
+            <?php
+            return [
+                'relay_secret'      => '',
+                'ai_gateway_key'    => '',
+                'openai_api_key'    => '',
+                'openai_base'       => 'https://agentrouter.org/v1',
+                'anthropic_base'    => 'https://agentrouter.org',
+                'anthropic_version' => '2023-06-01',
+                'instagram_token'   => '',
+                'instagram_user_id' => '',
+                'linkedin_token'    => '',
+                'linkedin_author'   => '',
+                'fb_token'          => '',
+                'fb_page_id'        => '',
+                'meta_version'      => 'v21.0',
+                'sig_window'        => 300,
+            ];
+            PHPCONFIG
+              echo "relay-config.php نمونه ساخته شد"
+            else
+              echo "relay-config.php از قبل وجود دارد"
+            fi
+            chmod 600 "$CONFIG_FILE" 2>/dev/null || true
+
+      # بررسی سلامت رله
       - name: Verify relay health
         run: |
           sleep 3
           RELAY_DOMAIN="${{ vars.RELAY_DOMAIN || 'darkslategrey-woodcock-525023.hostingersite.com' }}"
-          echo "🔍 تست رله: https://$RELAY_DOMAIN/health"
+          echo "Testing relay: https://$RELAY_DOMAIN/health"
           HTTP=$(curl -sS -o /tmp/relay-health.json -w "%{http_code}" \
             --max-time 15 "https://$RELAY_DOMAIN/health" 2>/dev/null || true)
           HTTP=${HTTP:-000}
           if [ "$HTTP" = "200" ]; then
             echo "::notice::✅ رله PHP سالم است"
+            cat /tmp/relay-health.json
           else
             echo "::warning::⚠️ رله پاسخ 200 نداد (HTTP $HTTP)"
+          fi
+
+      # بررسی امنیتی: فایل کانفیگ نباید قابل خواندن باشد
+      - name: Security check — relay-config.php not publicly readable
+        run: |
+          RELAY_DOMAIN="${{ vars.RELAY_DOMAIN || 'darkslategrey-woodcock-525023.hostingersite.com' }}"
+          HTTP=$(curl -sS -o /dev/null -w "%{http_code}" \
+            --max-time 10 "https://$RELAY_DOMAIN/relay-config.php" 2>/dev/null || true)
+          HTTP=${HTTP:-000}
+          if [ "$HTTP" = "200" ]; then
+            echo "::error::❌ relay-config.php قابل خواندن است!"
+          else
+            echo "::notice::✅ relay-config.php محافظت شده (HTTP $HTTP)"
           fi
 
   # ─── مرحله ۴: تست سرتاسری زنجیره ──────────────────────
@@ -173,7 +226,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run chain test
+      - name: Run chain test (site ↔ relay)
         env:
           SITE_URL:     https://ehsansalehi.ir
           RELAY_URL:    ${{ secrets.RELAY_URL }}
@@ -182,6 +235,22 @@ jobs:
         run: |
           chmod +x tools/test-chain.sh
           bash tools/test-chain.sh | tee chain-report.txt
+
+      - name: Test SSH connectivity to Hostinger
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.SSH_IP }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: |
+            echo "✅ SSH به هاستینگر وصل شد"
+            echo "Uptime: $(uptime)"
+            echo "Disk: $(df -h / | tail -1)"
+            echo "PHP: $(php -v 2>/dev/null | head -1 || echo 'نامشخص')"
+            echo ""
+            echo "Test relay from inside Hostinger:"
+            curl -sS --max-time 15 "http://localhost/health" 2>&1 || echo "رله روی localhost در دسترس نیست"
 
       - name: Summary
         if: always()
