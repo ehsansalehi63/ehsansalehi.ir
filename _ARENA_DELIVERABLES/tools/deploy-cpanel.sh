@@ -43,10 +43,15 @@ deploy_api() {
   local INCOMING="${APP_DIR}/incoming"
   local NAME; NAME="deploy-$(date -u +%Y%m%d-%H%M%S).tar.gz"
 
+  # مسیر home برای تبدیل absolute → relative (API2 مسیر نسبی می‌خواهد)
+  local HOME_DIR="${CPANEL_HOME:-/home/${CPANEL_USER}}"
+
   c_info "تست اتصال به cPanel API..."
   local test_resp
+  # از --data-urlencode با -G استفاده می‌کنیم تا نیازی به jq نباشد
   test_resp=$(curl -sS --max-time 30 -H "$AUTH" \
-    "${BASE}/Fileman/list_files?dir=$(printf '%s' "$APP_DIR" | jq -sRr @uri)" 2>&1) || true
+    -G "${BASE}/Fileman/list_files" \
+    --data-urlencode "dir=${APP_DIR}" 2>&1) || true
   if ! grep -q '"errors":null\|"status":1' <<<"$test_resp"; then
     c_err "اتصال به API ناموفق. پاسخ:"
     echo "$test_resp" | head -5
@@ -69,13 +74,59 @@ deploy_api() {
   c_ok "آپلود کامل شد"
 
   c_info "استخراج روی سرور..."
-  local ex
+  #
+  #  ⚠️ نکته مهم:
+  #  UAPI ماژول Archive روی همه سرورها نصب نیست. روی میزبان‌فا این خطا می‌آید:
+  #      Failed to load module "Archive": Can't locate Cpanel/API/Archive.pm
+  #  بنابراین اول API2 (Fileman::fileop) را امتحان می‌کنیم که همه‌جا هست،
+  #  و اگر نبود به UAPI برمی‌گردیم.
+  #
+  local ex="" extracted=0
+
+  # ─── روش ۱: API2 Fileman::fileop (سازگار با همه سرورها) ───
+  # مسیرها باید نسبت به home باشند، نه absolute
+  local REL_SRC="${INCOMING#"$HOME_DIR"/}/${NAME}"
+  local REL_DST="${APP_DIR#"$HOME_DIR"/}"
+  REL_SRC="${REL_SRC#/}"; REL_DST="${REL_DST#/}"
+
+  c_info "تلاش با API2 (Fileman::fileop)..."
   ex=$(curl -sS --max-time 300 -H "$AUTH" \
-    --data-urlencode "sourcefiles=${INCOMING}/${NAME}" \
-    --data-urlencode "destdir=${APP_DIR}" \
-    "${BASE}/Archive/extract_archive")
-  grep -q '"errors":null\|"status":1' <<<"$ex" || { c_err "استخراج ناموفق: $ex"; return 1; }
-  c_ok "استخراج کامل شد"
+    -G "https://${CPANEL_HOST}:2083/json-api/cpanel" \
+    --data-urlencode "cpanel_jsonapi_user=${CPANEL_USER}" \
+    --data-urlencode "cpanel_jsonapi_apiversion=2" \
+    --data-urlencode "cpanel_jsonapi_module=Fileman" \
+    --data-urlencode "cpanel_jsonapi_func=fileop" \
+    --data-urlencode "op=extract" \
+    --data-urlencode "sourcefiles=${REL_SRC}" \
+    --data-urlencode "destfiles=${REL_DST}" \
+    --data-urlencode "doubledecode=0" \
+    --data-urlencode "overwrite=1" 2>&1) || true
+
+  if grep -q '"result":[[:space:]]*"\?1' <<<"$ex" || grep -q '"result":[[:space:]]*true' <<<"$ex"; then
+    extracted=1
+    c_ok "استخراج با API2 انجام شد"
+  else
+    c_info "API2 موفق نبود، تلاش با UAPI..."
+    # ─── روش ۲: UAPI Archive::extract_archive ───
+    ex=$(curl -sS --max-time 300 -H "$AUTH" \
+      --data-urlencode "sourcefiles=${INCOMING}/${NAME}" \
+      --data-urlencode "destdir=${APP_DIR}" \
+      "${BASE}/Archive/extract_archive" 2>&1) || true
+
+    if grep -q '"errors":null' <<<"$ex" && grep -q '"status":[[:space:]]*1' <<<"$ex"; then
+      extracted=1
+      c_ok "استخراج با UAPI انجام شد"
+    fi
+  fi
+
+  if [ "$extracted" -ne 1 ]; then
+    c_err "استخراج با هر دو روش ناموفق بود. آخرین پاسخ:"
+    echo "$ex" | head -c 600; echo
+    c_err "راهنما: اگر خطای 'Can't locate Cpanel/API/Archive.pm' دیدید،"
+    c_err "        یعنی UAPI Archive روی این سرور نیست و API2 هم رد شد."
+    c_err "        از روش SSH یا گیرنده PHP استفاده کنید."
+    return 1
+  fi
 
   c_info "ری‌استارت اپ..."
   curl -sS --max-time 60 -H "$AUTH" \
