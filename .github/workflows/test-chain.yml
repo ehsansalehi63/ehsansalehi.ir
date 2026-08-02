@@ -8,6 +8,10 @@
 #      RELAY_SECRET   رمز مشترک HMAC
 #      CRON_SECRET    کلید تست سرتاسری روی سایت
 #      HEALTH_URL     پیش‌فرض https://ehsansalehi.ir
+#      SSH_IP         آدرس IP هاستینگر
+#      SSH_PORT       پورت SSH
+#      SSH_USERNAME   نام کاربری SSH
+#      SSH_PASSWORD   رمز عبور SSH
 # ═══════════════════════════════════════════════════════════════
 
 name: Test Chain (site ↔ relay)
@@ -32,9 +36,38 @@ jobs:
           RELAY_URL:    ${{ secrets.RELAY_URL }}
           RELAY_SECRET: ${{ secrets.RELAY_SECRET }}
           CRON_SECRET:  ${{ secrets.CRON_SECRET }}
+          SSH_IP:       ${{ secrets.SSH_IP }}
+          SSH_PORT:     ${{ secrets.SSH_PORT }}
+          SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
         run: |
           chmod +x tools/test-chain.sh
           bash tools/test-chain.sh | tee chain-report.txt
+
+      - name: Test SSH connectivity to Hostinger
+        if: ${{ secrets.SSH_IP != '' }}
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.SSH_IP }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: |
+            echo "✅ SSH به هاستینگر وصل شد"
+            echo "Uptime: $(uptime)"
+            echo "Disk: $(df -h / | tail -1)"
+            echo "PHP: $(php -v 2>/dev/null | head -1 || echo 'نامشخص')"
+
+      - name: Test relay health from Hostinger
+        if: ${{ secrets.SSH_IP != '' && secrets.RELAY_URL != '' }}
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.SSH_IP }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: |
+            echo "🔍 تست رله از داخل هاستینگر..."
+            curl -sS --max-time 15 "${{ secrets.RELAY_URL }}/health" 2>&1 || echo "رله در دسترس نیست"
 
       - name: Summary
         if: always()
@@ -52,4 +85,3 @@ jobs:
           name: chain-report
           path: chain-report.txt
           retention-days: 14
-

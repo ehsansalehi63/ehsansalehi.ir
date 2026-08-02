@@ -1,0 +1,236 @@
+# ═══════════════════════════════════════════════════════════════
+#  دیپلوی کامل — سایت + رله
+#
+#  این ورک‌فلو هر دو هاست را دیپلوی می‌کند:
+#    ۱) سایت اصلی (میزبان‌فا) — از طریق SSH
+#    ۲) رله PHP (هاستینگر) — از طریق SSH
+#
+#  Secrets لازم:
+#    میزبان‌فا:
+#      FTP_SERVER       آدرس FTP میزبان‌فا
+#      FTP_USERNAME     نام کاربری FTP
+#      FTP_PASSWORD     رمز FTP
+#    هاستینگر:
+#      SSH_IP           آدرس IP هاستینگر
+#      SSH_PORT         پورت SSH
+#      SSH_USERNAME     نام کاربری SSH
+#      SSH_PASSWORD     رمز عبور SSH
+#    مشترک:
+#      HEALTH_URL       https://ehsansalehi.ir/api/deploy/health
+#      RELAY_URL        آدرس رله هاستینگر
+# ═══════════════════════════════════════════════════════════════
+
+name: Deploy All (Site + Relay)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-all
+  cancel-in-progress: false
+
+jobs:
+  # ─── مرحله ۱: بیلد ──────────────────────────────────────
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      bundle-path: ${{ steps.bundle.outputs.path }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Cache Next.js build
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/.next/cache
+          key: next-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/*.[jt]s','**/*.[jt]sx') }}
+          restore-keys: |
+            next-${{ hashFiles('package-lock.json') }}-
+            next-
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit --fund=false
+
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SITE_URL: https://ehsansalehi.ir
+          NEXT_TELEMETRY_DISABLED: '1'
+
+      - name: Create bundle
+        id: bundle
+        run: |
+          set -euo pipefail
+          OUT=.next/standalone
+          cp -r public "$OUT/public"
+          mkdir -p "$OUT/.next"
+          cp -r .next/static "$OUT/.next/static"
+          mkdir -p "$OUT/tmp"
+          date -u +%FT%TZ > "$OUT/tmp/restart.txt"
+          cat > "$OUT/deploy-info.json" <<EOF
+          {
+            "commit": "${GITHUB_SHA}",
+            "shortSha": "${GITHUB_SHA:0:7}",
+            "ref": "${GITHUB_REF_NAME}",
+            "runId": "${GITHUB_RUN_ID}",
+            "builtAt": "$(date -u +%FT%TZ)",
+            "node": "$(node -v)"
+          }
+          EOF
+          mkdir -p dist
+          BUNDLE="dist/bundle-${GITHUB_RUN_ID}.tar.gz"
+          tar --exclude='./node_modules/.cache' \
+              -C "$OUT" -cf - . | gzip -9 > "$BUNDLE"
+          SIZE=$(du -h "$BUNDLE" | cut -f1)
+          echo "path=$BUNDLE" >> "$GITHUB_OUTPUT"
+          echo "::notice::حجم بسته: $SIZE"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bundle
+          path: dist/*.tar.gz
+          retention-days: 7
+
+  # ─── مرحله ۲: دیپلوی سایت به میزبان‌فا ─────────────────
+  deploy-site:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: bundle
+          path: dist/
+
+      - name: Find bundle file
+        id: find
+        run: echo "path=$(ls dist/*.tar.gz | head -1)" >> "$GITHUB_OUTPUT"
+
+      # ─── روش ۱: SSH (ترجیحی) ────────────────────────────
+      - name: Deploy site via SSH to Mizbanfa
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_IP }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          source: ${{ steps.find.outputs.path }}
+          target: ~/incoming/
+          strip_components: 1
+
+      - name: Extract and restart via SSH
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.SSH_IP }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: |
+            set -e
+            APP_DIR="$HOME/ehsansalehi.ir"
+            BUNDLE=$(ls -t ~/incoming/bundle-*.tar.gz 2>/dev/null | head -1)
+            
+            if [ -z "$BUNDLE" ]; then
+              echo "❌ بسته یافت نشد"
+              exit 1
+            fi
+            
+            echo "📦 استخراج بسته: $BUNDLE"
+            mkdir -p "$APP_DIR"
+            [ -f "$APP_DIR/.env" ] && cp "$APP_DIR/.env" "$APP_DIR/.env.bak"
+            tar -xzf "$BUNDLE" -C "$APP_DIR"
+            [ -f "$APP_DIR/.env.bak" ] && mv "$APP_DIR/.env.bak" "$APP_DIR/.env"
+            
+            echo "🔄 ری‌استارت..."
+            date -u +%FT%TZ > "$APP_DIR/tmp/restart.txt"
+            rm -f "$BUNDLE"
+            
+            echo "✅ دیپلوی سایت کامل شد: $(date -u +%FT%TZ)"
+
+      - name: Verify site health
+        run: |
+          sleep 8
+          DEPLOYED=$(curl -sS --max-time 20 "${{ secrets.HEALTH_URL }}" \
+            | grep -o '"shortSha":"[^"]*"' | cut -d'"' -f4 || echo "?")
+          EXPECTED="${GITHUB_SHA:0:7}"
+          echo "نسخه روی سایت: $DEPLOYED"
+          echo "نسخه مورد انتظار: $EXPECTED"
+          if [ "$DEPLOYED" = "$EXPECTED" ]; then
+            echo "::notice::✅ نسخه صحیح منتشر شد"
+          else
+            echo "::warning::نسخه‌ها مطابقت ندارند (ممکن است کش باشد)"
+          fi
+
+  # ─── مرحله ۳: دیپلوی رله PHP به هاستینگر ───────────────
+  deploy-relay:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy PHP relay to Hostinger via SSH
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_IP }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          source: "relay-php/relay.php,relay-php/.htaccess"
+          target: ~/public_html/
+          strip_components: 1
+
+      - name: Verify relay health
+        run: |
+          sleep 3
+          RELAY_DOMAIN="${{ vars.RELAY_DOMAIN || 'darkslategrey-woodcock-525023.hostingersite.com' }}"
+          echo "🔍 تست رله: https://$RELAY_DOMAIN/health"
+          HTTP=$(curl -sS -o /tmp/relay-health.json -w "%{http_code}" \
+            --max-time 15 "https://$RELAY_DOMAIN/health" 2>&1 || echo "000")
+          if [ "$HTTP" = "200" ]; then
+            echo "::notice::✅ رله PHP سالم است"
+          else
+            echo "::warning::⚠️ رله پاسخ 200 نداد (HTTP $HTTP)"
+          fi
+
+  # ─── مرحله ۴: تست سرتاسری ──────────────────────────────
+  test-chain:
+    needs: [deploy-site, deploy-relay]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: always()
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run chain test
+        env:
+          SITE_URL:     https://ehsansalehi.ir
+          RELAY_URL:    ${{ secrets.RELAY_URL }}
+          RELAY_SECRET: ${{ secrets.RELAY_SECRET }}
+          CRON_SECRET:  ${{ secrets.CRON_SECRET }}
+        run: |
+          chmod +x tools/test-chain.sh
+          bash tools/test-chain.sh | tee chain-report.txt
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo '## گزارش تست زنجیره (پس از دیپلوی)'
+            echo '```'
+            sed 's/\x1b\[[0-9;]*m//g' chain-report.txt 2>/dev/null || echo 'گزارشی تولید نشد'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
