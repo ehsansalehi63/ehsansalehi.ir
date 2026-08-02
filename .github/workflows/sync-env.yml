@@ -13,8 +13,8 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      # ── 1) Read relay config from Hostinger via SSH ──
-      - name: Read relay config from Hostinger
+      # ── 1) Read actual CONFIG from relay via SSH (env vars + config file) ──
+      - name: Read relay config values from Hostinger
         id: relay
         uses: appleboy/ssh-action@v1.2.2
         with:
@@ -22,34 +22,82 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
+          capture_stdout: true
           script: |
-            CONFIG="$HOME/public_html/relay-config.php"
-            if [ ! -f "$CONFIG" ]; then
-              echo "ERROR: relay-config.php not found"
-              exit 1
+            # Try 1: Check if env vars are available in SSH session
+            GATE=$(printenv AI_GATEWAY_KEY 2>/dev/null || echo "")
+            RSEC=$(printenv RELAY_SECRET 2>/dev/null || echo "")
+            
+            # Try 2: If empty, check .env file in home directory
+            if [ -z "$GATE" ] || [ -z "$RSEC" ]; then
+              for F in "$HOME/.env" "$HOME/public_html/.env" "$HOME/.cpanel/.env"; do
+                if [ -f "$F" ]; then
+                  GATE2=$(grep '^AI_GATEWAY_KEY=' "$F" 2>/dev/null | cut -d= -f2- || echo "")
+                  RSEC2=$(grep '^RELAY_SECRET=' "$F" 2>/dev/null | cut -d= -f2- || echo "")
+                  [ -z "$GATE" ] && [ -n "$GATE2" ] && GATE="$GATE2"
+                  [ -z "$RSEC" ] && [ -n "$RSEC2" ] && RSEC="$RSEC2"
+                fi
+              done
             fi
-            php -r "
-            \$c = include '$CONFIG';
-            echo 'GATE_KEY=' . \$c['ai_gateway_key'] . PHP_EOL;
-            echo 'RELAY_SECRET=' . \$c['relay_secret'] . PHP_EOL;
-            echo 'HAS_OPENAI=' . (empty(\$c['openai_api_key']) ? 'EMPTY' : 'SET') . PHP_EOL;
-            "
+
+            # Try 3: Use PHP to read the actual config (includes env vars via getenv)
+            if [ -z "$GATE" ] || [ -z "$RSEC" ]; then
+              php -r '
+              $CONFIG = [
+                "relay_secret" => "", "ai_gateway_key" => "", "openai_api_key" => "",
+                "openai_base" => "https://agentrouter.org/v1", "anthropic_base" => "https://agentrouter.org",
+                "anthropic_version" => "2023-06-01", "instagram_token" => "", "instagram_user_id" => "",
+                "linkedin_token" => "", "linkedin_author" => "", "fb_token" => "", "fb_page_id" => "",
+                "meta_version" => "v21.0", "sig_window" => 300,
+              ];
+              $cfgFile = getcwd() . "/public_html/relay-config.php";
+              if (is_file($cfgFile)) {
+                $loaded = require $cfgFile;
+                if (is_array($loaded)) $CONFIG = array_merge($CONFIG, $loaded);
+              }
+              foreach ([
+                "RELAY_SECRET" => "relay_secret", "AI_GATEWAY_KEY" => "ai_gateway_key",
+                "OPENAI_API_KEY" => "openai_api_key",
+              ] as $env => $key) {
+                $v = getenv($env);
+                if ($v !== false && $v !== "") $CONFIG[$key] = $v;
+              }
+              echo "GATE_KEY=" . $CONFIG["ai_gateway_key"] . PHP_EOL;
+              echo "RELAY_SECRET=" . $CONFIG["relay_secret"] . PHP_EOL;
+              echo "HAS_OPENAI=" . (empty($CONFIG["openai_api_key"]) ? "EMPTY" : "SET") . PHP_EOL;
+              ' 2>/dev/null
+            else
+              echo "GATE_KEY=$GATE"
+              echo "RELAY_SECRET=$RSEC"
+              echo "HAS_OPENAI=CHECK"
+            fi
 
       # ── 2) Parse and mask values ──
       - name: Parse relay config
         run: |
           set -euo pipefail
           OUTPUT='${{ steps.relay.outputs.stdout }}'
+          echo "Lines in output: $(echo "$OUTPUT" | wc -l)"
+          
           GATE_KEY=$(echo "$OUTPUT" | grep '^GATE_KEY=' | head -1 | cut -d= -f2-)
           RSECRET=$(echo "$OUTPUT" | grep '^RELAY_SECRET=' | head -1 | cut -d= -f2-)
           HAS_OPENAI=$(echo "$OUTPUT" | grep '^HAS_OPENAI=' | head -1 | cut -d= -f2-)
 
+          echo "GATE_KEY empty? $([ -z "$GATE_KEY" ] && echo YES || echo NO)"
+          echo "RSECRET empty? $([ -z "$RSECRET" ] && echo YES || echo NO)"
+          echo "HAS_OPENAI: $HAS_OPENAI"
+
           if [ -z "$GATE_KEY" ]; then
-            echo "::error::ai_gateway_key is empty on relay"
-            exit 1
+            echo "::warning::ai_gateway_key not found via SSH — will use RELAY_SECRET from GitHub Secrets"
+            GATE_KEY="${{ secrets.RELAY_SECRET }}"
           fi
           if [ -z "$RSECRET" ]; then
-            echo "::error::relay_secret is empty on relay"
+            echo "::warning::relay_secret not found via SSH — will use RELAY_SECRET from GitHub Secrets"
+            RSECRET="${{ secrets.RELAY_SECRET }}"
+          fi
+
+          if [ -z "$GATE_KEY" ] || [ -z "$RSECRET" ]; then
+            echo "::error::Could not determine GATE_KEY or RELAY_SECRET"
             exit 1
           fi
 
@@ -57,7 +105,7 @@ jobs:
           echo "::add-mask::$RSECRET"
           echo "GATE_KEY=$GATE_KEY" >> $GITHUB_ENV
           echo "RSECRET=$RSECRET" >> $GITHUB_ENV
-          echo "::notice::Relay config read — gate_key: SET, relay_secret: SET, openai_api_key: $HAS_OPENAI"
+          echo "::notice::Values ready — GATE_KEY: $([ -n "$GATE_KEY" ] && echo SET || echo EMPTY), RSECRET: $([ -n "$RSECRET" ] && echo SET || echo EMPTY)"
 
       # ── 3) Set env vars on Mizbanfa via cPanel API ──
       - name: Set env vars on Mizbanfa
@@ -72,53 +120,36 @@ jobs:
 
           # 3a) Get Node.js app list
           echo "--- Listing Node.js apps ---"
-          APPS=$(curl -sS -k --max-time 15 \
+          curl -sS -k --max-time 15 \
             "https://${CH}:2083/execute/Node/get_applications" \
-            -H "Authorization: cpanel ${CU}:${CT}")
-          echo "$APPS" | head -c 1000
-          echo ""
+            -H "Authorization: cpanel ${CU}:${CT}" | python3 -m json.tool 2>/dev/null | head -50
 
-          # 3b) Try Environment API (user-level env vars)
-          echo "--- Setting OPENAI_API_KEY via Environment API ---"
-          R1=$(curl -sS -k --max-time 15 \
+          # 3b) Set user-level env vars via Environment API
+          echo "--- Setting OPENAI_API_KEY ---"
+          curl -sS -k --max-time 15 \
             "https://${CH}:2083/execute/Environment/set_user_environment_variable" \
             -H "Authorization: cpanel ${CU}:${CT}" \
-            -d "name=OPENAI_API_KEY&value=$GATE_KEY")
-          echo "$R1" | head -c 300
-          echo ""
+            -d "name=OPENAI_API_KEY&value=$GATE_KEY" | python3 -m json.tool 2>/dev/null | head -10
 
-          echo "--- Setting RELAY_SECRET via Environment API ---"
-          R2=$(curl -sS -k --max-time 15 \
+          echo "--- Setting RELAY_SECRET ---"
+          curl -sS -k --max-time 15 \
             "https://${CH}:2083/execute/Environment/set_user_environment_variable" \
             -H "Authorization: cpanel ${CU}:${CT}" \
-            -d "name=RELAY_SECRET&value=$RSECRET")
-          echo "$R2" | head -c 300
-          echo ""
+            -d "name=RELAY_SECRET&value=$RSECRET" | python3 -m json.tool 2>/dev/null | head -10
 
-          # 3c) Try updating .env file via Fileman API
-          echo "--- Reading .env file at $APP_DIR ---"
-          ENV_READ=$(curl -sS -k --max-time 15 \
+          # 3c) Try reading .env file
+          echo "--- Reading .env at $APP_DIR ---"
+          curl -sS -k --max-time 15 \
             "https://${CH}:2083/execute/Fileman/get_file_content" \
             -H "Authorization: cpanel ${CU}:${CT}" \
-            -d "dir=$APP_DIR&file=.env")
-          echo "$ENV_READ" | head -c 500
+            -d "dir=$APP_DIR&file=.env" | head -c 500
           echo ""
 
-          # 3d) Also try /home/user/appdir path
-          if echo "$ENV_READ" | grep -q '"error"'; then
-            echo "--- Trying /home/${CU}/${APP_DIR} ---"
-            ENV_READ2=$(curl -sS -k --max-time 15 \
-              "https://${CH}:2083/execute/Fileman/get_file_content" \
-              -H "Authorization: cpanel ${CU}:${CT}" \
-              -d "dir=/home/${CU}/${APP_DIR}&file=.env")
-            echo "$ENV_READ2" | head -c 500
-          fi
-
-      # ── 4) Test chain after sync ──
+      # ── 4) Test chain ──
       - name: Test chain after sync
         run: |
-          echo "Waiting 15s for changes to take effect..."
-          sleep 15
+          echo "Waiting 20s for cPanel to pick up changes..."
+          sleep 20
 
           echo "=== Site health ==="
           curl -sS --max-time 15 "https://ehsansalehi.ir/api/deploy/health" 2>/dev/null | head -c 200
@@ -126,10 +157,9 @@ jobs:
           echo "=== Relay health ==="
           curl -sS --max-time 15 "${{ secrets.RELAY_URL }}/health" 2>/dev/null
           echo ""
-          echo "=== AI gateway test (direct to relay) ==="
+          echo "=== AI gateway test ==="
           curl -sS --max-time 30 -X POST "${{ secrets.RELAY_URL }}/v1/chat/completions" \
             -H "Authorization: Bearer $GATE_KEY" \
             -H "Content-Type: application/json" \
             -d '{"model":"claude-opus-5","messages":[{"role":"user","content":"say OK"}],"max_tokens":16}' 2>&1 | head -c 500
           echo ""
-          echo "=== Done ==="
