@@ -151,6 +151,32 @@ jobs:
           target: ~/public_html/
           strip_components: 1
 
+      # ریست OPcache برای اعمال تغییرات فایل relay.php
+      - name: Reset OPcache (SSH)
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.SSH_IP }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: |
+            # Touch the file to update mtime (triggers opcache revalidation)
+            touch "$HOME/public_html/relay.php" "$HOME/public_html/.htaccess"
+            
+            # Try to reset opcache via PHP CLI
+            php -r 'if (function_exists("opcache_reset")) { opcache_reset(); echo "OPcache reset via CLI\n"; } else { echo "opcache_reset not available in CLI\n"; }' 2>/dev/null || true
+            
+            # Create a temp PHP file to reset opcache via web
+            OCF="$HOME/public_html/opcache-reset-9x7.php"
+            echo '<?php if (function_exists("opcache_reset")) { opcache_reset(); echo "OPCACHE_RESET_OK"; } else { echo "NO_OPCACHE"; } ?>' > "$OCF"
+            chmod 644 "$OCF"
+            
+            # Call it via curl and then delete
+            DOMAIN="darkslategrey-woodcock-525023.hostingersite.com"
+            RESULT=$(curl -sS --max-time 10 "https://$DOMAIN/opcache-reset-9x7.php" 2>/dev/null || echo "CURL_FAILED")
+            rm -f "$OCF"
+            echo "OPcache reset result: $RESULT"
+
       # مطمئن شو relay-config.php وجود دارد (اگر نبود نمونه بساز)
       - name: Ensure relay-config.php exists (SSH)
         uses: appleboy/ssh-action@v1.2.2
