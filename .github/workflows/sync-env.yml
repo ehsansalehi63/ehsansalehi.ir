@@ -1,14 +1,4 @@
-# ═══════════════════════════════════════════════════════════════
-#  همگام‌سازی متغیرهای محیطی: رله هاستینگر ← میزبان‌فا
-#
-#  این ورک‌فلو مقادیر ai_gateway_key و relay_secret را از relay-config.php
-#  روی هاستینگر می‌خواند و به‌عنوان OPENAI_API_KEY و RELAY_SECRET
-#  روی میزبان‌فا (cPanel) تنظیم می‌کند.
-#
-#  اجرا: دستی (workflow_dispatch)
-# ═══════════════════════════════════════════════════════════════
-
-name: Sync Env Config (relay → site)
+name: Sync Env Config (relay to site)
 
 on:
   workflow_dispatch:
@@ -23,8 +13,8 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      # ─── ۱) خواندن relay-config.php از هاستینگر ─────────
-      - name: Read relay config from Hostinger via SSH
+      # ── 1) Read relay config from Hostinger via SSH ──
+      - name: Read relay config from Hostinger
         id: relay
         uses: appleboy/ssh-action@v1.2.2
         with:
@@ -35,32 +25,31 @@ jobs:
           script: |
             CONFIG="$HOME/public_html/relay-config.php"
             if [ ! -f "$CONFIG" ]; then
-              echo "ERROR: relay-config.php not found at $CONFIG"
+              echo "ERROR: relay-config.php not found"
               exit 1
             fi
             php -r "
-              \$c = include '$CONFIG';
-              echo 'GATE_KEY=' . \$c['ai_gateway_key'] . PHP_EOL;
-              echo 'RELAY_SECRET=' . \$c['relay_secret'] . PHP_EOL;
-              echo 'OPENAI_API_KEY_RELAY=' . (empty(\$c['openai_api_key']) ? 'EMPTY' : 'SET') . PHP_EOL;
+            \$c = include '$CONFIG';
+            echo 'GATE_KEY=' . \$c['ai_gateway_key'] . PHP_EOL;
+            echo 'RELAY_SECRET=' . \$c['relay_secret'] . PHP_EOL;
+            echo 'HAS_OPENAI=' . (empty(\$c['openai_api_key']) ? 'EMPTY' : 'SET') . PHP_EOL;
             "
 
-      # ─── ۲) استخراج و mask کردن مقادیر ──────────────────
-      - name: Parse and mask relay config values
+      # ── 2) Parse and mask values ──
+      - name: Parse relay config
         run: |
+          set -euo pipefail
           OUTPUT='${{ steps.relay.outputs.stdout }}'
-          echo "Raw output lines: $(echo "$OUTPUT" | wc -l)"
-
           GATE_KEY=$(echo "$OUTPUT" | grep '^GATE_KEY=' | head -1 | cut -d= -f2-)
           RSECRET=$(echo "$OUTPUT" | grep '^RELAY_SECRET=' | head -1 | cut -d= -f2-)
-          HAS_OPENAI_KEY=$(echo "$OUTPUT" | grep '^OPENAI_API_KEY_RELAY=' | head -1 | cut -d= -f2-)
+          HAS_OPENAI=$(echo "$OUTPUT" | grep '^HAS_OPENAI=' | head -1 | cut -d= -f2-)
 
           if [ -z "$GATE_KEY" ]; then
-            echo "::error::ai_gateway_key on relay is EMPTY — cannot sync"
+            echo "::error::ai_gateway_key is empty on relay"
             exit 1
           fi
           if [ -z "$RSECRET" ]; then
-            echo "::error::relay_secret on relay is EMPTY — cannot sync"
+            echo "::error::relay_secret is empty on relay"
             exit 1
           fi
 
@@ -68,11 +57,10 @@ jobs:
           echo "::add-mask::$RSECRET"
           echo "GATE_KEY=$GATE_KEY" >> $GITHUB_ENV
           echo "RSECRET=$RSECRET" >> $GITHUB_ENV
-          echo "HAS_OPENAI_KEY=$HAS_OPENAI_KEY" >> $GITHUB_ENV
-          echo "::notice::Read relay config — ai_gateway_key: SET, relay_secret: SET, openai_api_key on relay: $HAS_OPENAI_KEY"
+          echo "::notice::Relay config read — gate_key: SET, relay_secret: SET, openai_api_key: $HAS_OPENAI"
 
-      # ─── ۳) تنظیم env vars روی میزبان‌فا از طریق cPanel API ─
-      - name: Set env vars on Mizbanfa via cPanel API
+      # ── 3) Set env vars on Mizbanfa via cPanel API ──
+      - name: Set env vars on Mizbanfa
         run: |
           set -euo pipefail
           CH="${{ secrets.CPANEL_HOST }}"
@@ -80,219 +68,68 @@ jobs:
           CT="${{ secrets.CPANEL_TOKEN }}"
           APP_DIR="${{ secrets.CPANEL_APP_DIR }}"
 
-          echo "=== cPanel host: $CH ==="
-          echo "=== cPanel user: $CU ==="
-          echo "=== app dir: $APP_DIR ==="
+          echo "=== cPanel: $CH / $CU / app=$APP_DIR ==="
 
-          # ─── ۳a) Get Node.js app list ───────────────────
-          echo "--- Getting Node.js apps ---"
-          APPS_RESP=$(curl -sS -k --max-time 15 \
+          # 3a) Get Node.js app list
+          echo "--- Listing Node.js apps ---"
+          APPS=$(curl -sS -k --max-time 15 \
             "https://${CH}:2083/execute/Node/get_applications" \
-            -H "Authorization: cpanel ${CU}:${CT}" 2>&1) || true
-          echo "$APPS_RESP" | python3 -m json.tool 2>/dev/null | head -40 || echo "$APPS_RESP" | head -c 500
-
-          # Extract app_id for our app directory
-          APP_ID=$(echo "$APPS_RESP" | python3 -c "
-          import json, sys
-          try:
-              data = json.load(sys.stdin)
-              apps = data.get('data', []) or data.get('result', []) or []
-              if isinstance(apps, list):
-                  for app in apps:
-                      if isinstance(app, dict):
-                          d = app.get('dir', '') or app.get('app_root', '') or ''
-                      if '$APP_DIR' in d:
-                          print(app.get('app_id', app.get('id', '')))
-                          break
-              elif isinstance(apps, dict):
-                  for k, app in apps.items():
-                      d = str(app.get('dir', '') or app.get('app_root', '') or '')
-                      if '$APP_DIR' in d:
-                          print(app.get('app_id', app.get('id', k)))
-                          break
-          except:
-              pass
-          " 2>/dev/null || echo "")
-
-          echo "App ID: ${APP_ID:-NOT_FOUND}"
-
-          # ─── ۳b) Try Node::edit_application env vars ─────
-          if [ -n "$APP_ID" ]; then
-            echo "--- Updating env vars via Node::edit_application (app_id=$APP_ID) ---"
-            
-            # Get current env vars first
-            CURR_ENV=$(curl -sS -k --max-time 15 \
-              "https://${CH}:2083/execute/Node/get_applications" \
-              -H "Authorization: cpanel ${CU}:${CT}" 2>&1) || true
-            
-            # Build env_var_key/value arrays from current + our updates
-            ENV_KEYS=$(echo "$CURR_ENV" | python3 -c "
-            import json, sys, urllib.parse
-            data = json.load(sys.stdin)
-            apps = data.get('data', []) or data.get('result', []) or []
-            if isinstance(apps, list):
-                for app in apps:
-                    d = app.get('dir','') or ''
-                    if '$APP_DIR' in d:
-                        env = app.get('env', {}) or app.get('environment', {}) or {}
-                        for k in env:
-                            print(urllib.parse.quote(k))
-                        # Add our keys if not present
-                        for k in ['OPENAI_API_KEY', 'RELAY_SECRET']:
-                            if k not in env:
-                                print(urllib.parse.quote(k))
-                        break
-            " 2>/dev/null || true)
-
-            ENV_VALUES=$(echo "$CURR_ENV" | python3 -c "
-            import json, sys, urllib.parse
-            data = json.load(sys.stdin)
-            GATE='${GATE_KEY}'
-            RSEC='${RSECRET}'
-            apps = data.get('data', []) or data.get('result', []) or []
-            if isinstance(apps, list):
-                for app in apps:
-                    d = app.get('dir','') or ''
-                    if '$APP_DIR' in d:
-                        env = app.get('env', {}) or app.get('environment', {}) or {}
-                        for k, v in env.items():
-                            if k == 'OPENAI_API_KEY':
-                                v = GATE
-                            elif k == 'RELAY_SECRET':
-                                v = RSEC
-                            print(urllib.parse.quote(str(v)))
-                        # Add our keys if not present
-                        for k in ['OPENAI_API_KEY', 'RELAY_SECRET']:
-                            if k not in env:
-                                if k == 'OPENAI_API_KEY':
-                                    print(urllib.parse.quote(GATE))
-                                else:
-                                    print(urllib.parse.quote(RSEC))
-                        break
-            " 2>/dev/null || true)
-
-            # Build form data
-            FORM_DATA=""
-            FIRST=1
-            for key in $ENV_KEYS; do
-              if [ $FIRST -eq 1 ]; then
-                FORM_DATA="env_var_key%5B%5D=${key}"
-                FIRST=0
-              else
-                FORM_DATA="${FORM_DATA}&env_var_key%5B%5D=${key}"
-              fi
-            done
-            FIRST=1
-            for val in $ENV_VALUES; do
-              if [ $FIRST -eq 1 ]; then
-                FORM_DATA="${FORM_DATA}&env_var_value%5B%5D=${val}"
-                FIRST=0
-              else
-                FORM_DATA="${FORM_DATA}&env_var_value%5B%5D=${val}"
-              fi
-            done
-
-            echo "Form data length: ${#FORM_DATA}"
-            
-            EDIT_RESP=$(curl -sS -k --max-time 20 \
-              -X POST "https://${CH}:2083/execute/Node/edit_application" \
-              -H "Authorization: cpanel ${CU}:${CT}" \
-              -H "Content-Type: application/x-www-form-urlencoded" \
-              -d "app_id=${APP_ID}&${FORM_DATA}" 2>&1) || true
-            echo "Edit response: $(echo "$EDIT_RESP" | head -c 500)"
-          else
-            echo "--- App ID not found, trying Environment::set_user_environment_variable ---"
-            
-            # Fallback: set user-level env vars
-            echo "Setting OPENAI_API_KEY..."
-            curl -sS -k --max-time 15 \
-              "https://${CH}:2083/execute/Environment/set_user_environment_variable" \
-              -H "Authorization: cpanel ${CU}:${CT}" \
-              -d "name=OPENAI_API_KEY&value=${GATE_KEY}" 2>&1 | head -c 300
-            echo ""
-            
-            echo "Setting RELAY_SECRET..."
-            curl -sS -k --max-time 15 \
-              "https://${CH}:2083/execute/Environment/set_user_environment_variable" \
-              -H "Authorization: cpanel ${CU}:${CT}" \
-              -d "name=RELAY_SECRET&value=${RSECRET}" 2>&1 | head -c 300
-          fi
-
-          # ─── ۳c) Also update .env file directly via Fileman API ─
+            -H "Authorization: cpanel ${CU}:${CT}")
+          echo "$APPS" | head -c 1000
           echo ""
-          echo "--- Trying to update .env file directly ---"
-          
-          # Try to read current .env
+
+          # 3b) Try Environment API (user-level env vars)
+          echo "--- Setting OPENAI_API_KEY via Environment API ---"
+          R1=$(curl -sS -k --max-time 15 \
+            "https://${CH}:2083/execute/Environment/set_user_environment_variable" \
+            -H "Authorization: cpanel ${CU}:${CT}" \
+            -d "name=OPENAI_API_KEY&value=$GATE_KEY")
+          echo "$R1" | head -c 300
+          echo ""
+
+          echo "--- Setting RELAY_SECRET via Environment API ---"
+          R2=$(curl -sS -k --max-time 15 \
+            "https://${CH}:2083/execute/Environment/set_user_environment_variable" \
+            -H "Authorization: cpanel ${CU}:${CT}" \
+            -d "name=RELAY_SECRET&value=$RSECRET")
+          echo "$R2" | head -c 300
+          echo ""
+
+          # 3c) Try updating .env file via Fileman API
+          echo "--- Reading .env file at $APP_DIR ---"
           ENV_READ=$(curl -sS -k --max-time 15 \
             "https://${CH}:2083/execute/Fileman/get_file_content" \
             -H "Authorization: cpanel ${CU}:${CT}" \
-            -d "dir=${APP_DIR}&file=.env" 2>&1) || true
-          
-          ENV_CONTENT=$(echo "$ENV_READ" | python3 -c "
-          import json, sys
-          try:
-              data = json.load(sys.stdin)
-              c = data.get('data', {}).get('contents', '') or data.get('contents', '') or ''
-              print(c, end='')
-          except:
-              pass
-          " 2>/dev/null || echo "")
+            -d "dir=$APP_DIR&file=.env")
+          echo "$ENV_READ" | head -c 500
+          echo ""
 
-          if [ -n "$ENV_CONTENT" ]; then
-            echo "Current .env found, updating..."
-            # Update OPENAI_API_KEY and RELAY_SECRET lines
-            UPDATED=$(echo "$ENV_CONTENT" | sed "s|^OPENAI_API_KEY=.*|OPENAI_API_KEY=${GATE_KEY}|" | sed "s|^RELAY_SECRET=.*|RELAY_SECRET=${RSECRET}|")
-            
-            # If lines don't exist, append them
-            if ! echo "$UPDATED" | grep -q '^OPENAI_API_KEY='; then
-              UPDATED="${UPDATED}
-OPENAI_API_KEY=${GATE_KEY}"
-            fi
-            if ! echo "$UPDATED" | grep -q '^RELAY_SECRET='; then
-              UPDATED="${UPDATED}
-RELAY_SECRET=${RSECRET}"
-            fi
-
-            # Save via cPanel API
-            SAVE_RESP=$(curl -sS -k --max-time 20 \
-              -X POST "https://${CH}:2083/execute/Fileman/save_file_content" \
+          # 3d) Also try /home/user/appdir path
+          if echo "$ENV_READ" | grep -q '"error"'; then
+            echo "--- Trying /home/${CU}/${APP_DIR} ---"
+            ENV_READ2=$(curl -sS -k --max-time 15 \
+              "https://${CH}:2083/execute/Fileman/get_file_content" \
               -H "Authorization: cpanel ${CU}:${CT}" \
-              -H "Content-Type: application/x-www-form-urlencoded" \
-              --data-urlencode "dir=${APP_DIR}" \
-              --data-urlencode "file=.env" \
-              --data-urlencode "content=${UPDATED}" 2>&1) || true
-            echo "Save response: $(echo "$SAVE_RESP" | head -c 300)"
-          else
-            echo ".env file not found or empty at ${APP_DIR}/.env"
-            echo "Trying /home/${CU}/${APP_DIR}/.env..."
+              -d "dir=/home/${CU}/${APP_DIR}&file=.env")
+            echo "$ENV_READ2" | head -c 500
           fi
 
-      # ─── ۴) تست زنجیره پس از sync ──────────────────────
+      # ── 4) Test chain after sync ──
       - name: Test chain after sync
-        env:
-          SITE_URL: https://ehsansalehi.ir
-          RELAY_URL: ${{ secrets.RELAY_URL }}
-          RELAY_SECRET: ${{ secrets.RELAY_SECRET }}
-          CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
-          echo "Waiting 15s for cPanel to pick up changes..."
+          echo "Waiting 15s for changes to take effect..."
           sleep 15
 
-          echo "=== Testing site health ==="
-          curl -sS --max-time 15 "https://ehsansalehi.ir/api/deploy/health" 2>/dev/null | python3 -m json.tool 2>/dev/null | head -10
-
+          echo "=== Site health ==="
+          curl -sS --max-time 15 "https://ehsansalehi.ir/api/deploy/health" 2>/dev/null | head -c 200
           echo ""
-          echo "=== Testing relay health ==="
-          curl -sS --max-time 15 "${{ secrets.RELAY_URL }}/health" 2>/dev/null | python3 -m json.tool 2>/dev/null
-
+          echo "=== Relay health ==="
+          curl -sS --max-time 15 "${{ secrets.RELAY_URL }}/health" 2>/dev/null
           echo ""
-          echo "=== Testing AI gateway through relay ==="
+          echo "=== AI gateway test (direct to relay) ==="
           curl -sS --max-time 30 -X POST "${{ secrets.RELAY_URL }}/v1/chat/completions" \
             -H "Authorization: Bearer $GATE_KEY" \
             -H "Content-Type: application/json" \
             -d '{"model":"claude-opus-5","messages":[{"role":"user","content":"say OK"}],"max_tokens":16}' 2>&1 | head -c 500
-
           echo ""
-          echo ""
-          echo "=== Testing site → relay → AI chain ==="
-          curl -sS --max-time 60 "${{ secrets.HEALTH_URL }}" 2>/dev/null | python3 -m json.tool 2>/dev/null | head -5
+          echo "=== Done ==="
