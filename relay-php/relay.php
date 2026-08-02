@@ -606,7 +606,7 @@ if ($path === 'health') {
     respond(200, [
         'ok'      => true,
         'service' => 'social-relay-php',
-        'version' => '1.0',
+        'version' => '1.1-cfg',
         'time'    => gmdate('c'),
         'php'     => PHP_VERSION,
         'secretConfigured' => (bool) $CONFIG['relay_secret'],
