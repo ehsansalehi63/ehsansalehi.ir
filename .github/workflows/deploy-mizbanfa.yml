@@ -1,27 +1,18 @@
 # ═══════════════════════════════════════════════════════════════
-#  دیپلوی سریع به میزبان‌فا — بدون SSH، بدون FTP فایل‌به‌فایل
+#  دیپلوی سریع به میزبان‌فا — از طریق SSH
 #
-#  ⚠️ این فایل را باید دستی در GitHub UI بسازید:
-#     .github/workflows/deploy-fast.yml
-#     (چون GitHub App آرنا مجوز نوشتن در workflows ندارد)
-#
-#  Secrets لازم — یکی از دو دسته:
-#
-#    روش A (ترجیحی) — cPanel API Token:
-#      CPANEL_HOST      cip17.mizbanfadns.net
-#      CPANEL_USER      نام کاربری cPanel
-#      CPANEL_TOKEN     توکن ساخته‌شده در Manage API Tokens
-#      CPANEL_APP_DIR   /home/USERNAME/ehsansalehi.ir
-#
-#    روش B — PHP Receiver:
-#      DEPLOY_URL       https://site.ir/deploy-receive.php
-#      DEPLOY_SECRET    همان مقدار داخل فایل PHP
-#
-#  مشترک:
-#      HEALTH_URL       https://site.ir/api/health
+#  Secrets لازم:
+#    SSH_IP           آدرس IP سرور میزبان‌فا
+#    SSH_PORT         پورت SSH (معمولاً 22)
+#    SSH_USERNAME     نام کاربری SSH
+#    SSH_PASSWORD     رمز عبور SSH
+#    FTP_SERVER       آدرس FTP میزبان‌فا (برای دیپلوی قدیمی)
+#    FTP_USERNAME     نام کاربری FTP
+#    FTP_PASSWORD     رمز FTP
+#    HEALTH_URL       https://ehsansalehi.ir/api/health
 # ═══════════════════════════════════════════════════════════════
 
-name: Fast Deploy (no SSH)
+name: Deploy to Mizbanfa (SSH)
 
 on:
   push:
@@ -31,8 +22,8 @@ on:
       method:
         description: 'روش دیپلوی'
         type: choice
-        options: [api, php]
-        default: api
+        options: [ssh, ftp]
+        default: ssh
 
 concurrency:
   group: deploy-production
@@ -114,25 +105,73 @@ jobs:
           echo "::notice::حجم بسته: $SIZE"
           ls -lh "$BUNDLE"
 
-      # ─── ۷) دیپلوی ─────────────────────────────────────
-      - name: Deploy to cPanel
-        env:
-          DEPLOY_METHOD:  ${{ inputs.method || 'api' }}
-          CPANEL_HOST:    ${{ secrets.CPANEL_HOST }}
-          CPANEL_USER:    ${{ secrets.CPANEL_USER }}
-          CPANEL_TOKEN:   ${{ secrets.CPANEL_TOKEN }}
-          APP_DIR:        ${{ secrets.CPANEL_APP_DIR }}
-          DEPLOY_URL:     ${{ secrets.DEPLOY_URL }}
-          DEPLOY_SECRET:  ${{ secrets.DEPLOY_SECRET }}
-          HEALTH_URL:     ${{ secrets.HEALTH_URL }}
-        run: |
-          chmod +x tools/deploy-cpanel.sh
-          bash tools/deploy-cpanel.sh "${{ steps.bundle.outputs.path }}"
+      # ─── ۷) دیپلوی SSH ─────────────────────────────────
+      - name: Deploy via SSH
+        if: ${{ inputs.method == 'ssh' || inputs.method == '' }}
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_IP }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          source: ${{ steps.bundle.outputs.path }}
+          target: ~/incoming/
+          strip_components: 1
+
+      - name: Extract and restart via SSH
+        if: ${{ inputs.method == 'ssh' || inputs.method == '' }}
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.SSH_IP }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: |
+            set -e
+            APP_DIR="$HOME/ehsansalehi.ir"
+            BUNDLE="$HOME/incoming/bundle-${{ github.run_id }}.tar.gz"
+            
+            echo "📦 استخراج بسته..."
+            mkdir -p "$APP_DIR"
+            # بکاپ سریع از فایل‌های مهم
+            if [ -f "$APP_DIR/.env" ]; then
+              cp "$APP_DIR/.env" "$APP_DIR/.env.bak"
+            fi
+            # استخراج بسته
+            tar -xzf "$BUNDLE" -C "$APP_DIR"
+            # برگرداندن .env
+            if [ -f "$APP_DIR/.env.bak" ]; then
+              mv "$APP_DIR/.env.bak" "$APP_DIR/.env"
+            fi
+            
+            echo "🔄 ری‌استارت اپ..."
+            # توش touch به فایل restart.txt اپ نکست را می‌فهماند ری‌استارت شود
+            date -u +%FT%TZ > "$APP_DIR/tmp/restart.txt"
+            
+            # پاکسازی فایل موقت
+            rm -f "$BUNDLE"
+            
+            echo "✅ دیپلوی کامل شد: $(date -u +%FT%TZ)"
+
+      # ─── ۷-ب) دیپلوی FTP (پشتیبان) ─────────────────────
+      - name: Deploy via FTP (fallback)
+        if: ${{ inputs.method == 'ftp' }}
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ./ehsansalehi.ir/
+          local-dir: .next/standalone/
+          state-name: .sync-state-${{ github.run_id }}.json
+          timeout: 120000
+          security: loose
+          passive: true
 
       # ─── ۸) تأیید نهایی نسخه منتشرشده ──────────────────
       - name: Verify deployed version
         run: |
-          sleep 5
+          sleep 8
           DEPLOYED=$(curl -sS --max-time 20 "${{ secrets.HEALTH_URL }}" \
             | grep -o '"shortSha":"[^"]*"' | cut -d'"' -f4 || echo "?")
           EXPECTED="${GITHUB_SHA:0:7}"
