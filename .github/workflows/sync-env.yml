@@ -13,8 +13,8 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      # ── 1) Create temp PHP to read actual relay config (includes env vars) ──
-      - name: Read actual relay config via SSH
+      # ── 1) Read relay config via SSH (temp PHP file approach) ──
+      - name: Read relay config from Hostinger
         id: relay
         uses: appleboy/ssh-action@v1.2.2
         with:
@@ -24,43 +24,29 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           capture_stdout: true
           script: |
-            # Create a temporary PHP file that loads the same config logic as relay.php
-            # and outputs the actual values (including env vars)
-            TMPFILE="$HOME/public_html/.tmp-cfg-check.php"
-            cat > "$TMPFILE" << 'TMPEOF'
-            <?php
-            $CONFIG = [
-                'relay_secret' => '', 'ai_gateway_key' => '', 'openai_api_key' => '',
-                'openai_base' => 'https://agentrouter.org/v1', 'anthropic_base' => 'https://agentrouter.org',
-                'anthropic_version' => '2023-06-01', 'instagram_token' => '', 'instagram_user_id' => '',
-                'linkedin_token' => '', 'linkedin_author' => '', 'fb_token' => '', 'fb_page_id' => '',
-                'meta_version' => 'v21.0', 'sig_window' => 300,
-            ];
-            $cfgFile = __DIR__ . '/relay-config.php';
-            if (is_file($cfgFile)) {
-                $loaded = require $cfgFile;
-                if (is_array($loaded)) $CONFIG = array_merge($CONFIG, $loaded);
-            }
-            foreach ([
-                'RELAY_SECRET' => 'relay_secret', 'AI_GATEWAY_KEY' => 'ai_gateway_key',
-                'OPENAI_API_KEY' => 'openai_api_key',
-            ] as $env => $key) {
-                $v = getenv($env);
-                if ($v !== false && $v !== '') $CONFIG[$key] = $v;
-            }
-            header('Content-Type: text/plain');
-            echo "GATE_KEY=" . $CONFIG['ai_gateway_key'] . "\n";
-            echo "RELAY_SECRET=" . $CONFIG['relay_secret'] . "\n";
-            echo "HAS_OPENAI=" . (empty($CONFIG['openai_api_key']) ? 'EMPTY' : 'SET') . "\n";
-            TMPEOF
-
-            # Fetch the values via curl (localhost bypasses external DNS)
+            TMPF="$HOME/public_html/.tmp-cfg-check.php"
+            # Write PHP file using echo (avoid heredoc issues)
+            echo '<?php' > "$TMPF"
+            echo '$CONFIG = [' >> "$TMPF"
+            echo "'relay_secret' => '', 'ai_gateway_key' => '', 'openai_api_key' => ''," >> "$TMPF"
+            echo "'openai_base' => 'https://agentrouter.org/v1', 'anthropic_base' => 'https://agentrouter.org'," >> "$TMPF"
+            echo "'anthropic_version' => '2023-06-01', 'instagram_token' => '', 'instagram_user_id' => ''," >> "$TMPF"
+            echo "'linkedin_token' => '', 'linkedin_author' => '', 'fb_token' => '', 'fb_page_id' => ''," >> "$TMPF"
+            echo "'meta_version' => 'v21.0', 'sig_window' => 300," >> "$TMPF"
+            echo '];' >> "$TMPF"
+            echo '$cfgFile = __DIR__ . "/relay-config.php";' >> "$TMPF"
+            echo 'if (is_file($cfgFile)) { $loaded = require $cfgFile; if (is_array($loaded)) $CONFIG = array_merge($CONFIG, $loaded); }' >> "$TMPF"
+            echo 'foreach (["RELAY_SECRET" => "relay_secret", "AI_GATEWAY_KEY" => "ai_gateway_key", "OPENAI_API_KEY" => "openai_api_key"] as $env => $key) {' >> "$TMPF"
+            echo '  $v = getenv($env); if ($v !== false && $v !== "") $CONFIG[$key] = $v;' >> "$TMPF"
+            echo '}' >> "$TMPF"
+            echo 'header("Content-Type: text/plain");' >> "$TMPF"
+            echo 'echo "GATE_KEY=" . $CONFIG["ai_gateway_key"] . "\n";' >> "$TMPF"
+            echo 'echo "RELAY_SECRET=" . $CONFIG["relay_secret"] . "\n";' >> "$TMPF"
+            echo 'echo "HAS_OPENAI=" . (empty($CONFIG["openai_api_key"]) ? "EMPTY" : "SET") . "\n";' >> "$TMPF"
+            
+            # Fetch values via localhost
             VALUES=$(curl -sS --max-time 10 "http://localhost/.tmp-cfg-check.php" 2>/dev/null || echo "")
-            
-            # Delete temp file immediately
-            rm -f "$TMPFILE"
-            
-            # Output values
+            rm -f "$TMPF"
             echo "$VALUES"
 
       # ── 2) Parse and mask values ──
@@ -68,30 +54,25 @@ jobs:
         run: |
           set -euo pipefail
           OUTPUT='${{ steps.relay.outputs.stdout }}'
-          echo "Output lines: $(echo "$OUTPUT" | wc -l)"
+          echo "Lines: $(echo "$OUTPUT" | wc -l)"
 
           GATE_KEY=$(echo "$OUTPUT" | grep '^GATE_KEY=' | head -1 | cut -d= -f2-)
-          RSECRET=$(echo "$OUTPUT" | grep '^GATE_KEY=' | head -1 | cut -d= -f2-)
           RSECRET=$(echo "$OUTPUT" | grep '^RELAY_SECRET=' | head -1 | cut -d= -f2-)
           HAS_OPENAI=$(echo "$OUTPUT" | grep '^HAS_OPENAI=' | head -1 | cut -d= -f2-)
 
-          echo "GATE_KEY found: $([ -n "$GATE_KEY" ] && echo YES || echo NO)"
-          echo "RELAY_SECRET found: $([ -n "$RSECRET" ] && echo YES || echo NO)"
-          echo "HAS_OPENAI: $HAS_OPENAI"
+          echo "GATE found: $([ -n "$GATE_KEY" ] && echo YES || echo NO)"
+          echo "RSECRET found: $([ -n "$RSECRET" ] && echo YES || echo NO)"
 
-          # Fallback to GitHub Secrets if SSH couldn't read them
           if [ -z "$GATE_KEY" ]; then
-            echo "::warning::ai_gateway_key not found on relay — using RELAY_SECRET from GitHub Secrets"
+            echo "::warning::Using RELAY_SECRET from GitHub Secrets as GATE_KEY"
             GATE_KEY="${{ secrets.RELAY_SECRET }}"
           fi
           if [ -z "$RSECRET" ]; then
-            echo "::warning::relay_secret not found on relay — using RELAY_SECRET from GitHub Secrets"
+            echo "::warning::Using RELAY_SECRET from GitHub Secrets as RSECRET"
             RSECRET="${{ secrets.RELAY_SECRET }}"
           fi
-
           if [ -z "$GATE_KEY" ] || [ -z "$RSECRET" ]; then
-            echo "::error::Could not determine GATE_KEY or RELAY_SECRET — aborting"
-            exit 1
+            echo "::error::Could not get values" && exit 1
           fi
 
           echo "::add-mask::$GATE_KEY"
@@ -99,74 +80,52 @@ jobs:
           echo "GATE_KEY=$GATE_KEY" >> $GITHUB_ENV
           echo "RSECRET=$RSECRET" >> $GITHUB_ENV
           echo "HAS_OPENAI=$HAS_OPENAI" >> $GITHUB_ENV
-          echo "::notice::Config parsed — GATE_KEY: SET, RSECRET: SET, openai_api_key on relay: $HAS_OPENAI"
 
-      # ── 3) Upload .env file to Mizbanfa via FTP ──
-      - name: Update env vars on Mizbanfa via FTP
+      # ── 3) Upload .env to Mizbanfa via FTP ──
+      - name: Update .env on Mizbanfa via FTP
         run: |
           set -euo pipefail
-
-          # Create a .env file with the correct values
-          # We need to download the current .env first, update it, then upload
           FTP_HOST="${{ secrets.FTP_SERVER }}"
           FTP_USER="${{ secrets.FTP_USERNAME }}"
           FTP_PASS="${{ secrets.FTP_PASSWORD }}"
           APP_DIR="${{ secrets.CPANEL_APP_DIR }}"
 
-          echo "=== Downloading current .env from Mizbanfa ==="
+          # Download current .env
+          echo "=== Downloading .env ==="
           curl -sS --max-time 30 \
             "ftp://${FTP_USER}:${FTP_PASS}@${FTP_HOST}/${APP_DIR}/.env" \
-            -o /tmp/current-env.txt 2>&1 || echo "Could not download .env (may not exist yet)"
+            -o /tmp/env.txt 2>/dev/null || echo "No .env found, will create"
 
-          if [ -f /tmp/current-env.txt ] && [ -s /tmp/current-env.txt ]; then
-            echo "Current .env found, $(wc -l < /tmp/current-env.txt) lines"
-            # Update existing lines
-            sed -i "s|^OPENAI_API_KEY=.*|OPENAI_API_KEY=$GATE_KEY|" /tmp/current-env.txt
-            sed -i "s|^RELAY_SECRET=.*|RELAY_SECRET=$RSECRET|" /tmp/current-env.txt
-            
-            # Add lines if they don't exist
-            grep -q '^OPENAI_API_KEY=' /tmp/current-env.txt || echo "OPENAI_API_KEY=$GATE_KEY" >> /tmp/current-env.txt
-            grep -q '^RELAY_SECRET=' /tmp/current-env.txt || echo "RELAY_SECRET=$RSECRET" /tmp/current-env.txt
+          if [ -s /tmp/env.txt ]; then
+            echo "Found .env with $(wc -l < /tmp/env.txt) lines"
+            sed -i "s|^OPENAI_API_KEY=.*|OPENAI_API_KEY=$GATE_KEY|" /tmp/env.txt
+            sed -i "s|^RELAY_SECRET=.*|RELAY_SECRET=$RSECRET|" /tmp/env.txt
+            grep -q '^OPENAI_API_KEY=' /tmp/env.txt || echo "OPENAI_API_KEY=$GATE_KEY" >> /tmp/env.txt
+            grep -q '^RELAY_SECRET=' /tmp/env.txt || echo "RELAY_SECRET=$RSECRET" >> /tmp/env.txt
           else
-            echo "No .env found, creating new one"
-            cat > /tmp/current-env.txt << ENVEOF
-          OPENAI_API_KEY=$GATE_KEY
-          RELAY_SECRET=$RSECRET
-          ENVEOF
+            echo "OPENAI_API_KEY=$GATE_KEY" > /tmp/env.txt
+            echo "RELAY_SECRET=$RSECRET" >> /tmp/env.txt
           fi
 
-          echo "=== Uploading .env to Mizbanfa ==="
-          curl -sS --max-time 30 -T /tmp/current-env.txt \
+          echo "=== Uploading .env ==="
+          curl -sS --max-time 30 -T /tmp/env.txt \
             "ftp://${FTP_USER}:${FTP_PASS}@${FTP_HOST}/${APP_DIR}/.env" 2>&1
-          echo "Upload complete"
+          echo "Done"
 
-          # Also try to upload to the app root if APP_DIR is different
-          echo "=== Also uploading to /home/${{ secrets.CPANEL_USER }}/${APP_DIR}/.env ==="
-          curl -sS --max-time 30 -T /tmp/current-env.txt \
-            "ftp://${FTP_USER}:${FTP_PASS}@${FTP_HOST}/$(basename $APP_DIR)/.env" 2>&1 || true
-
-      # ── 4) Test chain after sync ──
-      - name: Test chain after sync
+      # ── 4) Test chain ──
+      - name: Test chain
         run: |
-          echo "Waiting 25s for Node.js app to restart..."
+          echo "Waiting 25s..."
           sleep 25
-
           echo "=== Site health ==="
           curl -sS --max-time 15 "https://ehsansalehi.ir/api/deploy/health" 2>/dev/null | head -c 200
           echo ""
-
           echo "=== Relay health ==="
           curl -sS --max-time 15 "${{ secrets.RELAY_URL }}/health" 2>/dev/null
           echo ""
-
-          echo "=== AI gateway test (relay with GATE_KEY) ==="
+          echo "=== AI gateway test ==="
           curl -sS --max-time 30 -X POST "${{ secrets.RELAY_URL }}/v1/chat/completions" \
             -H "Authorization: Bearer $GATE_KEY" \
             -H "Content-Type: application/json" \
             -d '{"model":"claude-opus-5","messages":[{"role":"user","content":"say OK"}],"max_tokens":16}' 2>&1 | head -c 500
           echo ""
-
-          echo "=== Site relay-test ==="
-          curl -sS --max-time 60 "${{ secrets.HEALTH_URL }}" 2>/dev/null | head -c 200
-          echo ""
-          echo "=== Done ==="
