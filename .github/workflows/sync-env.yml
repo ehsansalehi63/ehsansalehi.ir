@@ -13,8 +13,8 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      # ── 1) Investigate relay config on Hostinger ──
-      - name: Read relay config from Hostinger
+      # ── 1) Read relay config and upload .env to Mizbanfa all via SSH ──
+      - name: Read relay config + sync to Mizbanfa
         id: relay
         uses: appleboy/ssh-action@v1.2.2
         with:
@@ -24,49 +24,47 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           capture_stdout: true
           script: |
-            echo "=== .htaccess content ==="
-            head -50 "$HOME/public_html/.htaccess" 2>/dev/null || echo "No .htaccess"
-            echo ""
-            echo "=== .user.ini content ==="
-            cat "$HOME/public_html/.user.ini" 2>/dev/null || echo "No .user.ini"
-            echo ""
-            echo "=== relay-config.php content ==="
-            cat "$HOME/public_html/relay-config.php" 2>/dev/null || echo "No relay-config.php"
-            echo ""
-            echo "=== Check for .env files ==="
-            find "$HOME" -maxdepth 3 -name ".env" -type f 2>/dev/null | head -10
-            echo ""
-            echo "=== Check for env var files ==="
-            ls -la "$HOME/.cpanel/" 2>/dev/null | head -10
-            echo ""
-            echo "=== Check PHP env via CLI with relay.php dir ==="
+            # Step A: Read relay config via PHP CLI
             cd "$HOME/public_html"
-            php -r '
-            $CONFIG = ["relay_secret" => "", "ai_gateway_key" => "", "openai_api_key" => ""];
+            PHP_OUT=$(php -r '
+            $CONFIG = ["relay_secret" => "", "ai_gateway_key" => "", "openai_api_key" => "", "openai_base" => "https://agentrouter.org/v1", "anthropic_base" => "https://agentrouter.org", "anthropic_version" => "2023-06-01", "instagram_token" => "", "instagram_user_id" => "", "linkedin_token" => "", "linkedin_author" => "", "fb_token" => "", "fb_page_id" => "", "meta_version" => "v21.0", "sig_window" => 300];
             $cfgFile = __DIR__ . "/relay-config.php";
             if (is_file($cfgFile)) { $loaded = require $cfgFile; if (is_array($loaded)) $CONFIG = array_merge($CONFIG, $loaded); }
             foreach (["RELAY_SECRET" => "relay_secret", "AI_GATEWAY_KEY" => "ai_gateway_key", "OPENAI_API_KEY" => "openai_api_key"] as $env => $key) { $v = getenv($env); if ($v !== false && $v !== "") $CONFIG[$key] = $v; }
-            echo "GATE_KEY=" . $CONFIG["ai_gateway_key"] . "\n";
-            echo "RELAY_SECRET=" . $CONFIG["relay_secret"] . "\n";
-            echo "HAS_OPENAI=" . (empty($CONFIG["openai_api_key"]) ? "EMPTY" : "SET") . "\n";
-            ' 2>&1
-            echo ""
-            echo "=== Check Apache/LiteSpeed env vars ==="
-            printenv | grep -i -E "RELAY|GATE|OPENAI|SECRET" 2>/dev/null || echo "No matching env vars in shell"
+            echo $CONFIG["ai_gateway_key"] . "|" . $CONFIG["relay_secret"] . "|" . (empty($CONFIG["openai_api_key"]) ? "EMPTY" : "SET");
+            ' 2>/dev/null)
 
-      # ── 2) Show SSH output ──
+            GATE_KEY=$(echo "$PHP_OUT" | cut -d'|' -f1)
+            RSECRET=$(echo "$PHP_OUT" | cut -d'|' -f2)
+            HAS_OAI=$(echo "$PHP_OUT" | cut -d'|' -f3)
+
+            # If PHP CLI didn't get env vars, try .htaccess SetEnv
+            if [ -z "$GATE_KEY" ]; then
+              GATE_KEY=$(grep -i "^SetEnv.*AI_GATEWAY_KEY" "$HOME/public_html/.htaccess" 2>/dev/null | awk '{print $NF}' | tr -d '"' || echo "")
+            fi
+            if [ -z "$RSECRET" ]; then
+              RSECRET=$(grep -i "^SetEnv.*RELAY_SECRET" "$HOME/public_html/.htaccess" 2>/dev/null | awk '{print $NF}' | tr -d '"' || echo "")
+            fi
+
+            # Output as base64 to avoid GitHub Actions output issues
+            echo "RESULT=$(echo "${GATE_KEY}|${RSECRET}|${HAS_OAI}" | base64 -w0)"
+
+      # ── 2) Parse and set env ──
       - name: Parse relay config
         run: |
           set -euo pipefail
-          OUTPUT='${{ steps.relay.outputs.stdout }}'
-          echo "===== SSH OUTPUT START ====="
-          echo "$OUTPUT"
-          echo "===== SSH OUTPUT END ====="
+          RAW='${{ steps.relay.outputs.stdout }}'
+          echo "Raw output: $RAW"
+          RESULT=$(echo "$RAW" | grep '^RESULT=' | cut -d= -f2-)
+          DECODED=$(echo "$RESULT" | base64 -d 2>/dev/null || echo "")
+          echo "Decoded: $DECODED"
+          
+          GATE_KEY=$(echo "$DECODED" | cut -d'|' -f1)
+          RSECRET=$(echo "$DECODED" | cut -d'|' -f2)
+          
+          echo "GATE found: $([ -n "$GATE_KEY" ] && echo YES || echo NO)"
+          echo "RSECRET found: $([ -n "$RSECRET" ] && echo YES || echo NO)"
 
-          GATE_KEY=$(echo "$OUTPUT" | grep '^GATE_KEY=' | head -1 | cut -d= -f2-)
-          RSECRET=$(echo "$OUTPUT" | grep '^RELAY_SECRET=' | head -1 | cut -d= -f2-)
-
-          # Fallback
           if [ -z "$GATE_KEY" ]; then
             echo "::warning::GATE_KEY not found — using RELAY_SECRET from GitHub Secrets"
             GATE_KEY="${{ secrets.RELAY_SECRET }}"
