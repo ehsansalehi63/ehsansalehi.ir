@@ -34,6 +34,18 @@ safe_curl() {
   echo "${http_code:-000}"
 }
 
+# تابع کمکی: استخراج مقدار از JSON با بردارش فاصله بعد از دو نقطه
+# (هم "key":value و هم "key": value را پیدا می‌کند)
+json_bool() {
+  local key="$1" file="$2"
+  grep -oE "\"${key}\"[[:space:]]*:[[:space:]]*true" "$file" 2>/dev/null || echo ""
+}
+
+json_str() {
+  local key="$1" file="$2"
+  grep -oE "\"${key}\"[[:space:]]*:[[:space:]]*\"[^\"]*\"" "$file" 2>/dev/null | sed -E 's/.*:[[:space:]]*"([^"]*)"/\1/' || echo ""
+}
+
 echo "═══════════════════════════════════════════════════════════"
 echo "  تست زنجیره سایت ↔ رله"
 echo "  $(date -u +%FT%TZ)"
@@ -70,9 +82,10 @@ else
     c_ok "رله بالا است"
     head -5 /tmp/relay-health.json 2>/dev/null
 
-    # بررسی تنظیمات رله
-    SECRET_OK=$(grep -o '"secretConfigured":true' /tmp/relay-health.json 2>/dev/null || echo "")
-    AI_OK=$(grep -o '"enabled":true' /tmp/relay-health.json 2>/dev/null || echo "")
+    # بررسی تنظیمات رله (بردارش فاصله بعد از دو نقطه در JSON)
+    SECRET_OK=$(json_bool secretConfigured /tmp/relay-health.json)
+    AI_OK=$(json_bool enabled /tmp/relay-health.json)
+    GATE_OK=$(json_bool gateKeySet /tmp/relay-health.json)
     if [ -n "$SECRET_OK" ]; then
       c_ok "RELAY_SECRET روی رله تنظیم شده"
     else
@@ -82,6 +95,11 @@ else
       c_ok "دروازه AI روی رله فعال است"
     else
       c_fail "دروازه AI روی رله فعال نیست"
+    fi
+    if [ -n "$GATE_OK" ]; then
+      c_ok "کلید دروازه AI (ai_gateway_key) تنظیم شده"
+    else
+      c_fail "کلید دروازه AI (ai_gateway_key) تنظیم نشده"
     fi
   else
     c_fail "رله پاسخ نمی‌دهد (HTTP $HTTP)"
@@ -108,8 +126,8 @@ else
   if [ "$HTTP" = "200" ]; then
     c_ok "امضای HMAC پذیرفته شد"
     echo "  دسترسی از هاستینگر:"
-    grep -o '"name":"[^"]*"' /tmp/relay-diagnose.json 2>/dev/null | while read -r line; do
-      NAME=$(echo "$line" | cut -d'"' -f4)
+    grep -oE '"name"[[:space:]]*:[[:space:]]*"[^"]*"' /tmp/relay-diagnose.json 2>/dev/null | while read -r line; do
+      NAME=$(echo "$line" | sed -E 's/.*:[[:space:]]*"([^"]*)"/\1/')
       echo "    - $NAME"
     done
   else
@@ -129,8 +147,8 @@ else
 
   if [ "$HTTP" = "200" ]; then
     c_ok "تست سرتاسری موفق"
-    SUMMARY=$(grep -o '"summary":"[^"]*"' /tmp/relay-test.json 2>/dev/null | cut -d'"' -f4 || echo "نامشخص")
-    VERDICT=$(grep -o '"verdict":"[^"]*"' /tmp/relay-test.json 2>/dev/null | cut -d'"' -f4 || echo "")
+    SUMMARY=$(json_str summary /tmp/relay-test.json)
+    VERDICT=$(json_str verdict /tmp/relay-test.json)
     echo "  خلاصه: $SUMMARY"
     [ -n "$VERDICT" ] && echo "  نتیجه: $VERDICT"
   else
@@ -152,11 +170,11 @@ else
   if [ "$HTTP" = "200" ]; then
     c_ok "integrations-test پاسخ داد"
     for svc in telegram linkedin openai instagram; do
-      SVC_OK=$(grep -o "\"$svc\":{[^}]*\"ok\":true" /tmp/integrations.json 2>/dev/null || echo "")
+      SVC_OK=$(grep -oE "\"${svc}\"[[:space:]]*:[[:space:]]*\{[^}]*\"ok\"[[:space:]]*:[[:space:]]*true" /tmp/integrations.json 2>/dev/null || echo "")
       if [ -n "$SVC_OK" ]; then
         c_ok "  $svc: متصل ✅"
       else
-        SVC_FAIL=$(grep -o "\"$svc\":{[^}]*\"ok\":false" /tmp/integrations.json 2>/dev/null || echo "")
+        SVC_FAIL=$(grep -oE "\"${svc}\"[[:space:]]*:[[:space:]]*\{[^}]*\"ok\"[[:space:]]*:[[:space:]]*false" /tmp/integrations.json 2>/dev/null || echo "")
         if [ -n "$SVC_FAIL" ]; then
           c_fail "  $svc: قطع ❌"
         else
@@ -179,10 +197,10 @@ else
   if [ -z "$SSH_USER" ]; then
     c_skip "SSH_USERNAME تنظیم نشده — رد شد"
   else
-    if ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -p "$SSH_PORT" "${SSH_USER}@${SSH_IP}" "echo OK" 2>/dev/null; then
+    if ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o PasswordAuthentication=yes -p "$SSH_PORT" "${SSH_USER}@${SSH_IP}" "echo OK" 2>/dev/null; then
       c_ok "اتصال SSH به هاستینگر برقرار است"
     else
-      c_fail "اتصال SSH به هاستینگر برقرار نیست"
+      c_fail "اتصال SSH به هاستینگر برقرار نیست (در GitHub Actions با sshpass/ssh-action کار می‌کند)"
     fi
   fi
 fi
