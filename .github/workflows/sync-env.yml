@@ -13,8 +13,8 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      # ── 1) Read relay config and upload .env to Mizbanfa all via SSH ──
-      - name: Read relay config + sync to Mizbanfa
+      # ── 1) Read relay config via temp PHP on web server ──
+      - name: Read relay config from Hostinger
         id: relay
         uses: appleboy/ssh-action@v1.2.2
         with:
@@ -24,39 +24,34 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           capture_stdout: true
           script: |
-            # Step A: Read relay config via PHP CLI
-            cd "$HOME/public_html"
-            PHP_OUT=$(php -r '
-            $CONFIG = ["relay_secret" => "", "ai_gateway_key" => "", "openai_api_key" => "", "openai_base" => "https://agentrouter.org/v1", "anthropic_base" => "https://agentrouter.org", "anthropic_version" => "2023-06-01", "instagram_token" => "", "instagram_user_id" => "", "linkedin_token" => "", "linkedin_author" => "", "fb_token" => "", "fb_page_id" => "", "meta_version" => "v21.0", "sig_window" => 300];
-            $cfgFile = __DIR__ . "/relay-config.php";
-            if (is_file($cfgFile)) { $loaded = require $cfgFile; if (is_array($loaded)) $CONFIG = array_merge($CONFIG, $loaded); }
-            foreach (["RELAY_SECRET" => "relay_secret", "AI_GATEWAY_KEY" => "ai_gateway_key", "OPENAI_API_KEY" => "openai_api_key"] as $env => $key) { $v = getenv($env); if ($v !== false && $v !== "") $CONFIG[$key] = $v; }
-            echo $CONFIG["ai_gateway_key"] . "|" . $CONFIG["relay_secret"] . "|" . (empty($CONFIG["openai_api_key"]) ? "EMPTY" : "SET");
-            ' 2>/dev/null)
+            # Create temp PHP that loads config exactly like relay.php does
+            TMPF="$HOME/public_html/.tmp-cfg-check.php"
+            echo '<?php' > "$TMPF"
+            echo '$CONFIG = ["relay_secret" => "", "ai_gateway_key" => "", "openai_api_key" => "", "openai_base" => "https://agentrouter.org/v1", "anthropic_base" => "https://agentrouter.org", "anthropic_version" => "2023-06-01", "instagram_token" => "", "instagram_user_id" => "", "linkedin_token" => "", "linkedin_author" => "", "fb_token" => "", "fb_page_id" => "", "meta_version" => "v21.0", "sig_window" => 300];' >> "$TMPF"
+            echo '$cfgFile = __DIR__ . "/relay-config.php";' >> "$TMPF"
+            echo 'if (is_file($cfgFile)) { $loaded = require $cfgFile; if (is_array($loaded)) $CONFIG = array_merge($CONFIG, $loaded); }' >> "$TMPF"
+            echo 'foreach (["RELAY_SECRET" => "relay_secret", "AI_GATEWAY_KEY" => "ai_gateway_key", "OPENAI_API_KEY" => "openai_api_key"] as $env => $key) { $v = getenv($env); if ($v !== false && $v !== "") $CONFIG[$key] = $v; }' >> "$TMPF"
+            echo 'header("Content-Type: text/plain");' >> "$TMPF"
+            echo 'echo $CONFIG["ai_gateway_key"] . "|" . $CONFIG["relay_secret"] . "|" . (empty($CONFIG["openai_api_key"]) ? "EMPTY" : "SET");' >> "$TMPF"
 
-            GATE_KEY=$(echo "$PHP_OUT" | cut -d'|' -f1)
-            RSECRET=$(echo "$PHP_OUT" | cut -d'|' -f2)
-            HAS_OAI=$(echo "$PHP_OUT" | cut -d'|' -f3)
-
-            # If PHP CLI didn't get env vars, try .htaccess SetEnv
-            if [ -z "$GATE_KEY" ]; then
-              GATE_KEY=$(grep -i "^SetEnv.*AI_GATEWAY_KEY" "$HOME/public_html/.htaccess" 2>/dev/null | awk '{print $NF}' | tr -d '"' || echo "")
-            fi
-            if [ -z "$RSECRET" ]; then
-              RSECRET=$(grep -i "^SetEnv.*RELAY_SECRET" "$HOME/public_html/.htaccess" 2>/dev/null | awk '{print $NF}' | tr -d '"' || echo "")
-            fi
-
-            # Output as base64 to avoid GitHub Actions output issues
-            echo "RESULT=$(echo "${GATE_KEY}|${RSECRET}|${HAS_OAI}" | base64 -w0)"
+            # Access via the real domain (web server will have env vars)
+            DOMAIN="darkslategrey-woodcock-525023.hostingersite.com"
+            RESULT=$(curl -sS --max-time 15 "https://${DOMAIN}/.tmp-cfg-check.php" 2>/dev/null || echo "")
+            
+            # Delete temp file
+            rm -f "$TMPF"
+            
+            # Base64 encode for safe GitHub Actions output
+            echo "RESULT=$(echo -n "$RESULT" | base64 -w0)"
 
       # ── 2) Parse and set env ──
       - name: Parse relay config
         run: |
           set -euo pipefail
           RAW='${{ steps.relay.outputs.stdout }}'
-          echo "Raw output: $RAW"
-          RESULT=$(echo "$RAW" | grep '^RESULT=' | cut -d= -f2-)
-          DECODED=$(echo "$RESULT" | base64 -d 2>/dev/null || echo "")
+          echo "Raw: $RAW"
+          B64=$(echo "$RAW" | grep '^RESULT=' | cut -d= -f2-)
+          DECODED=$(echo "$B64" | base64 -d 2>/dev/null || echo "")
           echo "Decoded: $DECODED"
           
           GATE_KEY=$(echo "$DECODED" | cut -d'|' -f1)
@@ -66,11 +61,11 @@ jobs:
           echo "RSECRET found: $([ -n "$RSECRET" ] && echo YES || echo NO)"
 
           if [ -z "$GATE_KEY" ]; then
-            echo "::warning::GATE_KEY not found — using RELAY_SECRET from GitHub Secrets"
+            echo "::warning::GATE_KEY not found on relay — using RELAY_SECRET from GitHub Secrets"
             GATE_KEY="${{ secrets.RELAY_SECRET }}"
           fi
           if [ -z "$RSECRET" ]; then
-            echo "::warning::RSECRET not found — using RELAY_SECRET from GitHub Secrets"
+            echo "::warning::RSECRET not found on relay — using RELAY_SECRET from GitHub Secrets"
             RSECRET="${{ secrets.RELAY_SECRET }}"
           fi
           if [ -z "$GATE_KEY" ] || [ -z "$RSECRET" ]; then
