@@ -15,7 +15,7 @@ RewriteRule ^v1/(.*)$ relay.php [QSA,L]
 # مسیرهای رله: /health، /publish، /diagnose و غیره
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(health|publish|fetch|diagnose|instagram/refresh-token)/?$ relay.php?path=$1 [QSA,L]
+RewriteRule ^(health|publish|fetch|diagnose|cfg-export|instagram/refresh-token)/?$ relay.php?path=$1 [QSA,L]
 
 # محافظت از فایل تنظیمات
 <Files "relay-config.php">

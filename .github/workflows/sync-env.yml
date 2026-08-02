@@ -13,84 +13,37 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      # ── 1) Create temp PHP on Hostinger via SSH ──
-      - name: Create temp config checker on Hostinger
-        uses: appleboy/ssh-action@v1.2.2
-        with:
-          host: ${{ secrets.SSH_IP }}
-          port: ${{ secrets.SSH_PORT }}
-          username: ${{ secrets.SSH_USERNAME }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          script: |
-            TMPF="$HOME/public_html/tmp-cfg-check-9x7.php"
-            echo '<?php' > "$TMPF"
-            echo '$CONFIG = ["relay_secret" => "", "ai_gateway_key" => "", "openai_api_key" => "", "openai_base" => "https://agentrouter.org/v1", "anthropic_base" => "https://agentrouter.org", "anthropic_version" => "2023-06-01", "instagram_token" => "", "instagram_user_id" => "", "linkedin_token" => "", "linkedin_author" => "", "fb_token" => "", "fb_page_id" => "", "meta_version" => "v21.0", "sig_window" => 300];' >> "$TMPF"
-            echo '$cfgFile = __DIR__ . "/relay-config.php";' >> "$TMPF"
-            echo 'if (is_file($cfgFile)) { $loaded = require $cfgFile; if (is_array($loaded)) $CONFIG = array_merge($CONFIG, $loaded); }' >> "$TMPF"
-            echo 'foreach (["RELAY_SECRET" => "relay_secret", "AI_GATEWAY_KEY" => "ai_gateway_key", "OPENAI_API_KEY" => "openai_api_key"] as $env => $key) { $v = getenv($env); if ($v !== false && $v !== "") $CONFIG[$key] = $v; }' >> "$TMPF"
-            echo 'header("Content-Type: text/plain");' >> "$TMPF"
-            echo 'echo $CONFIG["ai_gateway_key"] . "|" . $CONFIG["relay_secret"] . "|" . (empty($CONFIG["openai_api_key"]) ? "EMPTY" : "SET");' >> "$TMPF"
-            chmod 644 "$TMPF"
-            echo "File created at: $TMPF"
-            ls -la "$TMPF"
-
-      # ── 2) Fetch config from GitHub runner (not from SSH) ──
+      # ── 1) Fetch relay config via cfg-export endpoint ──
       - name: Fetch relay config
         id: fetch
         run: |
           set -euo pipefail
-          RELAY_DOMAIN="darkslategrey-woodcock-525023.hostingersite.com"
-          echo "Fetching from https://${RELAY_DOMAIN}/tmp-cfg-check-9x7.php"
-          RESULT=$(curl -sS --max-time 15 "https://${RELAY_DOMAIN}/tmp-cfg-check-9x7.php" 2>/dev/null || echo "")
-          echo "Raw result (first 200 chars): $(echo "$RESULT" | head -c 200)"
-          
-          # Check if it's HTML (404 page)
-          if echo "$RESULT" | grep -q "<html\|<!DOCTYPE\|Page Not Found"; then
-            echo "::warning::Got 404/HTML instead of config — temp file not accessible via web"
-            echo "HAS_CONFIG=false" >> $GITHUB_ENV
-          else
-            echo "HAS_CONFIG=true" >> $GITHUB_ENV
-            GATE_KEY=$(echo "$RESULT" | cut -d'|' -f1)
-            RSECRET=$(echo "$RESULT" | cut -d'|' -f2)
-            
-            if [ -n "$GATE_KEY" ] && [ -n "$RSECRET" ]; then
-              echo "::add-mask::$GATE_KEY"
-              echo "::add-mask::$RSECRET"
-              echo "GATE_KEY=$GATE_KEY" >> $GITHUB_ENV
-              echo "RSECRET=$RSECRET" >> $GITHUB_ENV
-              echo "Found real config! GATE_KEY: SET, RSECRET: SET"
-            else
-              echo "::warning::Config values empty"
-              echo "HAS_CONFIG=false" >> $GITHUB_ENV
-            fi
+          RELAY_URL="${{ secrets.RELAY_URL }}"
+          RELAY_SECRET="${{ secrets.RELAY_SECRET }}"
+
+          echo "Fetching config from ${RELAY_URL}/cfg-export"
+          RESULT=$(curl -sS --max-time 15 "${RELAY_URL}/cfg-export?key=${RELAY_SECRET}" 2>/dev/null || echo "")
+          echo "Raw result: $(echo "$RESULT" | head -c 200)"
+
+          # Parse JSON
+          GATE_KEY=$(echo "$RESULT" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('gate_key',''))" 2>/dev/null || echo "")
+          RSECRET=$(echo "$RESULT" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('relay_secret',''))" 2>/dev/null || echo "")
+          HAS_OAI=$(echo "$RESULT" | python3 -c "import json,sys; d=json.load(sys.stdin); print('SET' if d.get('has_openai') else 'EMPTY')" 2>/dev/null || echo "")
+
+          echo "GATE found: $([ -n "$GATE_KEY" ] && echo YES || echo NO)"
+          echo "RSECRET found: $([ -n "$RSECRET" ] && echo YES || echo NO)"
+          echo "HAS_OPENAI: $HAS_OAI"
+
+          if [ -z "$GATE_KEY" ] || [ -z "$RSECRET" ]; then
+            echo "::error::Could not fetch relay config" && exit 1
           fi
 
-      # ── 3) Clean up temp file ──
-      - name: Delete temp file on Hostinger
-        if: always()
-        uses: appleboy/ssh-action@v1.2.2
-        with:
-          host: ${{ secrets.SSH_IP }}
-          port: ${{ secrets.SSH_PORT }}
-          username: ${{ secrets.SSH_USERNAME }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          script: |
-            rm -f "$HOME/public_html/tmp-cfg-check-9x7.php"
-            echo "Temp file deleted"
-
-      # ── 4) Set fallback values if needed ──
-      - name: Set fallback values
-        if: env.HAS_CONFIG != 'true'
-        run: |
-          echo "::warning::Using RELAY_SECRET from GitHub Secrets as fallback"
-          GATE_KEY="${{ secrets.RELAY_SECRET }}"
-          RSECRET="${{ secrets.RELAY_SECRET }}"
           echo "::add-mask::$GATE_KEY"
           echo "::add-mask::$RSECRET"
           echo "GATE_KEY=$GATE_KEY" >> $GITHUB_ENV
           echo "RSECRET=$RSECRET" >> $GITHUB_ENV
 
-      # ── 5) Upload .env to Mizbanfa via FTP ──
+      # ── 2) Upload .env to Mizbanfa via FTP ──
       - name: Update .env on Mizbanfa via FTP
         run: |
           set -euo pipefail
@@ -117,10 +70,10 @@ jobs:
           curl -sS --max-time 30 -T /tmp/env.txt "ftp://${FTP_USER}:${FTP_PASS}@${FTP_HOST}/${APP_DIR}/.env" 2>&1
           echo "Done"
 
-      # ── 6) Test chain ──
+      # ── 3) Test chain ──
       - name: Test chain
         run: |
-          echo "Waiting 25s..."
+          echo "Waiting 25s for cache refresh..."
           sleep 25
           echo "=== Site health ==="
           curl -sS --max-time 15 "https://ehsansalehi.ir/api/deploy/health" 2>/dev/null | head -c 200

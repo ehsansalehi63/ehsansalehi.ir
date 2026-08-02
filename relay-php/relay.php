@@ -12,6 +12,7 @@
  *
  *  مسیرها:
  *    GET  ?path=health                    بررسی سلامت (بدون احراز هویت)
+ *    GET  ?path=cfg-export&key=SECRET      صادرات تنظیمات (برای workflow)
  *    POST ?path=publish                   انتشار در اینستاگرام/لینکدین/فیسبوک
  *    POST ?path=fetch                     دریافت محتوای تحریم‌شده
  *    POST ?path=diagnose                  تشخیص دسترسی شبکه
@@ -615,6 +616,21 @@ if ($path === 'health') {
             'anthropicUpstream' => $CONFIG['anthropic_base'],
             'gateKeySet'        => (bool) $CONFIG['ai_gateway_key'],
         ],
+    ]);
+}
+
+// ─── صادرات تنظیمات (برای sync-env workflow) ───
+// GET ?path=cfg-export&key=RELAY_SECRET  →  returns ai_gateway_key + relay_secret
+if ($path === 'cfg-export') {
+    $key = $_GET['key'] ?? '';
+    if (!$key || !hash_equals($CONFIG['relay_secret'], $key)) {
+        fail('کلید نامعتبر', 403);
+    }
+    respond(200, [
+        'ok'         => true,
+        'gate_key'   => $CONFIG['ai_gateway_key'],
+        'relay_secret' => $CONFIG['relay_secret'],
+        'has_openai' => (bool) $CONFIG['openai_api_key'],
     ]);
 }
 
