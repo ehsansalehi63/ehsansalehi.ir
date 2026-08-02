@@ -13,18 +13,15 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      # ── 1) Read relay config via temp PHP on web server ──
-      - name: Read relay config from Hostinger
-        id: relay
+      # ── 1) Create temp PHP on Hostinger via SSH ──
+      - name: Create temp config checker on Hostinger
         uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ secrets.SSH_IP }}
           port: ${{ secrets.SSH_PORT }}
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
-          capture_stdout: true
           script: |
-            # Use name WITHOUT leading dot (web servers hide dot files)
             TMPF="$HOME/public_html/tmp-cfg-check-9x7.php"
             echo '<?php' > "$TMPF"
             echo '$CONFIG = ["relay_secret" => "", "ai_gateway_key" => "", "openai_api_key" => "", "openai_base" => "https://agentrouter.org/v1", "anthropic_base" => "https://agentrouter.org", "anthropic_version" => "2023-06-01", "instagram_token" => "", "instagram_user_id" => "", "linkedin_token" => "", "linkedin_author" => "", "fb_token" => "", "fb_page_id" => "", "meta_version" => "v21.0", "sig_window" => 300];' >> "$TMPF"
@@ -33,50 +30,67 @@ jobs:
             echo 'foreach (["RELAY_SECRET" => "relay_secret", "AI_GATEWAY_KEY" => "ai_gateway_key", "OPENAI_API_KEY" => "openai_api_key"] as $env => $key) { $v = getenv($env); if ($v !== false && $v !== "") $CONFIG[$key] = $v; }' >> "$TMPF"
             echo 'header("Content-Type: text/plain");' >> "$TMPF"
             echo 'echo $CONFIG["ai_gateway_key"] . "|" . $CONFIG["relay_secret"] . "|" . (empty($CONFIG["openai_api_key"]) ? "EMPTY" : "SET");' >> "$TMPF"
+            chmod 644 "$TMPF"
+            echo "File created at: $TMPF"
+            ls -la "$TMPF"
 
-            # Access via the real domain (NOT localhost, NOT dot file)
-            DOMAIN="darkslategrey-woodcock-525023.hostingersite.com"
-            RESULT=$(curl -sS --max-time 15 "https://${DOMAIN}/tmp-cfg-check-9x7.php" 2>/dev/null || echo "")
-            
-            # Delete temp file
-            rm -f "$TMPF"
-            
-            # Base64 encode for safe GitHub Actions output
-            echo "RESULT=$(echo -n "$RESULT" | base64 -w0)"
-
-      # ── 2) Parse and set env ──
-      - name: Parse relay config
+      # ── 2) Fetch config from GitHub runner (not from SSH) ──
+      - name: Fetch relay config
+        id: fetch
         run: |
           set -euo pipefail
-          RAW='${{ steps.relay.outputs.stdout }}'
-          B64=$(echo "$RAW" | grep '^RESULT=' | cut -d= -f2-)
-          DECODED=$(echo "$B64" | base64 -d 2>/dev/null || echo "")
-          echo "Decoded length: $(echo -n "$DECODED" | wc -c)"
+          RELAY_DOMAIN="darkslategrey-woodcock-525023.hostingersite.com"
+          echo "Fetching from https://${RELAY_DOMAIN}/tmp-cfg-check-9x7.php"
+          RESULT=$(curl -sS --max-time 15 "https://${RELAY_DOMAIN}/tmp-cfg-check-9x7.php" 2>/dev/null || echo "")
+          echo "Raw result (first 200 chars): $(echo "$RESULT" | head -c 200)"
           
-          GATE_KEY=$(echo "$DECODED" | cut -d'|' -f1)
-          RSECRET=$(echo "$DECODED" | cut -d'|' -f2)
-          
-          echo "GATE found: $([ -n "$GATE_KEY" ] && echo YES || echo NO)"
-          echo "RSECRET found: $([ -n "$RSECRET" ] && echo YES || echo NO)"
+          # Check if it's HTML (404 page)
+          if echo "$RESULT" | grep -q "<html\|<!DOCTYPE\|Page Not Found"; then
+            echo "::warning::Got 404/HTML instead of config — temp file not accessible via web"
+            echo "HAS_CONFIG=false" >> $GITHUB_ENV
+          else
+            echo "HAS_CONFIG=true" >> $GITHUB_ENV
+            GATE_KEY=$(echo "$RESULT" | cut -d'|' -f1)
+            RSECRET=$(echo "$RESULT" | cut -d'|' -f2)
+            
+            if [ -n "$GATE_KEY" ] && [ -n "$RSECRET" ]; then
+              echo "::add-mask::$GATE_KEY"
+              echo "::add-mask::$RSECRET"
+              echo "GATE_KEY=$GATE_KEY" >> $GITHUB_ENV
+              echo "RSECRET=$RSECRET" >> $GITHUB_ENV
+              echo "Found real config! GATE_KEY: SET, RSECRET: SET"
+            else
+              echo "::warning::Config values empty"
+              echo "HAS_CONFIG=false" >> $GITHUB_ENV
+            fi
+          fi
 
-          if [ -z "$GATE_KEY" ]; then
-            echo "::warning::GATE_KEY not found — using RELAY_SECRET from GitHub Secrets"
-            GATE_KEY="${{ secrets.RELAY_SECRET }}"
-          fi
-          if [ -z "$RSECRET" ]; then
-            echo "::warning::RSECRET not found — using RELAY_SECRET from GitHub Secrets"
-            RSECRET="${{ secrets.RELAY_SECRET }}"
-          fi
-          if [ -z "$GATE_KEY" ] || [ -z "$RSECRET" ]; then
-            echo "::error::Could not get values" && exit 1
-          fi
+      # ── 3) Clean up temp file ──
+      - name: Delete temp file on Hostinger
+        if: always()
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.SSH_IP }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: |
+            rm -f "$HOME/public_html/tmp-cfg-check-9x7.php"
+            echo "Temp file deleted"
 
+      # ── 4) Set fallback values if needed ──
+      - name: Set fallback values
+        if: env.HAS_CONFIG != 'true'
+        run: |
+          echo "::warning::Using RELAY_SECRET from GitHub Secrets as fallback"
+          GATE_KEY="${{ secrets.RELAY_SECRET }}"
+          RSECRET="${{ secrets.RELAY_SECRET }}"
           echo "::add-mask::$GATE_KEY"
           echo "::add-mask::$RSECRET"
           echo "GATE_KEY=$GATE_KEY" >> $GITHUB_ENV
           echo "RSECRET=$RSECRET" >> $GITHUB_ENV
 
-      # ── 3) Upload .env to Mizbanfa via FTP ──
+      # ── 5) Upload .env to Mizbanfa via FTP ──
       - name: Update .env on Mizbanfa via FTP
         run: |
           set -euo pipefail
@@ -85,7 +99,7 @@ jobs:
           FTP_PASS="${{ secrets.FTP_PASSWORD }}"
           APP_DIR="${{ secrets.CPANEL_APP_DIR }}"
 
-          echo "=== Downloading .env ==="
+          echo "=== Downloading .env from Mizbanfa ==="
           curl -sS --max-time 30 "ftp://${FTP_USER}:${FTP_PASS}@${FTP_HOST}/${APP_DIR}/.env" -o /tmp/env.txt 2>/dev/null || echo "No .env found"
 
           if [ -s /tmp/env.txt ]; then
@@ -103,7 +117,7 @@ jobs:
           curl -sS --max-time 30 -T /tmp/env.txt "ftp://${FTP_USER}:${FTP_PASS}@${FTP_HOST}/${APP_DIR}/.env" 2>&1
           echo "Done"
 
-      # ── 4) Test chain ──
+      # ── 6) Test chain ──
       - name: Test chain
         run: |
           echo "Waiting 25s..."
