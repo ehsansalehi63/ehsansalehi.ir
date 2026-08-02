@@ -24,8 +24,8 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           capture_stdout: true
           script: |
-            # Create temp PHP that loads config exactly like relay.php does
-            TMPF="$HOME/public_html/.tmp-cfg-check.php"
+            # Use name WITHOUT leading dot (web servers hide dot files)
+            TMPF="$HOME/public_html/tmp-cfg-check-9x7.php"
             echo '<?php' > "$TMPF"
             echo '$CONFIG = ["relay_secret" => "", "ai_gateway_key" => "", "openai_api_key" => "", "openai_base" => "https://agentrouter.org/v1", "anthropic_base" => "https://agentrouter.org", "anthropic_version" => "2023-06-01", "instagram_token" => "", "instagram_user_id" => "", "linkedin_token" => "", "linkedin_author" => "", "fb_token" => "", "fb_page_id" => "", "meta_version" => "v21.0", "sig_window" => 300];' >> "$TMPF"
             echo '$cfgFile = __DIR__ . "/relay-config.php";' >> "$TMPF"
@@ -34,9 +34,9 @@ jobs:
             echo 'header("Content-Type: text/plain");' >> "$TMPF"
             echo 'echo $CONFIG["ai_gateway_key"] . "|" . $CONFIG["relay_secret"] . "|" . (empty($CONFIG["openai_api_key"]) ? "EMPTY" : "SET");' >> "$TMPF"
 
-            # Access via the real domain (web server will have env vars)
+            # Access via the real domain (NOT localhost, NOT dot file)
             DOMAIN="darkslategrey-woodcock-525023.hostingersite.com"
-            RESULT=$(curl -sS --max-time 15 "https://${DOMAIN}/.tmp-cfg-check.php" 2>/dev/null || echo "")
+            RESULT=$(curl -sS --max-time 15 "https://${DOMAIN}/tmp-cfg-check-9x7.php" 2>/dev/null || echo "")
             
             # Delete temp file
             rm -f "$TMPF"
@@ -49,10 +49,9 @@ jobs:
         run: |
           set -euo pipefail
           RAW='${{ steps.relay.outputs.stdout }}'
-          echo "Raw: $RAW"
           B64=$(echo "$RAW" | grep '^RESULT=' | cut -d= -f2-)
           DECODED=$(echo "$B64" | base64 -d 2>/dev/null || echo "")
-          echo "Decoded: $DECODED"
+          echo "Decoded length: $(echo -n "$DECODED" | wc -c)"
           
           GATE_KEY=$(echo "$DECODED" | cut -d'|' -f1)
           RSECRET=$(echo "$DECODED" | cut -d'|' -f2)
@@ -61,11 +60,11 @@ jobs:
           echo "RSECRET found: $([ -n "$RSECRET" ] && echo YES || echo NO)"
 
           if [ -z "$GATE_KEY" ]; then
-            echo "::warning::GATE_KEY not found on relay — using RELAY_SECRET from GitHub Secrets"
+            echo "::warning::GATE_KEY not found — using RELAY_SECRET from GitHub Secrets"
             GATE_KEY="${{ secrets.RELAY_SECRET }}"
           fi
           if [ -z "$RSECRET" ]; then
-            echo "::warning::RSECRET not found on relay — using RELAY_SECRET from GitHub Secrets"
+            echo "::warning::RSECRET not found — using RELAY_SECRET from GitHub Secrets"
             RSECRET="${{ secrets.RELAY_SECRET }}"
           fi
           if [ -z "$GATE_KEY" ] || [ -z "$RSECRET" ]; then
