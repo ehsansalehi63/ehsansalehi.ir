@@ -13,7 +13,7 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      # ── 1) Read relay config via SSH (temp PHP file approach) ──
+      # ── 1) Read relay config via SSH ──
       - name: Read relay config from Hostinger
         id: relay
         uses: appleboy/ssh-action@v1.2.2
@@ -25,27 +25,19 @@ jobs:
           capture_stdout: true
           script: |
             TMPF="$HOME/public_html/.tmp-cfg-check.php"
-            # Write PHP file using echo (avoid heredoc issues)
             echo '<?php' > "$TMPF"
-            echo '$CONFIG = [' >> "$TMPF"
-            echo "'relay_secret' => '', 'ai_gateway_key' => '', 'openai_api_key' => ''," >> "$TMPF"
-            echo "'openai_base' => 'https://agentrouter.org/v1', 'anthropic_base' => 'https://agentrouter.org'," >> "$TMPF"
-            echo "'anthropic_version' => '2023-06-01', 'instagram_token' => '', 'instagram_user_id' => ''," >> "$TMPF"
-            echo "'linkedin_token' => '', 'linkedin_author' => '', 'fb_token' => '', 'fb_page_id' => ''," >> "$TMPF"
-            echo "'meta_version' => 'v21.0', 'sig_window' => 300," >> "$TMPF"
-            echo '];' >> "$TMPF"
+            echo '$CONFIG = ["relay_secret" => "", "ai_gateway_key" => "", "openai_api_key" => "", "openai_base" => "https://agentrouter.org/v1", "anthropic_base" => "https://agentrouter.org", "anthropic_version" => "2023-06-01", "instagram_token" => "", "instagram_user_id" => "", "linkedin_token" => "", "linkedin_author" => "", "fb_token" => "", "fb_page_id" => "", "meta_version" => "v21.0", "sig_window" => 300];' >> "$TMPF"
             echo '$cfgFile = __DIR__ . "/relay-config.php";' >> "$TMPF"
             echo 'if (is_file($cfgFile)) { $loaded = require $cfgFile; if (is_array($loaded)) $CONFIG = array_merge($CONFIG, $loaded); }' >> "$TMPF"
-            echo 'foreach (["RELAY_SECRET" => "relay_secret", "AI_GATEWAY_KEY" => "ai_gateway_key", "OPENAI_API_KEY" => "openai_api_key"] as $env => $key) {' >> "$TMPF"
-            echo '  $v = getenv($env); if ($v !== false && $v !== "") $CONFIG[$key] = $v;' >> "$TMPF"
-            echo '}' >> "$TMPF"
+            echo 'foreach (["RELAY_SECRET" => "relay_secret", "AI_GATEWAY_KEY" => "ai_gateway_key", "OPENAI_API_KEY" => "openai_api_key"] as $env => $key) { $v = getenv($env); if ($v !== false && $v !== "") $CONFIG[$key] = $v; }' >> "$TMPF"
             echo 'header("Content-Type: text/plain");' >> "$TMPF"
             echo 'echo "GATE_KEY=" . $CONFIG["ai_gateway_key"] . "\n";' >> "$TMPF"
             echo 'echo "RELAY_SECRET=" . $CONFIG["relay_secret"] . "\n";' >> "$TMPF"
             echo 'echo "HAS_OPENAI=" . (empty($CONFIG["openai_api_key"]) ? "EMPTY" : "SET") . "\n";' >> "$TMPF"
-            
-            # Fetch values via localhost
-            VALUES=$(curl -sS --max-time 10 "http://localhost/.tmp-cfg-check.php" 2>/dev/null || echo "")
+
+            # Try multiple URLs
+            RELAY_DOMAIN="darkslategrey-woodcock-525023.hostingersite.com"
+            VALUES=$(curl -sS --max-time 10 "https://${RELAY_DOMAIN}/.tmp-cfg-check.php" 2>/dev/null || echo "")
             rm -f "$TMPF"
             echo "$VALUES"
 
@@ -55,20 +47,20 @@ jobs:
           set -euo pipefail
           OUTPUT='${{ steps.relay.outputs.stdout }}'
           echo "Lines: $(echo "$OUTPUT" | wc -l)"
+          echo "First 100 chars: $(echo "$OUTPUT" | head -c 100)"
 
           GATE_KEY=$(echo "$OUTPUT" | grep '^GATE_KEY=' | head -1 | cut -d= -f2-)
           RSECRET=$(echo "$OUTPUT" | grep '^RELAY_SECRET=' | head -1 | cut -d= -f2-)
-          HAS_OPENAI=$(echo "$OUTPUT" | grep '^HAS_OPENAI=' | head -1 | cut -d= -f2-)
 
           echo "GATE found: $([ -n "$GATE_KEY" ] && echo YES || echo NO)"
           echo "RSECRET found: $([ -n "$RSECRET" ] && echo YES || echo NO)"
 
           if [ -z "$GATE_KEY" ]; then
-            echo "::warning::Using RELAY_SECRET from GitHub Secrets as GATE_KEY"
+            echo "::warning::GATE_KEY not found — using RELAY_SECRET from GitHub Secrets"
             GATE_KEY="${{ secrets.RELAY_SECRET }}"
           fi
           if [ -z "$RSECRET" ]; then
-            echo "::warning::Using RELAY_SECRET from GitHub Secrets as RSECRET"
+            echo "::warning::RSECRET not found — using RELAY_SECRET from GitHub Secrets"
             RSECRET="${{ secrets.RELAY_SECRET }}"
           fi
           if [ -z "$GATE_KEY" ] || [ -z "$RSECRET" ]; then
@@ -79,7 +71,6 @@ jobs:
           echo "::add-mask::$RSECRET"
           echo "GATE_KEY=$GATE_KEY" >> $GITHUB_ENV
           echo "RSECRET=$RSECRET" >> $GITHUB_ENV
-          echo "HAS_OPENAI=$HAS_OPENAI" >> $GITHUB_ENV
 
       # ── 3) Upload .env to Mizbanfa via FTP ──
       - name: Update .env on Mizbanfa via FTP
@@ -90,14 +81,13 @@ jobs:
           FTP_PASS="${{ secrets.FTP_PASSWORD }}"
           APP_DIR="${{ secrets.CPANEL_APP_DIR }}"
 
-          # Download current .env
           echo "=== Downloading .env ==="
           curl -sS --max-time 30 \
             "ftp://${FTP_USER}:${FTP_PASS}@${FTP_HOST}/${APP_DIR}/.env" \
-            -o /tmp/env.txt 2>/dev/null || echo "No .env found, will create"
+            -o /tmp/env.txt 2>/dev/null || echo "No .env found"
 
           if [ -s /tmp/env.txt ]; then
-            echo "Found .env with $(wc -l < /tmp/env.txt) lines"
+            echo "Found .env ($(wc -l < /tmp/env.txt) lines)"
             sed -i "s|^OPENAI_API_KEY=.*|OPENAI_API_KEY=$GATE_KEY|" /tmp/env.txt
             sed -i "s|^RELAY_SECRET=.*|RELAY_SECRET=$RSECRET|" /tmp/env.txt
             grep -q '^OPENAI_API_KEY=' /tmp/env.txt || echo "OPENAI_API_KEY=$GATE_KEY" >> /tmp/env.txt
