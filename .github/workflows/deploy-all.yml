@@ -139,20 +139,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # آپلود فایل‌های رله PHP از طریق SSH/SCP
-      - name: Upload PHP relay files via SSH (scp-action)
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SSH_IP }}
-          port: ${{ secrets.SSH_PORT }}
-          username: ${{ secrets.SSH_USERNAME }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          source: "relay-php/relay.php,relay-php/.htaccess"
-          target: ~/public_html/
-          strip_components: 1
-
-      # ریست OPcache برای اعمال تغییرات فایل relay.php
-      - name: Reset OPcache (SSH)
+      # آپلود فایل‌های رله PHP از طریق SSH (دانلود مستقیم از GitHub)
+      - name: Deploy relay.php via SSH (download from GitHub)
         uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ secrets.SSH_IP }}
@@ -160,22 +148,46 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
-            # Touch the file to update mtime (triggers opcache revalidation)
-            touch "$HOME/public_html/relay.php" "$HOME/public_html/.htaccess"
+            cd "$HOME/public_html"
             
-            # Try to reset opcache via PHP CLI
-            php -r 'if (function_exists("opcache_reset")) { opcache_reset(); echo "OPcache reset via CLI\n"; } else { echo "opcache_reset not available in CLI\n"; }' 2>/dev/null || true
+            # Download relay.php from GitHub raw
+            curl -sSL --max-time 30 -o relay.php.new               "https://raw.githubusercontent.com/ehsansalehi63/ehsansalehi.ir/main/relay-php/relay.php"
             
-            # Create a temp PHP file to reset opcache via web
-            OCF="$HOME/public_html/opcache-reset-9x7.php"
-            echo '<?php if (function_exists("opcache_reset")) { opcache_reset(); echo "OPCACHE_RESET_OK"; } else { echo "NO_OPCACHE"; } ?>' > "$OCF"
-            chmod 644 "$OCF"
+            # Download .htaccess from GitHub raw
+            curl -sSL --max-time 30 -o .htaccess.new               "https://raw.githubusercontent.com/ehsansalehi63/ehsansalehi.ir/main/relay-php/.htaccess"
             
-            # Call it via curl and then delete
-            DOMAIN="darkslategrey-woodcock-525023.hostingersite.com"
-            RESULT=$(curl -sS --max-time 10 "https://$DOMAIN/opcache-reset-9x7.php" 2>/dev/null || echo "CURL_FAILED")
+            # Check if downloads succeeded (files should contain PHP/Apache content)
+            if grep -q '<?php' relay.php.new && grep -q 'RewriteRule' .htaccess.new; then
+              mv relay.php.new relay.php
+              mv .htaccess.new .htaccess
+              chmod 644 relay.php .htaccess
+              echo "✅ relay.php and .htaccess updated successfully"
+              
+              # Show version to confirm
+              grep "version.*=>" relay.php | head -1
+            else
+              echo "❌ Download failed — keeping old files"
+              cat relay.php.new | head -5
+              rm -f relay.php.new .htaccess.new
+              exit 1
+            fi
+            
+            # Reset OPcache
+            php -r 'if (function_exists("opcache_reset")) { opcache_reset(); echo "OPcache reset via CLI\n"; }' 2>/dev/null || true
+            
+            # Touch file for opcache revalidation
+            touch relay.php .htaccess
+            
+            # Try web-based opcache reset
+            OCF="opcache-reset-tmp.php"
+            echo '<?php if (function_exists("opcache_reset")) { opcache_reset(); echo "OPCACHE_RESET_OK"; } else { echo "NO_OPCACHE"; }' > "$OCF"
+            RESULT=$(curl -sS --max-time 10 "https://darkslategrey-woodcock-525023.hostingersite.com/$OCF" 2>/dev/null || echo "CURL_FAILED")
             rm -f "$OCF"
             echo "OPcache reset result: $RESULT"
+            
+            # Verify the new version is live
+            HEALTH=$(curl -sS --max-time 10 "https://darkslategrey-woodcock-525023.hostingersite.com/health" 2>/dev/null || echo "{}")
+            echo "Health check: $HEALTH" 
 
       # مطمئن شو relay-config.php وجود دارد (اگر نبود نمونه بساز)
       - name: Ensure relay-config.php exists (SSH)
