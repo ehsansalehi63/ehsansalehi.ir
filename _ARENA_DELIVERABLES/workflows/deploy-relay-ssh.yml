@@ -1,0 +1,143 @@
+# ═══════════════════════════════════════════════════════════════
+#  دیپلوی رله PHP به هاستینگر — از طریق SSH
+#
+#  این workflow جایگزین آپلود دستی فایل‌ها در File Manager است.
+#
+#  Secrets (هاستینگر — همان‌هایی که ساخته‌اید):
+#      SSH_IP         آی‌پی سرور هاستینگر
+#      SSH_USERNAME   نام کاربری SSH
+#      SSH_PASSWORD   رمز عبور SSH
+#      SSH_PORT       پورت SSH (هاستینگر معمولاً ۶۵۰۰۲)
+#
+#  اختیاری:
+#      RELAY_DIR      مسیر. پیش‌فرض: ~/public_html
+#      RELAY_URL      برای تست بعد از دیپلوی
+#
+#  ⚠️ relay-config.php هرگز از گیت آپلود نمی‌شود (کلیدها داخلش است).
+#     فقط relay.php و .htaccess جایگزین می‌شوند.
+# ═══════════════════════════════════════════════════════════════
+
+name: Deploy Relay (Hostinger SSH)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '_ARENA_DELIVERABLES/relay-php-upload/**'
+      - '.github/workflows/deploy-relay-ssh.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-relay
+  cancel-in-progress: false
+
+jobs:
+  deploy-relay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # ─── ۱) بررسی سلامت فایل‌ها قبل از آپلود ───────────
+      - name: Validate PHP syntax
+        run: |
+          set -euo pipefail
+          SRC=_ARENA_DELIVERABLES/relay-php-upload
+
+          test -f "$SRC/relay.php"   || { echo "::error::relay.php پیدا نشد"; exit 1; }
+          test -f "$SRC/.htaccess"   || { echo "::error::.htaccess پیدا نشد"; exit 1; }
+
+          # نشانگرهای conflict گیت را رد کن
+          if grep -rnE '^(<<<<<<<|>>>>>>>|=======)$' "$SRC/relay.php"; then
+            echo "::error::relay.php حاوی نشانگر conflict است"; exit 1
+          fi
+
+          php -l "$SRC/relay.php"
+          echo "✅ سینتکس PHP سالم است"
+
+      # ─── ۲) آماده‌سازی SSH ─────────────────────────────
+      - name: Setup SSH
+        env:
+          SSH_IP:   ${{ secrets.SSH_IP }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq && sudo apt-get install -y -qq sshpass
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          ssh-keyscan -T 20 -p "${SSH_PORT:-22}" "$SSH_IP" >> ~/.ssh/known_hosts 2>/dev/null \
+            || echo "::warning::ssh-keyscan ناموفق — از accept-new استفاده می‌شود"
+
+      # ─── ۳) آپلود ──────────────────────────────────────
+      - name: Upload relay
+        env:
+          SSHPASS:   ${{ secrets.SSH_PASSWORD }}
+          SSH_IP:    ${{ secrets.SSH_IP }}
+          SSH_USER:  ${{ secrets.SSH_USERNAME }}
+          SSH_PORT:  ${{ secrets.SSH_PORT }}
+          RELAY_DIR: ${{ secrets.RELAY_DIR }}
+        run: |
+          set -euo pipefail
+          PORT="${SSH_PORT:-22}"
+          DIR="${RELAY_DIR:-public_html}"
+          SRC=_ARENA_DELIVERABLES/relay-php-upload
+          OPTS="-o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o ConnectTimeout=30"
+
+          run_ssh() { sshpass -e ssh $OPTS -p "$PORT" "${SSH_USER}@${SSH_IP}" "$@"; }
+
+          echo "::group::اتصال"
+          run_ssh "echo متصل: \$(hostname); php -v 2>/dev/null | head -1 || echo 'php CLI ندارد'"
+          echo "::endgroup::"
+
+          echo "::group::پشتیبان‌گیری"
+          run_ssh "cd ~/$DIR 2>/dev/null || exit 0; \
+            [ -f relay.php ] && cp relay.php relay.php.bak-\$(date +%Y%m%d%H%M%S) || true; \
+            ls -1t relay.php.bak-* 2>/dev/null | tail -n +4 | xargs -r rm -f"
+          echo "::endgroup::"
+
+          echo "::group::آپلود relay.php و .htaccess"
+          run_ssh "mkdir -p ~/$DIR"
+          sshpass -e scp $OPTS -P "$PORT" \
+            "$SRC/relay.php" "$SRC/.htaccess" \
+            "${SSH_USER}@${SSH_IP}:~/$DIR/"
+          echo "::endgroup::"
+
+          echo "::group::بررسی relay-config.php"
+          # اگر فایل تنظیمات وجود ندارد، یک نمونه خالی بساز (بدون کلید)
+          run_ssh "cd ~/$DIR; \
+            if [ -f relay-config.php ]; then \
+              echo '✅ relay-config.php موجود است — دست نخورد'; \
+            else \
+              echo '⚠️  relay-config.php وجود ندارد — نمونه خالی ساخته شد. باید کلیدها را پر کنید.'; \
+              printf '%s\n' '<?php return [' \"    'relay_secret'   => '',\" \"    'ai_gateway_key' => '',\" \"    'openai_api_key' => '',\" '];' > relay-config.php; \
+            fi; \
+            chmod 644 relay.php .htaccess; chmod 600 relay-config.php; ls -l relay.php .htaccess relay-config.php"
+          echo "::endgroup::"
+
+      # ─── ۴) تست سلامت رله ──────────────────────────────
+      - name: Health check
+        env:
+          RELAY_URL: ${{ secrets.RELAY_URL }}
+        run: |
+          set -uo pipefail
+          if [ -z "${RELAY_URL:-}" ]; then
+            echo "::warning::RELAY_URL تنظیم نشده — تست رد شد"; exit 0
+          fi
+          BASE="${RELAY_URL%/}"
+
+          for i in 1 2 3 4; do
+            BODY="$(curl -sS --max-time 25 "$BASE/health" 2>&1 || true)"
+            if printf '%s' "$BODY" | grep -q '"ok"[[:space:]]*:[[:space:]]*true'; then
+              echo "::notice::✅ رله زنده است"
+              printf '%s\n' "$BODY" | head -c 800
+              # هشدار اگر کلیدها پر نشده‌اند
+              printf '%s' "$BODY" | grep -q '"secretConfigured"[[:space:]]*:[[:space:]]*true' \
+                || echo "::warning::relay_secret پر نشده است"
+              exit 0
+            fi
+            echo "تلاش $i/4 ناموفق"; [ $i -lt 4 ] && sleep 10
+          done
+
+          echo "::error::رله پاسخ سالم نداد"
+          printf '%s\n' "${BODY:0:600}"
+          exit 1

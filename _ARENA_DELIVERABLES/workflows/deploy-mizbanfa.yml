@@ -1,0 +1,148 @@
+# ═══════════════════════════════════════════════════════════════
+#  دیپلوی سایت به میزبان‌فا (cPanel + Passenger)
+#
+#  میزبان‌فا SSH ندارد → انتقال با FTP انجام می‌شود.
+#  (Secrets های SSH_* مربوط به هاستینگر/رله هستند، نه این سایت.)
+#
+#  Secrets لازم:
+#      FTP_SERVER      آدرس FTP میزبان‌فا
+#      FTP_USERNAME    نام کاربری FTP
+#      FTP_PASSWORD    رمز عبور FTP
+#
+#  اختیاری (برای ری‌استارت و تأیید):
+#      CPANEL_HOST     مثال: cip17.mizbanfadns.net
+#      CPANEL_USER     نام کاربری cPanel
+#      CPANEL_TOKEN    کلید API میزبان‌فا (Manage API Tokens)
+#      HEALTH_URL      پیش‌فرض: https://ehsansalehi.ir/api/deploy/health
+# ═══════════════════════════════════════════════════════════════
+
+name: Deploy Site (Mizbanfa)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Cache Next.js build
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/.next/cache
+          key: next-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/*.[jt]s','**/*.[jt]sx') }}
+          restore-keys: |
+            next-${{ hashFiles('package-lock.json') }}-
+            next-
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit --fund=false
+
+      # prebuild/postbuild خودشان deploy-info.json را می‌نویسند
+      # و hostname را روی 0.0.0.0 قفل می‌کنند.
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SITE_URL: https://ehsansalehi.ir
+          NEXT_TELEMETRY_DISABLED: '1'
+
+      - name: Prepare standalone payload
+        run: |
+          set -euo pipefail
+          OUT=.next/standalone
+
+          rm -rf "$OUT/public" "$OUT/.next/static"
+          cp -r public "$OUT/public"
+          mkdir -p "$OUT/.next" "$OUT/tmp"
+          cp -r .next/static "$OUT/.next/static"
+
+          # مهر زمانی تازه → Passenger بعد از آپلود ری‌استارت می‌شود
+          date -u +%FT%TZ > "$OUT/tmp/restart.txt"
+
+          test -f "$OUT/server.js"
+          test -f "$OUT/deploy-info.json"
+          echo "نسخه در حال انتشار:"; cat "$OUT/deploy-info.json"
+
+      - name: Sync via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ./ehsansalehi.ir/
+          local-dir: .next/standalone/
+          state-name: .sync-state-${{ github.run_id }}.json
+          timeout: 120000
+          security: loose
+          passive: true
+          log-level: standard
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/.env
+            **/.env.*
+            **/.htaccess
+
+      # ─── ری‌استارت Passenger از طریق API میزبان‌فا ──────
+      - name: Restart Passenger (cPanel API)
+        continue-on-error: true
+        env:
+          CPANEL_HOST:  ${{ secrets.CPANEL_HOST }}
+          CPANEL_USER:  ${{ secrets.CPANEL_USER }}
+          CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
+        run: |
+          set -uo pipefail
+          if [ -z "${CPANEL_TOKEN:-}" ] || [ -z "${CPANEL_HOST:-}" ]; then
+            echo "::notice::کلید API میزبان‌فا تنظیم نشده — ری‌استارت از راه tmp/restart.txt انجام می‌شود"
+            exit 0
+          fi
+          # نوشتن دوباره restart.txt از طریق API تا Passenger حتماً بیدار شود
+          curl -sS --max-time 40 \
+            -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
+            "https://${CPANEL_HOST}:2083/execute/Fileman/save_file_content" \
+            --data-urlencode "dir=/home/${CPANEL_USER}/ehsansalehi.ir/tmp" \
+            --data-urlencode "file=restart.txt" \
+            --data-urlencode "content=$(date -u +%FT%TZ)" \
+            | head -c 400
+          echo
+
+      # ─── تأیید نسخه منتشرشده ───────────────────────────
+      - name: Verify deployment
+        env:
+          HEALTH_URL: ${{ secrets.HEALTH_URL }}
+        run: |
+          set -uo pipefail
+          URL="${HEALTH_URL:-https://ehsansalehi.ir/api/deploy/health}"
+          EXPECTED="${GITHUB_SHA:0:12}"
+          echo "بررسی $URL — نسخه مورد انتظار: $EXPECTED"
+
+          for i in 1 2 3 4 5 6 7 8; do
+            BODY="$(curl -sS --max-time 25 "$URL" 2>&1 || true)"
+            DEPLOYED="$(printf '%s' "$BODY" \
+              | grep -o '"shortCommit"[[:space:]]*:[[:space:]]*"[^"]*"' | cut -d'"' -f4)"
+
+            if [ "$DEPLOYED" = "$EXPECTED" ]; then
+              echo "::notice::✅ نسخه صحیح روی سایت است ($DEPLOYED)"
+              exit 0
+            fi
+            echo "تلاش $i/8 — نسخه فعلی: '${DEPLOYED:-نامشخص}'"
+            [ $i -lt 8 ] && sleep 20
+          done
+
+          echo "::warning::نسخه تأیید نشد — Passenger احتمالاً ری‌استارت نشده"
+          printf '%s\n' "${BODY:0:600}"
