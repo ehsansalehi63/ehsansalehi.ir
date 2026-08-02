@@ -172,22 +172,30 @@ jobs:
               exit 1
             fi
             
-            # Reset OPcache
-            php -r 'if (function_exists("opcache_reset")) { opcache_reset(); echo "OPcache reset via CLI\n"; }' 2>/dev/null || true
+            # Disable OPcache via .user.ini (PHP-FPM reads this)
+            echo 'opcache.enable=0' > .user.ini
+            echo "Created .user.ini to disable OPcache"
             
-            # Touch file for opcache revalidation
-            touch relay.php .htaccess
-            
-            # Try web-based opcache reset
-            OCF="opcache-reset-tmp.php"
-            echo '<?php if (function_exists("opcache_reset")) { opcache_reset(); echo "OPCACHE_RESET_OK"; } else { echo "NO_OPCACHE"; }' > "$OCF"
-            RESULT=$(curl -sS --max-time 10 "https://darkslategrey-woodcock-525023.hostingersite.com/$OCF" 2>/dev/null || echo "CURL_FAILED")
-            rm -f "$OCF"
-            echo "OPcache reset result: $RESULT"
+            # Wait for PHP-FPM to pick up .user.ini changes
+            echo "Waiting 10s for .user.ini to take effect..."
+            sleep 10
             
             # Verify the new version is live
             HEALTH=$(curl -sS --max-time 10 "https://darkslategrey-woodcock-525023.hostingersite.com/health" 2>/dev/null || echo "{}")
-            echo "Health check: $HEALTH" 
+            echo "Health check after .user.ini: $HEALTH"
+            
+            # If still old version, try renaming trick (forces recompile)
+            if echo "$HEALTH" | grep -q '"version": "1.0"'; then
+              echo "Still old version, trying rename trick..."
+              cp relay.php relay_tmp.php
+              mv relay.php relay_old.php
+              mv relay_tmp.php relay.php
+              rm -f relay_old.php
+              sleep 3
+              HEALTH2=$(curl -sS --max-time 10 "https://darkslategrey-woodcock-525023.hostingersite.com/health" 2>/dev/null || echo "{}")
+              echo "Health check after rename: $HEALTH2"
+            fi
+
 
       # مطمئن شو relay-config.php وجود دارد (اگر نبود نمونه بساز)
       - name: Ensure relay-config.php exists (SSH)
