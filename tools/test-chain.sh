@@ -25,6 +25,15 @@ c_fail() { printf '\033[31m❌ %s\033[0m\n' "$*"; FAIL=$((FAIL+1)); }
 c_skip() { printf '\033[33m⏭️  %s\033[0m\n' "$*"; SKIP=$((SKIP+1)); }
 c_info() { printf '\033[36m→  %s\033[0m\n' "$*"; }
 
+# تابع کمکی: curl با مدیریت خطا
+safe_curl() {
+  local out_var="$1"
+  shift
+  local http_code
+  http_code=$(curl -sS -o /tmp/"$out_var".json -w "%{http_code}" --max-time 15 "$@" 2>/dev/null) || true
+  echo "${http_code:-000}"
+}
+
 echo "═══════════════════════════════════════════════════════════"
 echo "  تست زنجیره سایت ↔ رله"
 echo "  $(date -u +%FT%TZ)"
@@ -33,8 +42,8 @@ echo ""
 
 # ─── ۱) سایت اصلی ─────────────────────────────────────────
 c_info "۱. سایت اصلی ($SITE_URL)"
-HTTP=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 15 "$SITE_URL" 2>&1 || echo "000")
-if [ "$HTTP" -ge 200 ] && [ "$HTTP" -lt 400 ] 2>/dev/null; then
+HTTP=$(safe_curl site-main "$SITE_URL")
+if [[ "$HTTP" =~ ^[0-9]+$ ]] && [ "$HTTP" -ge 200 ] && [ "$HTTP" -lt 400 ]; then
   c_ok "سایت اصلی بالا است (HTTP $HTTP)"
 else
   c_fail "سایت اصلی پاسخ نمی‌دهد (HTTP $HTTP)"
@@ -43,10 +52,10 @@ fi
 # ─── ۲) Health endpoint سایت ──────────────────────────────
 c_info "۲. Health endpoint سایت"
 HEALTH_URL="${SITE_URL}/api/deploy/health"
-HTTP=$(curl -sS -o /tmp/site-health.json -w "%{http_code}" --max-time 15 "$HEALTH_URL" 2>&1 || echo "000")
-if [ "$HTTP" = "200" ] 2>/dev/null; then
+HTTP=$(safe_curl site-health "$HEALTH_URL")
+if [ "$HTTP" = "200" ]; then
   c_ok "Health endpoint سایت کار می‌کند"
-  cat /tmp/site-health.json 2>/dev/null | head -5
+  head -5 /tmp/site-health.json 2>/dev/null
 else
   c_fail "Health endpoint سایت پاسخ نمی‌دهد (HTTP $HTTP)"
 fi
@@ -56,10 +65,10 @@ c_info "۳. رله هاستینگر"
 if [ -z "$RELAY_URL" ]; then
   c_skip "RELAY_URL تنظیم نشده — رد شد"
 else
-  HTTP=$(curl -sS -o /tmp/relay-health.json -w "%{http_code}" --max-time 15 "$RELAY_URL/health" 2>&1 || echo "000")
-  if [ "$HTTP" = "200" ] 2>/dev/null; then
+  HTTP=$(safe_curl relay-health "$RELAY_URL/health")
+  if [ "$HTTP" = "200" ]; then
     c_ok "رله بالا است"
-    cat /tmp/relay-health.json 2>/dev/null | head -5
+    head -5 /tmp/relay-health.json 2>/dev/null
 
     # بررسی تنظیمات رله
     SECRET_OK=$(grep -o '"secretConfigured":true' /tmp/relay-health.json 2>/dev/null || echo "")
@@ -93,19 +102,19 @@ else
     -H "X-Relay-Timestamp: $TS" \
     -H "X-Relay-Signature: $SIG" \
     -H 'Content-Type: application/json' \
-    -d "$BODY" 2>&1 || echo "000")
+    -d "$BODY" 2>/dev/null) || true
+  HTTP=${HTTP:-000}
 
-  if [ "$HTTP" = "200" ] 2>/dev/null; then
+  if [ "$HTTP" = "200" ]; then
     c_ok "امضای HMAC پذیرفته شد"
     echo "  دسترسی از هاستینگر:"
-    # نمایش جدول دسترسی
     grep -o '"name":"[^"]*"' /tmp/relay-diagnose.json 2>/dev/null | while read -r line; do
       NAME=$(echo "$line" | cut -d'"' -f4)
       echo "    - $NAME"
     done
   else
     c_fail "امضای HMAC رد شد (HTTP $HTTP)"
-    cat /tmp/relay-diagnose.json 2>/dev/null | head -5
+    head -5 /tmp/relay-diagnose.json 2>/dev/null
   fi
 fi
 
@@ -115,18 +124,18 @@ if [ -z "$CRON_SECRET" ]; then
   c_skip "CRON_SECRET تنظیم نشده — رد شد"
 else
   HTTP=$(curl -sS -o /tmp/relay-test.json -w "%{http_code}" --max-time 60 \
-    "${SITE_URL}/api/admin/relay-test?key=${CRON_SECRET}" 2>&1 || echo "000")
+    "${SITE_URL}/api/admin/relay-test?key=${CRON_SECRET}" 2>/dev/null) || true
+  HTTP=${HTTP:-000}
 
-  if [ "$HTTP" = "200" ] 2>/dev/null; then
+  if [ "$HTTP" = "200" ]; then
     c_ok "تست سرتاسری موفق"
-    # نمایش خلاصه
     SUMMARY=$(grep -o '"summary":"[^"]*"' /tmp/relay-test.json 2>/dev/null | cut -d'"' -f4 || echo "نامشخص")
     VERDICT=$(grep -o '"verdict":"[^"]*"' /tmp/relay-test.json 2>/dev/null | cut -d'"' -f4 || echo "")
     echo "  خلاصه: $SUMMARY"
     [ -n "$VERDICT" ] && echo "  نتیجه: $VERDICT"
   else
     c_fail "تست سرتاسری ناموفق (HTTP $HTTP)"
-    cat /tmp/relay-test.json 2>/dev/null | head -10
+    head -10 /tmp/relay-test.json 2>/dev/null
   fi
 fi
 
@@ -137,11 +146,11 @@ if [ -z "$CRON_SECRET" ]; then
 else
   HTTP=$(curl -sS -o /tmp/integrations.json -w "%{http_code}" --max-time 30 \
     -H "Authorization: Bearer $CRON_SECRET" \
-    "${SITE_URL}/api/admin/integrations-test" 2>&1 || echo "000")
+    "${SITE_URL}/api/admin/integrations-test" 2>/dev/null) || true
+  HTTP=${HTTP:-000}
 
-  if [ "$HTTP" = "200" ] 2>/dev/null; then
+  if [ "$HTTP" = "200" ]; then
     c_ok "integrations-test پاسخ داد"
-    # بررسی هر سرویس
     for svc in telegram linkedin openai instagram; do
       SVC_OK=$(grep -o "\"$svc\":{[^}]*\"ok\":true" /tmp/integrations.json 2>/dev/null || echo "")
       if [ -n "$SVC_OK" ]; then
@@ -170,7 +179,6 @@ else
   if [ -z "$SSH_USER" ]; then
     c_skip "SSH_USERNAME تنظیم نشده — رد شد"
   else
-    # فقط تست اتصال بدون اجرای دستور
     if ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -p "$SSH_PORT" "${SSH_USER}@${SSH_IP}" "echo OK" 2>/dev/null; then
       c_ok "اتصال SSH به هاستینگر برقرار است"
     else
