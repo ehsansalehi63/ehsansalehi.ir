@@ -1,0 +1,101 @@
+# ═══════════════════════════════════════════════════════════════
+#  تست زنجیره سایت ↔ رله از داخل GitHub Actions
+#
+#  رانر گیت‌هاب اینترنت آزاد دارد و به هر دو سرور می‌رسد.
+#  FTP → میزبان‌فا (سایت) | SSH → هاستینگر (رله)
+#
+#  Secrets استفاده‌شده (همه اختیاری — هرکدام نبود، آن مرحله رد می‌شود):
+#      RELAY_URL      آدرس رله هاستینگر
+#      RELAY_SECRET   رمز مشترک HMAC
+#      CRON_SECRET    کلید تست سرتاسری روی سایت
+#      HEALTH_URL     پیش‌فرض https://ehsansalehi.ir
+#      SSH_IP         آدرس IP هاستینگر (برای تست SSH)
+#      SSH_PORT       پورت SSH
+#      SSH_USERNAME   نام کاربری SSH
+#      SSH_PASSWORD   رمز عبور SSH
+# ═══════════════════════════════════════════════════════════════
+
+name: Test Chain (site ↔ relay)
+
+on:
+  workflow_dispatch:
+  schedule:
+    # هر روز ساعت ۶ صبح به وقت تهران (۰۲:۳۰ UTC)
+    - cron: '30 2 * * *'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # ─── تست اسکریپت زنجیره ─────────────────────────────
+      - name: Run chain test
+        env:
+          SITE_URL:     https://ehsansalehi.ir
+          RELAY_URL:    ${{ secrets.RELAY_URL }}
+          RELAY_SECRET: ${{ secrets.RELAY_SECRET }}
+          CRON_SECRET:  ${{ secrets.CRON_SECRET }}
+        run: |
+          chmod +x tools/test-chain.sh
+          bash tools/test-chain.sh | tee chain-report.txt
+
+      # ─── تست اتصال SSH به هاستینگر ──────────────────────
+      - name: Test SSH to Hostinger
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.SSH_IP }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: |
+            echo "✅ SSH به هاستینگر وصل شد"
+            echo "Uptime: $(uptime)"
+            echo "Disk: $(df -h / | tail -1)"
+            echo "PHP: $(php -v 2>/dev/null | head -1 || echo 'نامشخص')"
+
+            # تست رله از داخل هاستینگر
+            echo ""
+            echo "🔍 تست رله از داخل هاستینگر..."
+            curl -sS --max-time 15 "http://localhost/health" 2>&1 || echo "رله روی localhost در دسترس نیست — آدرس دامنه را تست کنید"
+
+      # ─── تست دسترسی رله از هاستینگر ─────────────────────
+      - name: Test relay reachability from Hostinger
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.SSH_IP }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: |
+            echo "🔍 تست دسترسی سرویس‌ها از هاستینگر..."
+            echo ""
+
+            echo "  AgentRouter:"
+            curl -sS -o /dev/null -w "    HTTP %{http_code} — %{time_total}s\n" --max-time 10 https://agentrouter.org 2>&1 || echo "    ❌ در دسترس نیست"
+
+            echo "  LinkedIn API:"
+            curl -sS -o /dev/null -w "    HTTP %{http_code} — %{time_total}s\n" --max-time 10 https://api.linkedin.com 2>&1 || echo "    ❌ در دسترس نیست"
+
+            echo "  Instagram Graph:"
+            curl -sS -o /dev/null -w "    HTTP %{http_code} — %{time_total}s\n" --max-time 10 https://graph.instagram.com 2>&1 || echo "    ❌ در دسترس نیست"
+
+      # ─── خلاصه ───────────────────────────────────────────
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo '## گزارش تست زنجیره'
+            echo '```'
+            sed 's/\x1b\[[0-9;]*m//g' chain-report.txt 2>/dev/null || echo 'گزارشی تولید نشد'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: chain-report
+          path: chain-report.txt
+          retention-days: 14

@@ -1,0 +1,122 @@
+# ═══════════════════════════════════════════════════════════════
+#  دیپلوی رله هاستینگر — از طریق SSH
+#
+#  SSH فقط برای هاستینگر (رله انتشار شبکه‌های اجتماعی + هوش مصنوعی)
+#  FTP فقط برای میزبان‌فا (سایت اصلی) — ورک‌فلو جدا
+#
+#  Secrets لازم:
+#    SSH_IP           آدرس IP هاستینگر
+#    SSH_PORT         پورت SSH
+#    SSH_USERNAME     نام کاربری SSH
+#    SSH_PASSWORD     رمز عبور SSH
+# ═══════════════════════════════════════════════════════════════
+
+name: Deploy Relay to Hostinger (SSH)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'relay/**'
+      - 'relay-php/**'
+      - '.github/workflows/deploy-relay-hostinger.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-relay
+  cancel-in-progress: false
+
+jobs:
+  deploy-relay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # ─── ۱) آپلود فایل‌های رله PHP از طریق SSH ──────────
+      - name: Upload PHP relay files via SSH
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_IP }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          source: "relay-php/relay.php,relay-php/.htaccess"
+          target: ~/public_html/
+          strip_components: 1
+
+      # ─── ۲) تنظیم relay-config.php (اگر وجود ندارد) ────
+      - name: Ensure relay-config.php exists
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.SSH_IP }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: |
+            # اگر relay-config.php وجود ندارد، نمونه خالی بساز
+            CONFIG_FILE="$HOME/public_html/relay-config.php"
+            if [ ! -f "$CONFIG_FILE" ]; then
+              cat > "$CONFIG_FILE" <<'PHPCONFIG'
+            <?php
+            // ⚠️ این فایل را با مقادیر واقعی پر کنید
+            // برای ساخت relay_secret: openssl rand -hex 32
+            return [
+                'relay_secret'      => '',
+                'ai_gateway_key'    => '',
+                'openai_api_key'    => '',
+                'openai_base'       => 'https://agentrouter.org/v1',
+                'anthropic_base'    => 'https://agentrouter.org',
+                'anthropic_version' => '2023-06-01',
+                'instagram_token'   => '',
+                'instagram_user_id' => '',
+                'linkedin_token'    => '',
+                'linkedin_author'   => '',
+                'fb_token'          => '',
+                'fb_page_id'        => '',
+                'meta_version'      => 'v21.0',
+                'sig_window'        => 300,
+            ];
+            PHPCONFIG
+              echo "✅ relay-config.php نمونه ساخته شد — لطفاً مقادیر واقعی را وارد کنید"
+            else
+              echo "✅ relay-config.php از قبل وجود دارد"
+            fi
+
+            # محافظت از فایل کانفیگ
+            chmod 600 "$CONFIG_FILE" 2>/dev/null || true
+
+      # ─── ۳) تست سلامت رله ──────────────────────────────
+      - name: Verify relay health
+        run: |
+          sleep 3
+          RELAY_DOMAIN="${{ vars.RELAY_DOMAIN || 'darkslategrey-woodcock-525023.hostingersite.com' }}"
+
+          echo "🔍 تست /health روی $RELAY_DOMAIN ..."
+          HTTP=$(curl -sS -o /tmp/health.json -w "%{http_code}" \
+            --max-time 15 "https://$RELAY_DOMAIN/health" 2>/dev/null || true)
+          HTTP=${HTTP:-000}
+
+          echo "HTTP Code: $HTTP"
+          cat /tmp/health.json 2>/dev/null || echo "(بدون پاسخ)"
+
+          if [ "$HTTP" = "200" ]; then
+            echo "::notice::✅ رله PHP سالم است"
+          else
+            echo "::warning::⚠️ رله پاسخ 200 نداد (HTTP $HTTP)"
+          fi
+
+      # ─── ۴) بررسی امنیتی: فایل کانفیگ نباید قابل خواندن باشد ──
+      - name: Security check — relay-config.php not readable
+        run: |
+          RELAY_DOMAIN="${{ vars.RELAY_DOMAIN || 'darkslategrey-woodcock-525023.hostingersite.com' }}"
+          HTTP=$(curl -sS -o /dev/null -w "%{http_code}" \
+            --max-time 10 "https://$RELAY_DOMAIN/relay-config.php" 2>/dev/null || true)
+          HTTP=${HTTP:-000}
+
+          if [ "$HTTP" = "200" ]; then
+            echo "::error::❌ فایل relay-config.php قابل خواندن است! دسترسی آن را محدود کنید"
+          else
+            echo "::notice::✅ فایل relay-config.php قابل خواندن نیست (HTTP $HTTP)"
+          fi
