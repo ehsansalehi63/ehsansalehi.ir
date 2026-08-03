@@ -52,8 +52,12 @@ jobs:
             echo "Found .env ($(wc -l < /tmp/env.txt) lines)"
             sed -i "s|^OPENAI_API_KEY=.*|OPENAI_API_KEY=$GATE_KEY|" /tmp/env.txt
             sed -i "s|^RELAY_SECRET=.*|RELAY_SECRET=$RSECRET|" /tmp/env.txt
+            sed -i "s|^OPENAI_MODEL=.*|OPENAI_MODEL=anthropic/claude-sonnet-4-20250514|" /tmp/env.txt
+            sed -i "s|^OPENAI_BASE_URL=.*|OPENAI_BASE_URL=${{ secrets.RELAY_URL }}/v1|" /tmp/env.txt
             grep -q '^OPENAI_API_KEY=' /tmp/env.txt || echo "OPENAI_API_KEY=$GATE_KEY" >> /tmp/env.txt
             grep -q '^RELAY_SECRET=' /tmp/env.txt || echo "RELAY_SECRET=$RSECRET" >> /tmp/env.txt
+            grep -q '^OPENAI_MODEL=' /tmp/env.txt || echo "OPENAI_MODEL=anthropic/claude-sonnet-4-20250514" >> /tmp/env.txt
+            grep -q '^OPENAI_BASE_URL=' /tmp/env.txt || echo "OPENAI_BASE_URL=${{ secrets.RELAY_URL }}/v1" >> /tmp/env.txt
           else
             echo "OPENAI_API_KEY=$GATE_KEY" > /tmp/env.txt
             echo "RELAY_SECRET=$RSECRET" >> /tmp/env.txt
@@ -82,5 +86,5 @@ jobs:
           curl -sS --max-time 30 -X POST "${{ secrets.RELAY_URL }}/v1/chat/completions" \
             -H "Authorization: Bearer $GATE_KEY" \
             -H "Content-Type: application/json" \
-            -d '{"model":"claude-sonnet-4-20250514","messages":[{"role":"user","content":"say OK"}],"max_tokens":16}' 2>&1 | head -c 500
+            -d '{"model":"anthropic/claude-sonnet-4-20250514","messages":[{"role":"user","content":"say OK"}],"max_tokens":16}' 2>&1 | head -c 500
           echo ""
