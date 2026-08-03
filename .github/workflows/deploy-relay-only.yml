@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Find document root and deploy relay
+      - name: Deploy relay to correct document root
         uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ secrets.SSH_IP }}
@@ -23,30 +23,97 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
-            echo "=== HOME ==="
-            echo $HOME
-            echo "=== Find relay.php everywhere ==="
-            find "$HOME" -name "relay.php" -type f 2>/dev/null
-            echo "=== Find .htaccess with relay rules ==="
-            find "$HOME" -name ".htaccess" -exec grep -l "relay" {} \; 2>/dev/null
-            echo "=== Check domains directory ==="
-            ls -la "$HOME/domains/" 2>/dev/null || echo "no domains dir"
-            echo "=== Check public_html ==="
-            ls -la "$HOME/public_html/" 2>/dev/null | head -15
-            echo "=== Find document root via PHP ==="
-            echo '<?php echo "DOC_ROOT=" . $_SERVER["DOCUMENT_ROOT"] . "\n"; ?>' > /tmp/find_docroot.php
-            # Try common locations
-            for dir in "$HOME/public_html" "$HOME/domains"/*/public_html "$HOME/domains/darkslategrey-woodcock-525023.hostingersite.com/public_html"; do
-              if [ -d "$dir" ]; then
-                cp /tmp/find_docroot.php "$dir/_find_docroot.php"
-                echo "Trying: $dir"
+            # The REAL document root for this domain
+            WEBROOT="$HOME/domains/darkslategrey-woodcock-525023.hostingersite.com/public_html"
+            
+            if [ ! -d "$WEBROOT" ]; then
+              echo "❌ Document root not found: $WEBROOT"
+              exit 1
+            fi
+            
+            cd "$WEBROOT"
+            echo "=== Deploying to: $WEBROOT ==="
+            
+            # Download relay.php and .htaccess from GitHub
+            curl -sSL --max-time 30 -o relay.php.new "https://raw.githubusercontent.com/ehsansalehi63/ehsansalehi.ir/main/relay-php/relay.php"
+            curl -sSL --max-time 30 -o .htaccess.new "https://raw.githubusercontent.com/ehsansalehi63/ehsansalehi.ir/main/relay-php/.htaccess"
+            
+            if grep -q '<?php' relay.php.new && grep -q 'RewriteRule' .htaccess.new; then
+              mv relay.php.new relay.php
+              mv .htaccess.new .htaccess
+              chmod 644 relay.php .htaccess
+              echo "✅ relay.php + .htaccess deployed"
+              grep "'version'" relay.php | head -1
+            else
+              echo "❌ Download failed"
+              rm -f relay.php.new .htaccess.new
+              exit 1
+            fi
+            
+            # Disable OPcache
+            echo 'opcache.enable=0' > .user.ini
+            echo "✅ .user.ini created (opcache disabled)"
+            
+            # Copy config from old location if it doesn't exist here
+            if [ ! -f "$WEBROOT/relay-config.php" ]; then
+              if [ -f "$HOME/public_html/relay-config.php" ]; then
+                cp "$HOME/public_html/relay-config.php" "$WEBROOT/relay-config.php"
+                chmod 600 "$WEBROOT/relay-config.php"
+                echo "✅ Copied relay-config.php from public_html"
+              else
+                echo "⚠️ No relay-config.php found — creating default"
+                cat > "$WEBROOT/relay-config.php" <<'PHPCONFIG'
+            <?php
+            return [
+                'relay_secret'      => '',
+                'ai_gateway_key'    => '',
+                'openai_api_key'    => '',
+                'openai_base'       => 'https://openrouter.ai/api/v1',
+                'anthropic_base'    => 'https://openrouter.ai/api/v1',
+                'anthropic_version' => '2023-06-01',
+                'instagram_token'   => '',
+                'instagram_user_id' => '',
+                'linkedin_token'    => '',
+                'linkedin_author'   => '',
+                'fb_token'          => '',
+                'fb_page_id'        => '',
+                'meta_version'      => 'v21.0',
+                'sig_window'        => 300,
+            ];
+            PHPCONFIG
+                chmod 600 "$WEBROOT/relay-config.php"
               fi
-            done
+            fi
             
-            # Check the actual web root by looking at the Hostinger config
-            echo "=== hPanel config ==="
-            cat "$HOME/.hpanel" 2>/dev/null || echo "no .hpanel"
-            ls "$HOME/" 2>/dev/null
+            # Update config for OpenRouter
+            CONFIG_FILE="$WEBROOT/relay-config.php"
+            sed -i "s|'openai_base'.*=>.*'[^']*'|'openai_base'       => 'https://openrouter.ai/api/v1'|" "$CONFIG_FILE"
+            sed -i "s|'anthropic_base'.*=>.*'[^']*'|'anthropic_base'    => 'https://openrouter.ai/api/v1'|" "$CONFIG_FILE"
+            touch "$CONFIG_FILE"
+            chmod 600 "$CONFIG_FILE"
+            echo "✅ Config updated for OpenRouter"
+            grep "openai_base\|anthropic_base" "$CONFIG_FILE"
             
-            echo "=== Try accessing _find_docroot from different paths ==="
-            curl -sS --max-time 10 "https://darkslategrey-woodcock-525023.hostingersite.com/_find_docroot.php" 2>/dev/null || echo "FAILED at public_html"
+            # Wait for .user.ini to take effect
+            echo "Waiting 15s for .user.ini..."
+            sleep 15
+            
+            # Try opcache reset via the new relay endpoint
+            RELAY_SECRET=$(grep "'relay_secret'" "$CONFIG_FILE" | grep -o "'[^']*'$" | tr -d "'")
+            if [ -n "$RELAY_SECRET" ]; then
+              echo "=== Calling opcache-reset ==="
+              curl -sS --max-time 15 "https://darkslategrey-woodcock-525023.hostingersite.com/opcache-reset?key=$RELAY_SECRET" 2>/dev/null || echo "RESET_FAILED"
+            fi
+            
+            sleep 3
+            
+            # Final health check
+            echo "=== Final health check ==="
+            curl -sS --max-time 10 "https://darkslategrey-woodcock-525023.hostingersite.com/health" 2>/dev/null || echo "HEALTH_FAILED"
+            
+            # Also sync to old public_html for consistency
+            cp relay.php "$HOME/public_html/relay.php" 2>/dev/null || true
+            cp .htaccess "$HOME/public_html/.htaccess" 2>/dev/null || true
+            cp .user.ini "$HOME/public_html/.user.ini" 2>/dev/null || true
+            cp "$CONFIG_FILE" "$HOME/public_html/relay-config.php" 2>/dev/null || true
+            echo "✅ Synced to public_html too"
