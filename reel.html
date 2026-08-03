@@ -7,57 +7,49 @@
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html { background: #0c1124; }
-body {
-  width: 1080px;
-  height: 1920px;
+html, body { overflow: hidden; background: #0c1124; }
+#wrapper {
+  width: calc(100vh * 1080 / 1920);
+  height: 100vh;
+  margin: 0 auto;
+  position: relative;
   background: linear-gradient(160deg, #0c1124 0%, #1a0f3d 40%, #2d1255 70%, #1e1147 100%);
   font-family: 'Vazirmatn', sans-serif;
-  position: relative;
   overflow: hidden;
-  transform-origin: top left;
 }
-.glow { position: absolute; border-radius: 50%; filter: blur(120px); pointer-events: none; }
-.g1 { width: 600px; height: 600px; background: #fbbf24; top: 80px; left: 50%; transform: translateX(-50%); opacity: 0.1; }
-.g2 { width: 400px; height: 400px; background: #38bdf8; bottom: 300px; right: -80px; opacity: 0.08; }
-.header { position: absolute; top: 220px; display: flex; flex-direction: column; align-items: center; gap: 24px; z-index: 10; width: 100%; }
-.header-line { width: 90px; height: 5px; background: #fbbf24; border-radius: 3px; }
-.title { font-size: 54px; font-weight: 900; color: #fbbf24; text-shadow: 0 2px 30px rgba(251,191,36,0.35); }
-.content { position: absolute; top: 400px; left: 0; right: 0; z-index: 10; padding: 0 90px; text-align: center; display: flex; flex-direction: column; gap: 24px; }
-.content p { font-size: 50px; font-weight: 700; color: #fff; line-height: 1.6; text-shadow: 0 4px 40px rgba(0,0,0,0.6); }
-.question { position: absolute; bottom: 280px; left: 50%; transform: translateX(-50%); z-index: 10; padding: 22px 48px; border: 2.5px solid #38bdf8; border-radius: 50px; font-size: 40px; font-weight: 500; color: #38bdf8; background: rgba(56,189,248,0.06); white-space: nowrap; }
-.bottom { position: absolute; bottom: 130px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 22px; z-index: 10; }
-.handle { font-size: 42px; font-weight: 500; color: #94a3b8; }
-.bottom-line { width: 110px; height: 5px; background: #fbbf24; border-radius: 3px; }
+.glow { position: absolute; border-radius: 50%; filter: blur(80px); pointer-events: none; }
+.g1 { width: 45%; height: 30%; background: #fbbf24; top: 5%; left: 50%; transform: translateX(-50%); opacity: 0.1; }
+.g2 { width: 30%; height: 25%; background: #38bdf8; bottom: 15%; right: -5%; opacity: 0.08; }
+.header { position: absolute; top: 12%; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 1.2vw; }
+.header-line { width: 5%; min-width: 40px; height: 4px; background: #fbbf24; border-radius: 2px; }
+.title { font-size: 3.2vw; font-weight: 900; color: #fbbf24; text-shadow: 0 2px 20px rgba(251,191,36,0.35); }
+.content { position: absolute; top: 22%; left: 0; right: 0; padding: 0 8%; text-align: center; display: flex; flex-direction: column; gap: 1.5vw; }
+.content p { font-size: 3vw; font-weight: 700; color: #fff; line-height: 1.5; text-shadow: 0 4px 30px rgba(0,0,0,0.6); }
+.question { position: absolute; bottom: 16%; left: 50%; transform: translateX(-50%); padding: 1.2vw 2.5vw; border: 2px solid #38bdf8; border-radius: 100px; font-size: 2.4vw; font-weight: 500; color: #38bdf8; background: rgba(56,189,248,0.06); white-space: nowrap; }
+.bottom { position: absolute; bottom: 7%; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 1vw; }
+.handle { font-size: 2.5vw; font-weight: 500; color: #94a3b8; direction: ltr; }
+.bottom-line { width: 60px; height: 4px; background: #fbbf24; border-radius: 2px; }
 </style>
-<script>
-function scalePage() {
-  var scale = Math.min(window.innerWidth / 1080, window.innerHeight / 1920);
-  document.body.style.transform = 'scale(' + scale + ')';
-  document.documentElement.style.height = (1920 * scale) + 'px';
-  document.documentElement.style.overflow = 'hidden';
-}
-window.addEventListener('load', scalePage);
-window.addEventListener('resize', scalePage);
-</script>
 </head>
 <body>
-<div class="glow g1"></div>
-<div class="glow g2"></div>
-<div class="header">
-  <div class="header-line"></div>
-  <div class="title">پیام روز</div>
-</div>
-<div class="content">
-  <p>موفقیت نتیجه تصمیمات کوچک روزانه‌است.</p>
-  <p>هر قدمی که امروز برمی‌دارید، شما را به رویای بزرگ‌تان نزدیک‌تر می‌کند.</p>
-  <p>تکنولوژی هم تنها ابزاری‌ست برای تحقق این تصمیمات.</p>
-  <p>پس امروز شروع کنید!</p>
-</div>
-<div class="question">شما چطور هر روز رشد می‌کنید؟</div>
-<div class="bottom">
-  <div class="handle">@ehsansalehi.ir</div>
-  <div class="bottom-line"></div>
+<div id="wrapper">
+  <div class="glow g1"></div>
+  <div class="glow g2"></div>
+  <div class="header">
+    <div class="header-line"></div>
+    <div class="title">پیام روز</div>
+  </div>
+  <div class="content">
+    <p>موفقیت نتیجه تصمیمات کوچک روزانه‌است.</p>
+    <p>هر قدمی که امروز برمی‌دارید، شما را به رویای بزرگ‌تان نزدیک‌تر می‌کند.</p>
+    <p>تکنولوژی هم تنها ابزاری‌ست برای تحقق این تصمیمات.</p>
+    <p>پس امروز شروع کنید!</p>
+  </div>
+  <div class="question">شما چطور هر روز رشد می‌کنید؟</div>
+  <div class="bottom">
+    <div class="handle">@ehsansalehi.ir</div>
+    <div class="bottom-line"></div>
+  </div>
 </div>
 </body>
 </html>
