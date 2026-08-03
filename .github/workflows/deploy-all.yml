@@ -251,6 +251,28 @@ jobs:
               echo "✅ Updated openai_base and anthropic_base to OpenRouter"
               echo "=== Verify ==="
               grep "openai_base\|anthropic_base" "$CONFIG_FILE"
+              
+              # Force OPcache invalidation by touching the config file
+              touch "$CONFIG_FILE"
+              
+              # Also touch relay.php to force recompile
+              touch "$HOME/public_html/relay.php"
+              
+              # Try opcache reset via PHP CLI
+              php -r "if(function_exists('opcache_reset')){opcache_reset();echo 'OPCACHE_RESET_OK';}else{echo 'NO_OPCACHE';}" 2>/dev/null || echo "PHP_CLI_NO_OPCACHE"
+              
+              # Also try via web - create temp file, call it, delete it
+              echo '<?php opcache_reset(); echo "WEB_OPCACHE_OK"; ?>' > "$HOME/public_html/_opcache_reset.php"
+              sleep 2
+              curl -sS --max-time 10 "https://darkslategrey-woodcock-525023.hostingersite.com/_opcache_reset.php" 2>/dev/null || echo "WEB_RESET_FAILED"
+              rm -f "$HOME/public_html/_opcache_reset.php"
+              
+              echo "Waiting 5s for cache to clear..."
+              sleep 5
+              
+              # Verify health shows new upstream
+              HEALTH=$(curl -sS --max-time 10 "https://darkslategrey-woodcock-525023.hostingersalehi.ir/health" 2>/dev/null || curl -sS --max-time 10 "https://darkslategrey-woodcock-525023.hostingersite.com/health" 2>/dev/null || echo "{}")
+              echo "Post-clear health: $HEALTH"
             else
               echo "❌ relay-config.php not found"
             fi
