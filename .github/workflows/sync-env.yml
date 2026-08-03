@@ -40,10 +40,10 @@ jobs:
           FTP_HOST="${{ secrets.FTP_SERVER }}"
           FTP_USER="${{ secrets.FTP_USERNAME }}"
           FTP_PASS="${{ secrets.FTP_PASSWORD }}"
-          APP_DIR="${{ secrets.CPANEL_APP_DIR }}"
+          REMOTE_DIR="ehsansalehi.ir"
 
-          echo "=== Downloading .env from Mizbanfa ==="
-          curl -sS --max-time 30 "ftp://${FTP_USER}:${FTP_PASS}@${FTP_HOST}/${APP_DIR}/.env" -o /tmp/env.txt 2>/dev/null || echo "No .env found"
+          echo "=== Downloading existing .env from Mizbanfa ==="
+          curl -sS --max-time 30 "ftp://${FTP_USER}:${FTP_PASS}@${FTP_HOST}/${REMOTE_DIR}/.env" -o /tmp/env.txt 2>/dev/null || echo "No .env found"
 
           if [ -s /tmp/env.txt ]; then
             echo "Found .env ($(wc -l < /tmp/env.txt) lines)"
@@ -56,9 +56,13 @@ jobs:
             echo "RELAY_SECRET=$RSECRET" >> /tmp/env.txt
           fi
 
+          echo "=== .env contents (masked) ==="
+          sed 's/=.*/=***/' /tmp/env.txt
+
           echo "=== Uploading .env ==="
-          curl -sS --max-time 30 -T /tmp/env.txt "ftp://${FTP_USER}:${FTP_PASS}@${FTP_HOST}/${APP_DIR}/.env" 2>&1
-          echo "Done"
+          curl -sS --max-time 30 -T /tmp/env.txt "ftp://${FTP_USER}:${FTP_PASS}@${FTP_HOST}/${REMOTE_DIR}/.env" 2>&1
+          echo ""
+          echo "Upload done"
 
       # ── 3) Test chain ──
       - name: Test chain
