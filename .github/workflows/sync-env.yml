@@ -42,8 +42,11 @@ jobs:
           FTP_PASS="${{ secrets.FTP_PASSWORD }}"
           REMOTE_DIR="ehsansalehi.ir"
 
+          echo "FTP host length: ${#FTP_HOST}"
+          echo "FTP user length: ${#FTP_USER}"
+
           echo "=== Downloading existing .env from Mizbanfa ==="
-          curl -sS --max-time 30 "ftp://${FTP_USER}:${FTP_PASS}@${FTP_HOST}/${REMOTE_DIR}/.env" -o /tmp/env.txt 2>/dev/null || echo "No .env found"
+          curl -sS --max-time 30 --user "${FTP_USER}:${FTP_PASS}" "ftp://${FTP_HOST}/${REMOTE_DIR}/.env" -o /tmp/env.txt 2>/dev/null || echo "No .env found"
 
           if [ -s /tmp/env.txt ]; then
             echo "Found .env ($(wc -l < /tmp/env.txt) lines)"
@@ -60,7 +63,7 @@ jobs:
           sed 's/=.*/=***/' /tmp/env.txt
 
           echo "=== Uploading .env ==="
-          curl -sS --max-time 30 -T /tmp/env.txt "ftp://${FTP_USER}:${FTP_PASS}@${FTP_HOST}/${REMOTE_DIR}/.env" 2>&1
+          curl -sS --max-time 30 --user "${FTP_USER}:${FTP_PASS}" -T /tmp/env.txt "ftp://${FTP_HOST}/${REMOTE_DIR}/.env" 2>&1
           echo ""
           echo "Upload done"
 
