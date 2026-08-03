@@ -634,6 +634,30 @@ if ($path === 'cfg-export') {
     ]);
 }
 
+// GET ?path=opcache-reset&key=SECRET →  OPcache reset (admin only)
+if ($path === 'opcache-reset') {
+    $key = $_GET['key'] ?? '';
+    if (!$key || !hash_equals($CONFIG['relay_secret'], $key)) {
+        fail('کلید نامعتبر', 403);
+    }
+    $cli = function_exists('opcache_reset') && opcache_reset();
+    $files = [];
+    if (function_exists('opcache_get_status')) {
+        $st = opcache_get_status(false);
+        if ($st && isset($st['scripts'])) {
+            foreach ($st['scripts'] as $path => $info) {
+                if (str_contains($path, 'relay')) $files[] = basename($path);
+            }
+        }
+    }
+    respond(200, [
+        'ok'      => true,
+        'reset'   => $cli,
+        'files'   => $files,
+        'message' => 'OPcache reset done',
+    ]);
+}
+
 // ─── از اینجا به بعد امضای HMAC لازم است ───
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     fail('فقط POST مجاز است', 405);
