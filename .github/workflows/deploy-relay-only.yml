@@ -1,4 +1,3 @@
-# ─── دیپلوی سریع رله PHP به هاستینگر (فقط SSH) ─────────
 name: Deploy Relay Only
 
 on:
@@ -16,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Deploy relay.php + config update via SSH
+      - name: Find document root and deploy relay
         uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ secrets.SSH_IP }}
@@ -24,41 +23,30 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
-            cd "$HOME/public_html"
+            echo "=== HOME ==="
+            echo $HOME
+            echo "=== Find relay.php everywhere ==="
+            find "$HOME" -name "relay.php" -type f 2>/dev/null
+            echo "=== Find .htaccess with relay rules ==="
+            find "$HOME" -name ".htaccess" -exec grep -l "relay" {} \; 2>/dev/null
+            echo "=== Check domains directory ==="
+            ls -la "$HOME/domains/" 2>/dev/null || echo "no domains dir"
+            echo "=== Check public_html ==="
+            ls -la "$HOME/public_html/" 2>/dev/null | head -15
+            echo "=== Find document root via PHP ==="
+            echo '<?php echo "DOC_ROOT=" . $_SERVER["DOCUMENT_ROOT"] . "\n"; ?>' > /tmp/find_docroot.php
+            # Try common locations
+            for dir in "$HOME/public_html" "$HOME/domains"/*/public_html "$HOME/domains/darkslategrey-woodcock-525023.hostingersite.com/public_html"; do
+              if [ -d "$dir" ]; then
+                cp /tmp/find_docroot.php "$dir/_find_docroot.php"
+                echo "Trying: $dir"
+              fi
+            done
             
-            curl -sSL --max-time 30 -o relay.php.new "https://raw.githubusercontent.com/ehsansalehi63/ehsansalehi.ir/main/relay-php/relay.php"
-            curl -sSL --max-time 30 -o .htaccess.new "https://raw.githubusercontent.com/ehsansalehi63/ehsansalehi.ir/main/relay-php/.htaccess"
+            # Check the actual web root by looking at the Hostinger config
+            echo "=== hPanel config ==="
+            cat "$HOME/.hpanel" 2>/dev/null || echo "no .hpanel"
+            ls "$HOME/" 2>/dev/null
             
-            if grep -q '<?php' relay.php.new && grep -q 'RewriteRule' .htaccess.new; then
-              mv relay.php.new relay.php
-              mv .htaccess.new .htaccess
-              chmod 644 relay.php .htaccess
-              echo "✅ relay.php + .htaccess updated"
-            else
-              echo "❌ Download failed"
-              rm -f relay.php.new .htaccess.new
-              exit 1
-            fi
-            
-            echo 'opcache.enable=0' > .user.ini
-            
-            CONFIG_FILE="$HOME/public_html/relay-config.php"
-            if [ -f "$CONFIG_FILE" ]; then
-              sed -i "s|'openai_base'.*=>.*'[^']*'|'openai_base'       => 'https://openrouter.ai/api/v1'|" "$CONFIG_FILE"
-              sed -i "s|'anthropic_base'.*=>.*'[^']*'|'anthropic_base'    => 'https://openrouter.ai/api/v1'|" "$CONFIG_FILE"
-              touch "$CONFIG_FILE"
-              echo "✅ Config updated for OpenRouter"
-              grep "openai_base\|anthropic_base" "$CONFIG_FILE"
-            fi
-            
-            sleep 10
-            
-            RELAY_SECRET=$(grep "'relay_secret'" "$CONFIG_FILE" | grep -o "'[^']*'$" | tr -d "'")
-            if [ -n "$RELAY_SECRET" ]; then
-              echo "Calling opcache-reset..."
-              curl -sS --max-time 15 "https://darkslategrey-woodcock-525023.hostingersite.com/opcache-reset?key=$RELAY_SECRET" 2>/dev/null || echo "RESET_CALL_FAILED"
-            fi
-            
-            sleep 3
-            echo "=== Final health check ==="
-            curl -sS --max-time 10 "https://darkslategrey-woodcock-525023.hostingersite.com/health" 2>/dev/null || echo "HEALTH_FAILED"
+            echo "=== Try accessing _find_docroot from different paths ==="
+            curl -sS --max-time 10 "https://darkslategrey-woodcock-525023.hostingersite.com/_find_docroot.php" 2>/dev/null || echo "FAILED at public_html"
