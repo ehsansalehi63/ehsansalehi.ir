@@ -233,6 +233,34 @@ jobs:
             fi
             chmod 600 "$CONFIG_FILE" 2>/dev/null || true
 
+      # دیباگ: مسیر واقعی document root و فایل رله
+      - name: Debug document root (SSH)
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.SSH_IP }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: |
+            echo "=== HOME ==="
+            echo $HOME
+            echo "=== public_html contents ==="
+            ls -la "$HOME/public_html/" | head -20
+            echo "=== relay.php version on disk ==="
+            grep "'version'" "$HOME/public_html/relay.php"
+            echo "=== .user.ini ==="
+            cat "$HOME/public_html/.user.ini" 2>/dev/null || echo "no .user.ini"
+            echo "=== Create test file ==="
+            echo "TEST_FILE_OK_$(date +%s)" > "$HOME/public_html/debug-test.txt"
+            echo "Test file created"
+            echo "=== Check via HTTP ==="
+            curl -sS --max-time 10 "https://darkslategrey-woodcock-525023.hostingersite.com/debug-test.txt" 2>/dev/null || echo "HTTP_FAILED"
+            rm -f "$HOME/public_html/debug-test.txt"
+            echo "=== PHP info via temp file ==="
+            echo '<?php echo "DOC_ROOT=" . $_SERVER["DOCUMENT_ROOT"] . "\n"; echo "FILE=" . __FILE__ . "\n"; opcache_reset(); echo "OPCACHE_RESET_OK\n";' > "$HOME/public_html/_debug_phpinfo.php"
+            curl -sS --max-time 10 "https://darkslategrey-woodcock-525023.hostingersite.com/_debug_phpinfo.php" 2>/dev/null || echo "HTTP_FAILED"
+            rm -f "$HOME/public_html/_debug_phpinfo.php"
+
       # بررسی سلامت رله
       - name: Verify relay health
         run: |
