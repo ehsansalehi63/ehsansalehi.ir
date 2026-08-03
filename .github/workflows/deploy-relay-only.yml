@@ -1,0 +1,64 @@
+# ─── دیپلوی سریع رله PHP به هاستینگر (فقط SSH) ─────────
+name: Deploy Relay Only
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-relay-only
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy relay.php + config update via SSH
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.SSH_IP }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: |
+            cd "$HOME/public_html"
+            
+            curl -sSL --max-time 30 -o relay.php.new "https://raw.githubusercontent.com/ehsansalehi63/ehsansalehi.ir/main/relay-php/relay.php"
+            curl -sSL --max-time 30 -o .htaccess.new "https://raw.githubusercontent.com/ehsansalehi63/ehsansalehi.ir/main/relay-php/.htaccess"
+            
+            if grep -q '<?php' relay.php.new && grep -q 'RewriteRule' .htaccess.new; then
+              mv relay.php.new relay.php
+              mv .htaccess.new .htaccess
+              chmod 644 relay.php .htaccess
+              echo "✅ relay.php + .htaccess updated"
+            else
+              echo "❌ Download failed"
+              rm -f relay.php.new .htaccess.new
+              exit 1
+            fi
+            
+            echo 'opcache.enable=0' > .user.ini
+            
+            CONFIG_FILE="$HOME/public_html/relay-config.php"
+            if [ -f "$CONFIG_FILE" ]; then
+              sed -i "s|'openai_base'.*=>.*'[^']*'|'openai_base'       => 'https://openrouter.ai/api/v1'|" "$CONFIG_FILE"
+              sed -i "s|'anthropic_base'.*=>.*'[^']*'|'anthropic_base'    => 'https://openrouter.ai/api/v1'|" "$CONFIG_FILE"
+              touch "$CONFIG_FILE"
+              echo "✅ Config updated for OpenRouter"
+              grep "openai_base\|anthropic_base" "$CONFIG_FILE"
+            fi
+            
+            sleep 10
+            
+            RELAY_SECRET=$(grep "'relay_secret'" "$CONFIG_FILE" | grep -o "'[^']*'$" | tr -d "'")
+            if [ -n "$RELAY_SECRET" ]; then
+              echo "Calling opcache-reset..."
+              curl -sS --max-time 15 "https://darkslategrey-woodcock-525023.hostingersite.com/opcache-reset?key=$RELAY_SECRET" 2>/dev/null || echo "RESET_CALL_FAILED"
+            fi
+            
+            sleep 3
+            echo "=== Final health check ==="
+            curl -sS --max-time 10 "https://darkslategrey-woodcock-525023.hostingersite.com/health" 2>/dev/null || echo "HEALTH_FAILED"
