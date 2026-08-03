@@ -233,6 +233,28 @@ jobs:
             fi
             chmod 600 "$CONFIG_FILE" 2>/dev/null || true
 
+      # آپدیت openai_base به OpenRouter (مهاجرت از agentrouter.org)
+      - name: Update relay-config.php for OpenRouter (SSH)
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.SSH_IP }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: |
+            CONFIG_FILE="$HOME/public_html/relay-config.php"
+            if [ -f "$CONFIG_FILE" ]; then
+              # Update openai_base to OpenRouter
+              sed -i "s|'openai_base'.*=>.*'[^']*'|'openai_base'       => 'https://openrouter.ai/api/v1'|" "$CONFIG_FILE"
+              # Update anthropic_base to OpenRouter too
+              sed -i "s|'anthropic_base'.*=>.*'[^']*'|'anthropic_base'    => 'https://openrouter.ai/api/v1'|" "$CONFIG_FILE"
+              echo "✅ Updated openai_base and anthropic_base to OpenRouter"
+              echo "=== Verify ==="
+              grep "openai_base\|anthropic_base" "$CONFIG_FILE"
+            else
+              echo "❌ relay-config.php not found"
+            fi
+
       # دیباگ: مسیر واقعی document root و فایل رله
       - name: Debug document root (SSH)
         uses: appleboy/ssh-action@v1.2.2
