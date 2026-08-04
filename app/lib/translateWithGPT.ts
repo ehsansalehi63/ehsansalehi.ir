@@ -33,9 +33,10 @@ export async function analyzeAndTranslateNews(
   }
 
   try {
+    const rawBaseUrl = process.env.OPENAI_BASE_URL || await getAutomationSetting('openai_base_url') || 'https://api.gapgpt.app/v1';
     const openai = new OpenAI({
       apiKey: apiKey,
-      baseURL: process.env.OPENAI_BASE_URL || await getAutomationSetting('openai_base_url') || 'https://api.gapgpt.app/v1',
+      baseURL: rawBaseUrl.replace('gapgpt.ir', 'gapgpt.app'),
       timeout: 15000,
     });
 
