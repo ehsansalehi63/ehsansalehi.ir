@@ -32,7 +32,7 @@ const IG_GRAPH = `https://graph.facebook.com/${process.env.META_API_VERSION || '
 //   auto = تلاش برای انتشار خودکار (رله یا مستقیم)
 //   semi = ارسال به تلگرام مدیر برای انتشار یک‌لمسی
 //   off  = غیرفعال
-const INSTAGRAM_MODE = (process.env.INSTAGRAM_MODE || 'off') as 'auto' | 'semi' | 'off';
+const INSTAGRAM_MODE = 'off' as const; // Instagram handled by Base44 workflow
 
 const DEFAULT_IMAGE = 'https://ehsansalehi.ir/images/og-image.jpg';
 
@@ -50,6 +50,12 @@ function resolveImageUrl(url: string | null): string {
   if (url.startsWith('http')) return url;
   if (url.startsWith('/')) return new URL(url, 'https://ehsansalehi.ir').toString();
   return url;
+}
+
+
+function isPersianText(text: string): boolean {
+  const persianChars = text.match(/[\u0600-\u06FF]/g);
+  return persianChars !== null && persianChars.length >= 5;
 }
 
 export async function sendToTelegram(
@@ -541,8 +547,14 @@ export async function postNewsToAllChannels(
   link: string,
   sourceName: string = 'پایگاه اخبار فناوری'
 ): Promise<{ success: boolean; results: Record<string, boolean>; errors: Record<string, string> }> {
-  // Platforms managed by Base44 workflows — skip to avoid duplicate posts
-  const SKIP_PLATFORMS = (process.env.SKIP_SOCIAL_PLATFORMS || 'linkedin,instagram')
+  // Skip if news is not translated to Persian
+  if (!isPersianText(title) || !isPersianText(summary)) {
+    console.log('skip: news not Persian:', title.slice(0, 50));
+    return { success: false, results: {}, errors: { skip: 'News not translated to Persian' } };
+  }
+
+  // Platforms managed by Base44 workflows
+  const SKIP_PLATFORMS = ['linkedin', 'instagram']
     .split(',').map(s => s.trim().toLowerCase());
 
   const skip = (p: string) => SKIP_PLATFORMS.includes(p);
