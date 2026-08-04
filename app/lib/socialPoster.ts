@@ -32,7 +32,7 @@ const IG_GRAPH = `https://graph.facebook.com/${process.env.META_API_VERSION || '
 //   auto = تلاش برای انتشار خودکار (رله یا مستقیم)
 //   semi = ارسال به تلگرام مدیر برای انتشار یک‌لمسی
 //   off  = غیرفعال
-const INSTAGRAM_MODE = (process.env.INSTAGRAM_MODE || 'auto') as 'auto' | 'semi' | 'off';
+const INSTAGRAM_MODE = (process.env.INSTAGRAM_MODE || 'off') as 'auto' | 'semi' | 'off';
 
 const DEFAULT_IMAGE = 'https://ehsansalehi.ir/images/og-image.jpg';
 
