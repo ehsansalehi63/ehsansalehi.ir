@@ -554,8 +554,7 @@ export async function postNewsToAllChannels(
   }
 
   // Platforms managed by Base44 workflows
-  const SKIP_PLATFORMS = ['linkedin', 'instagram']
-    .split(',').map(s => s.trim().toLowerCase());
+  const SKIP_PLATFORMS = ['linkedin', 'instagram'];
 
   const skip = (p: string) => SKIP_PLATFORMS.includes(p);
 
