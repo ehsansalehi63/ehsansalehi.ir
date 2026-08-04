@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1080, initial-scale=1">
+<link href="https://cdn.jsdelivr.net/npm/vazirmatn@33.003/Vazirmatn-font-face.css" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { width:1080px; height:1920px; overflow:hidden; font-family:'Vazirmatn',sans-serif; position:relative; background:#000; }
+  .bg { position:absolute; top:0; left:0; width:1080px; height:1920px; background:url('scene1_v3.png') center/cover; filter:contrast(1.1) saturate(1.15) brightness(0.9); }
+  /* Teal-orange color grading */
+  .grade { position:absolute; top:0; left:0; width:1080px; height:1920px; background:linear-gradient(135deg,rgba(0,80,100,0.12),rgba(255,140,50,0.08)); mix-blend-mode:overlay; }
+  /* Vignette */
+  .vignette { position:absolute; top:0; left:0; width:1080px; height:1920px; background:radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,0.55) 100%); }
+  /* Light leak */
+  .leak { position:absolute; top:-100px; right:-100px; width:600px; height:600px; background:radial-gradient(circle,rgba(255,200,100,0.25),transparent 70%); mix-blend-mode:screen; }
+  /* Bottom gradient */
+  .gradient { position:absolute; bottom:0; left:0; width:1080px; height:800px; background:linear-gradient(to top,rgba(0,0,0,0.95),rgba(0,0,0,0.7) 40%,transparent 100%); }
+  /* Category badge */
+  .badge { position:absolute; top:80px; right:80px; padding:12px 28px; background:rgba(0,180,255,0.9); border-radius:8px; font-size:28px; font-weight:700; color:#fff; box-shadow:0 4px 20px rgba(0,180,255,0.4); }
+  /* Scene number */
+  .num { position:absolute; top:80px; left:80px; font-size:120px; font-weight:900; color:rgba(255,255,255,0.08); line-height:1; }
+  /* Text block */
+  .text { position:absolute; bottom:200px; right:60px; left:60px; text-align:right; }
+  .accent { width:120px; height:5px; background:linear-gradient(90deg,#00b4ff,#00ffaa); border-radius:3px; margin-bottom:24px; }
+  .title { font-size:72px; font-weight:800; color:#fff; line-height:1.2; text-shadow:0 0 30px rgba(0,0,0,0.8),0 4px 8px rgba(0,0,0,0.5); letter-spacing:-1px; }
+  .subtitle { font-size:42px; font-weight:500; color:rgba(255,255,255,0.85); margin-top:16px; line-height:1.4; text-shadow:0 0 20px rgba(0,0,0,0.8); }
+  /* Top bar */
+  .topbar { position:absolute; top:0; left:0; width:1080px; height:8px; background:linear-gradient(90deg,#00b4ff,#ff6b35); }
+  /* Film grain */
+  .grain { position:absolute; top:0; left:0; width:1080px; height:1920px; opacity:0.03; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E"); }
+</style>
+</head>
+<body>
+  <div class="bg"></div>
+  <div class="grade"></div>
+  <div class="leak"></div>
+  <div class="vignette"></div>
+  <div class="gradient"></div>
+  <div class="grain"></div>
+  <div class="topbar"></div>
+  <div class="badge">📰 خبر اول</div>
+  <div class="num">۰۱</div>
+  <div class="text">
+    <div class="accent"></div>
+    <div class="title">اتحادیه اروپا ۳۰ میلیارد یورو برای ۷ کارخانه هوش مصنوعی</div>
+    <div class="subtitle">طرح جاه‌طلبانه اروپا برای رقابت با آمریکا و چین در تولید تراشه و مدل‌های AI</div>
+  </div>
+</body>
+</html>
