@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1080, initial-scale=1">
+<style>
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('fonts/Vazirmatn-Black.ttf') format('truetype');
+  font-weight: 900;
+}
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('fonts/Vazirmatn-ExtraBold.ttf') format('truetype');
+  font-weight: 800;
+}
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('fonts/Vazirmatn-Bold.ttf') format('truetype');
+  font-weight: 700;
+}
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('fonts/Vazirmatn-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+}
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('fonts/Vazirmatn-Regular.ttf') format('truetype');
+  font-weight: 400;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  width: 1080px;
+  height: 1920px;
+  overflow: hidden;
+  font-family: 'Vazirmatn', sans-serif;
+  position: relative;
+  background: #000;
+}
+
+.bg {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background-size: cover;
+  background-position: center;
+  filter: contrast(1.15) saturate(1.2) brightness(0.85);
+  transform: scale(1.08);
+}
+
+.grade {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: linear-gradient(135deg, rgba(0,80,90,0.15) 0%, rgba(0,0,0,0) 40%, rgba(255,120,20,0.12) 100%);
+  mix-blend-mode: overlay;
+}
+
+.bottom-gradient {
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 100%; height: 55%;
+  background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.7) 30%, rgba(0,0,0,0.3) 60%, rgba(0,0,0,0) 100%);
+}
+
+.top-gradient {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 30%;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
+}
+
+.vignette {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  box-shadow: inset 0 0 200px 60px rgba(0,0,0,0.6);
+}
+
+.leak {
+  position: absolute;
+  top: -100px; right: -100px;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(255,180,80,0.25) 0%, rgba(255,100,30,0.1) 40%, rgba(0,0,0,0) 70%);
+  mix-blend-mode: screen;
+  filter: blur(40px);
+}
+
+.accent-bar {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 6px;
+  z-index: 10;
+}
+
+.badge {
+  position: absolute;
+  top: 60px;
+  padding: 14px 36px;
+  border-radius: 100px;
+  font-weight: 700;
+  font-size: 32px;
+  color: white;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  z-index: 20;
+  letter-spacing: 1px;
+}
+
+.badge.right { right: 50px; }
+
+.scene-num {
+  position: absolute;
+  top: 50px;
+  left: 50px;
+  font-size: 140px;
+  font-weight: 900;
+  color: white;
+  opacity: 0.08;
+  z-index: 5;
+  text-shadow: 0 0 60px rgba(255,255,255,0.1);
+  line-height: 1;
+}
+
+.text-block {
+  position: absolute;
+  bottom: 120px;
+  right: 50px;
+  width: 980px;
+  z-index: 20;
+  perspective: 800px;
+}
+
+.title {
+  font-size: 62px;
+  font-weight: 900;
+  color: white;
+  line-height: 1.25;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.8), 0 4px 8px rgba(0,0,0,0.6), 0 8px 16px rgba(0,0,0,0.4), 0 0 40px rgba(0,0,0,0.5);
+  transform: perspective(800px) rotateY(-3deg) translateZ(20px);
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.accent-line {
+  width: 120px;
+  height: 5px;
+  margin-bottom: 20px;
+  border-radius: 3px;
+  box-shadow: 0 0 20px currentColor;
+}
+
+.subtitle {
+  font-size: 38px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.85);
+  line-height: 1.5;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+  transform: perspective(800px) rotateY(-2deg) translateZ(10px);
+}
+
+.frame-deco {
+  position: absolute;
+  top: 40px;
+  right: 40px;
+  width: 100px;
+  height: 100px;
+  border: 3px solid;
+  border-bottom: none;
+  border-left: none;
+  opacity: 0.4;
+  z-index: 15;
+}
+
+.frame-deco-bl {
+  position: absolute;
+  bottom: 40px;
+  left: 40px;
+  width: 100px;
+  height: 100px;
+  border: 3px solid;
+  border-top: none;
+  border-right: none;
+  opacity: 0.4;
+  z-index: 15;
+}
+
+.glow {
+  position: absolute;
+  bottom: 100px;
+  right: 0;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.15;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.source {
+  position: absolute;
+  bottom: 50px;
+  left: 50px;
+  font-size: 24px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.5);
+  z-index: 20;
+  letter-spacing: 2px;
+}
+</style>
+</head>
+<body>
+  <div class="bg" style="background-image: url('scene1_v3.png');"></div>
+  <div class="grade"></div>
+  <div class="leak"></div>
+  <div class="top-gradient"></div>
+  <div class="bottom-gradient"></div>
+  <div class="vignette"></div>
+  <div class="accent-bar" style="background: #00B4FF;"></div>
+  <div class="glow" style="background: #00B4FF;"></div>
+  <div class="frame-deco" style="border-color: #00B4FF;"></div>
+  <div class="frame-deco-bl" style="border-color: #00B4FF;"></div>
+  <div class="scene-num">۰۱</div>
+  <div class="badge right" style="background: 0, 180, 255, 0.25; border: 1px solid rgba(255,255,255,0.15);">خبر اول</div>
+  <div class="text-block">
+    <div class="accent-line" style="background: #00B4FF; color: #00B4FF;"></div>
+    <div class="title">اتحادیه اروپا ۳۰ میلیارد یورو برای ۷ کارخانه هوش مصنوعی</div>
+    <div class="subtitle">طرح جاه‌طلبانه اروپا برای رقابت با آمریکا و چین در تولید تراشه و مدل‌های AI</div>
+  </div>
+  <div class="source">ehsansalehi.ir</div>
+</body>
+</html>
