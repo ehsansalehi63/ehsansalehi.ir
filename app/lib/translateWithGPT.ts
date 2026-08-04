@@ -4,18 +4,24 @@ import { pool } from './db';
 const RELAY_URL = (process.env.RELAY_URL || '').replace(/\/+$/, '');
 const RELAY_SECRET = process.env.RELAY_SECRET || '';
 
+// Fallback gate key for gapgpt.app (also stored in relay config)
+const FALLBACK_GATE_KEY = 'sk-DGNaVGvNi7RhsW1FpsweR1GxrqQRq11wuJo53NSr1Fw1PMwE';
+
 async function fetchGateKey(): Promise<string> {
-  if (!RELAY_URL || !RELAY_SECRET) return '';
-  try {
-    const res = await fetch(`${RELAY_URL}?path=cfg-export&key=${encodeURIComponent(RELAY_SECRET)}`, {
-      signal: AbortSignal.timeout(8000),
-    });
-    if (!res.ok) return '';
-    const data = await res.json();
-    return data.gate_key || '';
-  } catch {
-    return '';
+  // Try relay config export first
+  if (RELAY_URL && RELAY_SECRET) {
+    try {
+      const res = await fetch(`${RELAY_URL}?path=cfg-export&key=${encodeURIComponent(RELAY_SECRET)}`, {
+        signal: AbortSignal.timeout(8000),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.gate_key) return data.gate_key;
+      }
+    } catch {}
   }
+  // Fall back to hardcoded key
+  return FALLBACK_GATE_KEY;
 }
 
 async function getAutomationSetting(key: string): Promise<string> {
