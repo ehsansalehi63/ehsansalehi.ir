@@ -46,8 +46,8 @@ export async function analyzeAndTranslateNews(
     };
   }
 
-  // Always use the gate_key with gapgpt.app for reliable translation
-  let apiKey = FALLBACK_GATE_KEY;
+  // Always use gate_key with gapgpt.app for reliable translation
+  const apiKey = FALLBACK_GATE_KEY;
   console.log('🔄 Using gate_key with gapgpt.app for translation');
 
   try {
