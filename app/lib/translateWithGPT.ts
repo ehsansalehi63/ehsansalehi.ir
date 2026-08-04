@@ -35,7 +35,7 @@ export async function analyzeAndTranslateNews(
   try {
     const openai = new OpenAI({
       apiKey: apiKey,
-      baseURL: process.env.OPENAI_BASE_URL || await getAutomationSetting('openai_base_url') || 'https://api.gapgpt.ir/v1',
+      baseURL: process.env.OPENAI_BASE_URL || await getAutomationSetting('openai_base_url') || 'https://api.gapgpt.app/v1',
       timeout: 15000,
     });
 
