@@ -1,0 +1,70 @@
+name: Update Relay Gate Key
+
+on:
+  workflow_dispatch:
+    inputs:
+      gate_key:
+        description: "New AI gateway key (gapgpt token)"
+        required: true
+
+concurrency:
+  group: update-gate-key
+  cancel-in-progress: true
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Update relay-config.php on Hostinger
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.SSH_IP }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: |
+            WEBROOT="$HOME/domains/darkslategrey-woodcock-525023.hostingersite.com/public_html"
+            
+            if [ ! -f "$WEBROOT/relay-config.php" ]; then
+              echo "❌ relay-config.php not found"
+              exit 1
+            fi
+            
+            CONFIG="$WEBROOT/relay-config.php"
+            NEW_KEY="${{ inputs.gate_key }}"
+            
+            # Backup
+            cp "$CONFIG" "${CONFIG}.bak"
+            
+            # Update ai_gateway_key
+            sed -i "s|'ai_gateway_key'.*=>.*'[^']*'|'ai_gateway_key'    => '$NEW_KEY'|" "$CONFIG"
+            
+            # Also update openai_api_key if present
+            sed -i "s|'openai_api_key'.*=>.*'[^']*'|'openai_api_key'    => '$NEW_KEY'|" "$CONFIG"
+            
+            chmod 600 "$CONFIG"
+            echo "✅ Updated gate_key in relay-config.php"
+            grep "ai_gateway_key\|openai_api_key" "$CONFIG" | sed "s/=>.*=>/=> [REDACTED]/"
+            
+            # Clear opcache
+            RELAY_SECRET=$(grep "relay_secret" "$CONFIG" | grep -o "[^]* | head -1 | tr -d ")
+            if [ -n "$RELAY_SECRET" ]; then
+              echo "=== Clearing opcache ==="
+              curl -sS --max-time 15 "https://darkslategrey-woodcock-525023.hostingersite.com/opcache-reset?key=$RELAY_SECRET" 2>/dev/null || true
+            fi
+            
+            sleep 5
+            
+            # Health check
+            echo "=== Health check ==="
+            curl -sS --max-time 10 "https://darkslategrey-woodcock-525023.hostingersite.com/health" 2>/dev/null | head -c 300
+            echo ""
+            
+            # Test AI gateway
+            echo "=== AI gateway test ==="
+            curl -sS --max-time 30 -X POST "https://darkslategrey-woodcock-525023.hostingersite.com/v1/chat/completions" \
+              -H "Authorization: Bearer $RELAY_SECRET" \
+              -H "Content-Type: application/json" \
+              -d "{\"model\":\"openai/gpt-4o-mini\",\"messages\":[{\"role\":\"user\",\"content\":\"say OK\"}],\"max_tokens\":16}" 2>&1 | head -c 500
+
