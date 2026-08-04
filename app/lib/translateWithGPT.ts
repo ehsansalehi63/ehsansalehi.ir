@@ -93,7 +93,7 @@ ${content.slice(0, 2000)}
       content: parsed.content || content,
     };
   } catch (error) {
-    console.error('❌ خطا در ترجمه:', error?.message || error);
+    console.error('❌ خطا در ترجمه:', (error as Error)?.message || String(error));
     return {
       title: title,
       summary: content.slice(0, 250),
