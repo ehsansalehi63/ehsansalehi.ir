@@ -1,28 +1,7 @@
-import OpenAI from 'openai';
 import { pool } from './db';
-
-const RELAY_URL = (process.env.RELAY_URL || '').replace(/\/+$/, '');
-const RELAY_SECRET = process.env.RELAY_SECRET || '';
 
 // Fallback gate key for gapgpt.app (also stored in relay config)
 const FALLBACK_GATE_KEY = 'sk-DGNaVGvNi7RhsW1FpsweR1GxrqQRq11wuJo53NSr1Fw1PMwE';
-
-async function fetchGateKey(): Promise<string> {
-  // Try relay config export first
-  if (RELAY_URL && RELAY_SECRET) {
-    try {
-      const res = await fetch(`${RELAY_URL}?path=cfg-export&key=${encodeURIComponent(RELAY_SECRET)}`, {
-        signal: AbortSignal.timeout(8000),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.gate_key) return data.gate_key;
-      }
-    } catch {}
-  }
-  // Fall back to hardcoded key
-  return FALLBACK_GATE_KEY;
-}
 
 async function getAutomationSetting(key: string): Promise<string> {
   try {
@@ -46,56 +25,75 @@ export async function analyzeAndTranslateNews(
     };
   }
 
-  // Always use gate_key with gapgpt.app for reliable translation
   const apiKey = FALLBACK_GATE_KEY;
   console.log('🔄 Using gate_key with gapgpt.app for translation');
 
   try {
-    const rawBaseUrl = 'https://api.gapgpt.app/v1';
-    const openai = new OpenAI({
-      apiKey: apiKey,
-      baseURL: rawBaseUrl.replace('gapgpt.ir', 'gapgpt.app'),
-      timeout: 15000,
+    const prompt = `شما یک نویسنده و مترجم حرفه‌ای هستید که اخبار فناوری را به فارسی روان و جذاب ترجمه و خلاصه‌نویسی می‌کند.
+عنوان اصلی خبر: "${title}"
+منبع: "${sourceName}"
+متن اصلی خبر: """
+${content.slice(0, 2000)}
+"""
+
+وظایف شما:
+1. یک عنوان فارسی جذاب و سئوشده (حداکثر ۱۰۰ کاراکتر).
+2. یک خلاصه ۲-۳ خطی (حدود ۲۰۰ کاراکتر).
+3. کل متن را به فارسی روان و دقیق ترجمه کنید.
+
+پاسخ را در قالب JSON معتبر ارسال کنید (بدون مارک‌داون):
+{"title":"عنوان","summary":"خلاصه","content":"متن کامل"}`;
+
+    const model = process.env.OPENAI_MODEL || await getAutomationSetting('openai_model') || 'gpt-4o-mini';
+    console.log('🔄 Calling gapgpt.app with model:', model);
+
+    const res = await fetch('https://api.gapgpt.app/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: model,
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.7,
+      }),
+      signal: AbortSignal.timeout(25000),
     });
 
-    const prompt = `
-    شما یک نویسنده و مترجم حرفه‌ای هستید که اخبار فناوری را به فارسی روان و جذاب ترجمه و خلاصه‌نویسی می‌کنید.
-    عنوان اصلی خبر: "${title}"
-    منبع: "${sourceName}"
-    متن اصلی خبر: """
-    ${content.slice(0, 2000)}
-    """
-    
-    وظایف شما با لحنی گرم، صمیمی و حرفه‌ای:
-    1. یک عنوان فارسی جذاب، تیتروار و سئوشده برای این خبر بنویسید (حداکثر ۱۰۰ کاراکتر).
-    2. یک خلاصه ۲ یا ۳ خطی بسیار جذاب و آموزنده (حدود ۲۰۰ کاراکتر) به فارسی بنویسید که در شبکه‌های اجتماعی هم قابل انتشار باشد.
-    3. کل متن خبر را به فارسی روان، شمرده، دقیق و با پاراگراف‌بندی مرتب ترجمه و بازنویسی کنید.
-    
-    پاسخ خود را حتماً در قالب JSON معتبر و با ساختار زیر ارسال کنید (بدون هیچ کد یا مارک‌داون اضافی):
-    {
-      "title": "عنوان فارسی جذاب",
-      "summary": "خلاصه جذاب و کوتاه",
-      "content": "متن کامل ترجمه و تحلیل‌شده"
+    console.log('🔄 gapgpt.app response status:', res.status);
+
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error('❌ gapgpt.app error:', res.status, errText.slice(0, 200));
+      throw new Error(`gapgpt.app returned ${res.status}: ${errText.slice(0, 100)}`);
     }
-    `;
 
-    const response = await openai.chat.completions.create({
-      model: process.env.OPENAI_MODEL || await getAutomationSetting('openai_model') || 'gpt-4o-mini',
-      messages: [{ role: 'user', content: prompt }],
-      response_format: { type: 'json_object' },
-      temperature: 0.7,
-    });
+    const data = await res.json();
+    const resultText = data.choices?.[0]?.message?.content || '{}';
 
-    const resultText = response.choices[0]?.message?.content || '{}';
-    const parsed = JSON.parse(resultText);
+    // Try to extract JSON from the response
+    let parsed;
+    try {
+      parsed = JSON.parse(resultText);
+    } catch {
+      // Try to find JSON in the text
+      const jsonMatch = resultText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        parsed = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error('No valid JSON in response');
+      }
+    }
 
+    console.log('✅ Translation succeeded:', parsed.title?.slice(0, 50));
     return {
       title: parsed.title || title,
       summary: parsed.summary || content.slice(0, 200),
       content: parsed.content || content,
     };
   } catch (error) {
-    console.error('❌ خطا در ترجمه با OpenAI:', error);
+    console.error('❌ خطا در ترجمه:', error?.message || error);
     return {
       title: title,
       summary: content.slice(0, 250),
