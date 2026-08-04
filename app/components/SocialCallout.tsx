@@ -42,7 +42,7 @@ export default function SocialCallout() {
           <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/>
         </svg>
       ),
-      url: 'https://www.linkedin.com/company/ehsansalehi-ir',
+      url: 'https://www.linkedin.com/in/ehsansalehitech',
       badge: 'Professional & B2B 💼',
       color: 'from-sky-600/20 to-indigo-500/10 border-sky-500/30 hover:border-sky-400 shadow-sky-500/10',
       btnText: 'View LinkedIn Profile'
@@ -95,7 +95,7 @@ export default function SocialCallout() {
           <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/>
         </svg>
       ),
-      url: 'https://www.linkedin.com/company/ehsansalehi-ir',
+      url: 'https://www.linkedin.com/in/ehsansalehitech',
       badge: 'تخصصی و کاری 💼',
       color: 'from-sky-600/20 to-indigo-500/10 border-sky-500/30 hover:border-sky-400 shadow-sky-500/10',
       btnText: 'مشاهده پروفایل لینکدین'
