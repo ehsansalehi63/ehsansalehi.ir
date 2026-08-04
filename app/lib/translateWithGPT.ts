@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import { pool } from './db';
+import { aiViaRelay, isRelayConfigured } from './relayClient';
 
 async function getAutomationSetting(key: string): Promise<string> {
   try {
@@ -24,7 +25,42 @@ export async function analyzeAndTranslateNews(
   }
 
   const apiKey = (process.env.OPENAI_API_KEY || await getAutomationSetting('openai_api_key') || '').trim();
+  
+  // If no API key, try relay AI gateway as fallback
   if (!apiKey || apiKey.includes('placeholder')) {
+    if (isRelayConfigured()) {
+      console.log('🔄 OPENAI_API_KEY not set, using relay AI gateway for translation...');
+      try {
+        const relayResult = await aiViaRelay({
+          model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: 'You are a professional Persian/Farsi news translator. Translate the given title and content to natural, fluent Persian. Return ONLY JSON with title, summary (max 250 chars), and content fields.' },
+            { role: 'user', content: `Title: ${title}\n\nContent: ${content}\n\nTranslate to Persian. Return JSON: {"title":"...","summary":"...","content":"..."}` }
+          ],
+          temperature: 0.3,
+        });
+        
+        if (relayResult.ok && relayResult.data) {
+          let parsed: any = null;
+          if (typeof relayResult.data === 'string') {
+            try { parsed = JSON.parse(relayResult.data); } catch {}
+          } else if (relayResult.data.choices) {
+            const msg = relayResult.data.choices[0]?.message?.content || '';
+            try { parsed = JSON.parse(msg); } catch { parsed = { title: msg.slice(0, 200), summary: msg.slice(0, 250), content: msg }; }
+          } else {
+            parsed = relayResult.data;
+          }
+          
+          if (parsed && parsed.title) {
+            console.log('✅ Relay translation succeeded');
+            return { title: parsed.title, summary: parsed.summary || parsed.content?.slice(0, 250) || '', content: parsed.content || '' };
+          }
+        }
+        console.warn('⚠️ Relay AI returned no usable result');
+      } catch (relayErr) {
+        console.error('⚠️ Relay AI translation failed:', relayErr);
+      }
+    }
     return {
       title: title,
       summary: content.slice(0, 250),
