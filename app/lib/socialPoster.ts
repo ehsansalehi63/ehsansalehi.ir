@@ -541,15 +541,21 @@ export async function postNewsToAllChannels(
   link: string,
   sourceName: string = 'پایگاه اخبار فناوری'
 ): Promise<{ success: boolean; results: Record<string, boolean>; errors: Record<string, string> }> {
+  // Platforms managed by Base44 workflows — skip to avoid duplicate posts
+  const SKIP_PLATFORMS = (process.env.SKIP_SOCIAL_PLATFORMS || 'linkedin,instagram')
+    .split(',').map(s => s.trim().toLowerCase());
+
+  const skip = (p: string) => SKIP_PLATFORMS.includes(p);
+
   const [tg, li, bl, et, rb, fb, wa, ig] = await Promise.all([
     sendToTelegram(title, summary, imageUrl, link, sourceName),
-    sendToLinkedIn(title, summary, imageUrl, link),
+    skip('linkedin') ? Promise.resolve({ success: false, error: 'skipped' }) : sendToLinkedIn(title, summary, imageUrl, link),
     sendToBale(title, summary, imageUrl, link, sourceName),
     sendToEitaa(title, summary, imageUrl, link, sourceName),
     sendToRubika(title, summary, imageUrl, link, sourceName),
     sendToFacebook(title, summary, imageUrl, link),
     sendToWhatsAppChannel(title, summary, link),
-    sendToInstagram(title, summary, imageUrl, link),
+    skip('instagram') ? Promise.resolve({ success: false, error: 'skipped' }) : sendToInstagram(title, summary, imageUrl, link),
   ]);
 
   const results: Record<string, boolean> = {
