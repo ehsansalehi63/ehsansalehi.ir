@@ -46,26 +46,12 @@ export async function analyzeAndTranslateNews(
     };
   }
 
-  let apiKey = (process.env.OPENAI_API_KEY || await getAutomationSetting('openai_api_key') || '').trim();
-  
-  // If no API key, try to fetch gate_key from relay config
-  if (!apiKey || apiKey.includes('placeholder')) {
-    console.log('🔄 OPENAI_API_KEY not set, fetching gate_key from relay...');
-    apiKey = await fetchGateKey();
-    if (apiKey) {
-      console.log('✅ Got gate_key from relay, using gapgpt.app directly');
-    } else {
-      console.warn('⚠️ No API key available, returning original English');
-      return {
-        title: title,
-        summary: content.slice(0, 250),
-        content: content,
-      };
-    }
-  }
+  // Always use the gate_key with gapgpt.app for reliable translation
+  let apiKey = FALLBACK_GATE_KEY;
+  console.log('🔄 Using gate_key with gapgpt.app for translation');
 
   try {
-    const rawBaseUrl = process.env.OPENAI_BASE_URL || await getAutomationSetting('openai_base_url') || 'https://api.gapgpt.app/v1';
+    const rawBaseUrl = 'https://api.gapgpt.app/v1';
     const openai = new OpenAI({
       apiKey: apiKey,
       baseURL: rawBaseUrl.replace('gapgpt.ir', 'gapgpt.app'),
