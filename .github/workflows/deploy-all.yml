@@ -74,9 +74,6 @@ jobs:
           cp -r .next/static "$OUT/.next/static"
           mkdir -p "$OUT/tmp"
           date -u +%FT%TZ > "$OUT/tmp/restart.txt"
-          # Copy PHP restart scripts for server restart after deploy
-          cp restart-server.php "$OUT/" 2>/dev/null || true
-          cp restart-config.php "$OUT/" 2>/dev/null || true
           cat > "$OUT/deploy-info.json" <<EOF
           {
             "commit": "${GITHUB_SHA}",
@@ -133,23 +130,21 @@ jobs:
             echo "::warning::نسخه‌ها مطابقت ندارند (ممکن است کش باشد)"
           fi
 
-      - name: Restart server via PHP script
+      - name: Wait for Passenger auto-restart
         run: |
-          sleep 3
-          echo "Calling restart-server.php..."
-          RESPONSE=$(curl -sS --max-time 15 "https://ehsansalehi.ir/restart-server.php?key=restart-ehsan-2026" 2>&1 || echo "CALL_FAILED")
-          echo "Restart response: $RESPONSE"
-          sleep 8
-          # Verify health again after restart
-          DEPLOYED=$(curl -sS --max-time 20 "${{ secrets.HEALTH_URL }}"             | grep -o '"shortSha":"[^"]*"' | cut -d'"' -f4 || echo "?")
+          # Passenger auto-detects tmp/restart.txt and restarts the Node.js app
+          # Just wait and verify the new version is live
+          echo "Waiting 20s for Passenger to detect tmp/restart.txt..."
+          sleep 20
+          DEPLOYED=$(curl -sS --max-time 20 "${{ secrets.HEALTH_URL }}" \
+            | grep -o '"shortSha":"[^"]*"' | cut -d'"' -f4 || echo "?")
           EXPECTED="${GITHUB_SHA:0:7}"
-          echo "After restart - deployed: $DEPLOYED, expected: $EXPECTED"
+          echo "After wait - deployed: $DEPLOYED, expected: $EXPECTED"
           if [ "$DEPLOYED" = "$EXPECTED" ]; then
-            echo "::notice::✅ سرور با موفقیت ری‌استارت شد"
+            echo "::notice::✅ نسخه جدید روی سرور فعال شد"
           else
-            echo "::warning::سرور هنوز نسخه قدیمی اجرا می‌کند"
+            echo "::warning::سرور هنوز نسخه قدیمی اجرا می‌کند - ممکن است نیاز به restart دستی از cPanel باشد"
           fi
-
   # ─── مرحله ۳: دیپلوی رله PHP به هاستینگر (SSH) ─────────
   deploy-relay:
     needs: build
