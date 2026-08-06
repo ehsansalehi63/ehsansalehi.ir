@@ -109,25 +109,26 @@ jobs:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: ./ehsansalehi.ir/
+          server-dir: /ehsansalehi.ir/
           local-dir: .next/standalone/
-          state-name: .sync-state-${{ github.run_id }}.json
+          state-name: .ftp-deploy-sync-state.json
           timeout: 120000
           security: loose
-          passive: true
+          log-level: verbose
 
       - name: Verify site health
         run: |
           sleep 8
-          DEPLOYED=$(curl -sS --max-time 20 "${{ secrets.HEALTH_URL }}" \
-            | grep -o '"shortSha":"[^"]*"' | cut -d'"' -f4 || echo "?")
-          EXPECTED="${GITHUB_SHA:0:7}"
+          BODY=$(curl -sS --max-time 20 "${{ secrets.HEALTH_URL }}" || echo '{}')
+          DEPLOYED=$(echo "$BODY" | grep -o '"shortCommit":"[^"]*"' | head -1 | cut -d'"' -f4 || echo "?")
+          EXPECTED="${GITHUB_SHA:0:12}"
+          echo "$BODY"
           echo "نسخه روی سایت: $DEPLOYED"
           echo "نسخه مورد انتظار: $EXPECTED"
           if [ "$DEPLOYED" = "$EXPECTED" ]; then
             echo "::notice::✅ نسخه صحیح منتشر شد"
           else
-            echo "::warning::نسخه‌ها مطابقت ندارند (ممکن است کش باشد)"
+            echo "::warning::نسخه‌ها مطابقت ندارند (ممکن است کش یا مسیر FTP اشتباه باشد)"
           fi
 
       - name: Wait for Passenger auto-restart
@@ -136,14 +137,16 @@ jobs:
           # Just wait and verify the new version is live
           echo "Waiting 20s for Passenger to detect tmp/restart.txt..."
           sleep 20
-          DEPLOYED=$(curl -sS --max-time 20 "${{ secrets.HEALTH_URL }}" \
-            | grep -o '"shortSha":"[^"]*"' | cut -d'"' -f4 || echo "?")
-          EXPECTED="${GITHUB_SHA:0:7}"
+          BODY=$(curl -sS --max-time 20 "${{ secrets.HEALTH_URL }}" || echo '{}')
+          DEPLOYED=$(echo "$BODY" | grep -o '"shortCommit":"[^"]*"' | head -1 | cut -d'"' -f4 || echo "?")
+          EXPECTED="${GITHUB_SHA:0:12}"
+          echo "$BODY"
           echo "After wait - deployed: $DEPLOYED, expected: $EXPECTED"
           if [ "$DEPLOYED" = "$EXPECTED" ]; then
             echo "::notice::✅ نسخه جدید روی سرور فعال شد"
           else
-            echo "::warning::سرور هنوز نسخه قدیمی اجرا می‌کند - ممکن است نیاز به restart دستی از cPanel باشد"
+            echo "::error::❌ سرور هنوز نسخه جدید را اجرا نمی‌کند"
+            exit 1
           fi
   # ─── مرحله ۳: دیپلوی رله PHP به هاستینگر (SSH) ─────────
   deploy-relay:
