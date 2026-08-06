@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import ProductDetailClient from './ProductDetailClient';
 import { SEED_LAPTOPS } from '@/lib/seedData';
 import { makeUniqueHardwareSlug } from '@/lib/hardwareSlug';
+import { applyHardwareMarkup, formatHardwarePrice } from '@/lib/hardwarePrice';
 
 export const metadata: Metadata = {
   title: 'جزئیات محصول | فروشگاه لپ‌تاپ استوک احسان صالحی',
@@ -53,11 +54,6 @@ function getConditionDirect(model: string): string {
   const m = model.toUpperCase();
   if (m.includes('OPEN BOX')) return 'Grade A++ (اوپن باکس)';
   return 'Grade A++ اروپایی';
-}
-
-function formatPriceDirect(basePrice: number): string {
-  const finalPrice = Math.round(basePrice * 1.1);
-  return `${finalPrice.toLocaleString('fa-IR')} هزار تومان`;
 }
 
 // Get description for a product
@@ -114,10 +110,10 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
       hard: item.hard,
       gpu: item.gpu,
       display: item.display,
-      base_price: Math.round(item.base_price * 1.1),
-      final_price: formatPriceDirect(item.base_price),
+      base_price: applyHardwareMarkup(item.base_price),
+      final_price: formatHardwarePrice(item.base_price),
       condition_grade: getConditionDirect(item.model),
-      price_estimate: formatPriceDirect(item.base_price),
+      price_estimate: formatHardwarePrice(item.base_price),
       category: getCategoryDirect(item.model),
       image_url: item.image_url || '/images/laptops/thinkpad_stock.jpg',
       badge: getBadgeDirect(item),

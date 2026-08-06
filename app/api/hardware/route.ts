@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SEED_LAPTOPS } from '@/lib/seedData';
 import { makeUniqueHardwareSlug } from '@/lib/hardwareSlug';
+import { applyHardwareMarkup, formatHardwarePrice } from '@/lib/hardwarePrice';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -278,11 +279,6 @@ function getCondition(model: string): string {
   return 'Grade A++ اروپایی';
 }
 
-function formatPrice(basePrice: number): string {
-  const finalPrice = Math.round(basePrice * 1.1);
-  return `${finalPrice.toLocaleString('fa-IR')} هزار تومان`;
-}
-
 export async function GET() {
   try {
     // Clear slug counts for fresh generation
@@ -297,8 +293,8 @@ export async function GET() {
       const condition = getCondition(item.model);
       const description = getDescription(item);
       const descriptionEn = getDescriptionEn(item);
-      const finalPrice = formatPrice(item.base_price);
-      const priceEstimate = `${Math.round(item.base_price * 1.1).toLocaleString('fa-IR')} هزار تومان`;
+      const finalPrice = formatHardwarePrice(item.base_price);
+      const priceEstimate = formatHardwarePrice(item.base_price);
 
       const specs = `پردازنده: ${item.cpu} | رم: ${item.ram} | حافظه: ${item.hard} | گرافیک: ${item.gpu} | نمایشگر: ${item.display}`;
       const specsEn = `CPU: ${item.cpu} | RAM: ${item.ram} | Storage: ${item.hard} | GPU: ${item.gpu} | Display: ${item.display}`;
@@ -317,7 +313,7 @@ export async function GET() {
         hard: item.hard,
         gpu: item.gpu,
         display: item.display,
-        base_price: Math.round(item.base_price * 1.1),
+        base_price: applyHardwareMarkup(item.base_price),
         final_price: finalPrice,
         condition_grade: condition,
         price_estimate: priceEstimate,

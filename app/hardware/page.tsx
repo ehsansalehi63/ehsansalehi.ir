@@ -2,6 +2,7 @@ import HardwareContent from './HardwareContent';
 import { Metadata } from 'next';
 import { SEED_LAPTOPS } from '@/lib/seedData';
 import { makeUniqueHardwareSlug } from '@/lib/hardwareSlug';
+import { applyHardwareMarkup, formatHardwarePrice } from '@/lib/hardwarePrice';
 
 export const metadata: Metadata = {
   title: 'لپ‌تاپ‌های استوک مهندسی و سخت‌افزار Grade A++ | گلچین‌شده توسط احسان صالحی',
@@ -56,11 +57,6 @@ function getConditionDirect(model: string): string {
   return 'Grade A++ اروپایی';
 }
 
-function formatPriceDirect(basePrice: number): string {
-  const finalPrice = Math.round(basePrice * 1.1);
-  return `${finalPrice.toLocaleString('fa-IR')} هزار تومان`;
-}
-
 export default function HardwarePage() {
   // Build products directly at render time (SSR)
   const slugCounts: Record<string, number> = {};
@@ -82,10 +78,10 @@ export default function HardwarePage() {
       hard: item.hard,
       gpu: item.gpu,
       display: item.display,
-      base_price: Math.round(item.base_price * 1.1),
-      final_price: formatPriceDirect(item.base_price),
+      base_price: applyHardwareMarkup(item.base_price),
+      final_price: formatHardwarePrice(item.base_price),
       condition_grade: getConditionDirect(item.model),
-      price_estimate: formatPriceDirect(item.base_price),
+      price_estimate: formatHardwarePrice(item.base_price),
       category: getCategoryDirect(item.model),
       image_url: item.image_url || '/images/laptops/thinkpad_stock.jpg',
       badge: getBadgeDirect(item),
