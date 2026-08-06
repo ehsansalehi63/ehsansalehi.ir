@@ -61,3 +61,4 @@ prebuild-install@*
 # فایل تنظیمات رله شامل کلیدهای حساس است
 relay-php/relay-config.php
 _ARENA_DELIVERABLES/relay-php-upload/relay-config.php
+image-search/

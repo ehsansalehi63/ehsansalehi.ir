@@ -1,14 +1,13 @@
-import HardwareContent from './HardwareContent';
 import { Metadata } from 'next';
+import ProductDetailClient from './ProductDetailClient';
 import { SEED_LAPTOPS } from '@/lib/seedData';
 
 export const metadata: Metadata = {
-  title: 'لپ‌تاپ‌های استوک مهندسی و سخت‌افزار Grade A++ | گلچین‌شده توسط احسان صالحی',
-  description: 'فروش و مشاوره خرید تخصصی لپ‌تاپ‌های مهندسی، برنامه‌نویسی و استوک اروپایی (Grade A++) ۱۰۰٪ تست‌شده و تاییدشده توسط مهندس احسان صالحی با ۲۰ سال تجربه.',
-  keywords: ['لپ تاپ استوک', 'لپ تاپ مهندسی', 'خرید لپ تاپ استوک', 'ThinkPad', 'MacBook Pro استوک', 'احسان صالحی', 'تجهیزات شبکه سیسکو'],
+  title: 'جزئیات محصول | فروشگاه لپ‌تاپ استوک احسان صالحی',
+  description: 'جزئیات کامل مشخصات فنی و توضیحات محصول استوک',
 };
 
-// Generate slug directly
+// Same slug generation logic as hardware page
 function makeSlugDirect(model: string): string {
   return model
     .toLowerCase()
@@ -71,10 +70,45 @@ function formatPriceDirect(basePrice: number): string {
   return `${finalPrice.toLocaleString('fa-IR')} هزار تومان`;
 }
 
-export default function HardwarePage() {
-  // Build products directly at render time (SSR)
+// Get description for a product
+function getDescriptionForProduct(item: typeof SEED_LAPTOPS[0]): string {
+  const m = item.model.toUpperCase();
+
+  if (m.includes('IMAC')) return `آی‌مک ۲۱.۵ اینچ ۲۰۱۹ اپل، یک آل‌این‌وان حرفه‌ای با نمایشگر خیره‌کننده 4K Retina است که برای طراحان گرافیک، تدوین‌گران ویدیو، عکاسان حرفه‌ای و توسعه‌دهندگان macOS ایده‌آل است.`;
+  if (m.includes('PRECISION') && m.includes('7770')) return `Dell Precision 7770 قدرتمندترین ورک‌استیشن موبایل Dell است که برای مهندسان ارشد، محققان هوش مصنوعی و متخصصان CAD/CAM پیشرفته طراحی شده.`;
+  if (m.includes('PRECISION') && m.includes('7760')) return `Dell Precision 7760 ورک‌استیشن موبایل رده‌بالا برای متخصصان هوش مصنوعی و پردازش‌های سنگین GPU.`;
+  if (m.includes('PRECISION')) return `Dell Precision ورک‌استیشن موبایل حرفه‌ای با گرافیک Quadro/RTX برای مهندسان و طراحان سه‌بعدی.`;
+  if (m.includes('OMEN')) return `HP Omen Transcend لپ‌تاپ گیمینگ و AI فوق‌العاده قدرتمند با RTX 4060 و نمایشگر 2K 120Hz.`;
+  if (m.includes('VICTUS')) return `HP Victus 15 لپ‌تاپ گیمینگ مقرون‌به‌صرفه با RTX 5050 و نمایشگر 144Hz.`;
+  if (m.includes('OMNIBOOK')) return `HP OmniBook لپ‌تاپ AI نسل جدید با پردازنده Snapdragon و NPU اختصاصی.`;
+  if (m.includes('ELITEBOOK 840 G11')) return `HP EliteBook 840 G11 جدیدترین لپ‌تاپ بیزنس با Intel Core Ultra 7 و قابلیت‌های AI.`;
+  if (m.includes('ELITEBOOK')) return `HP EliteBook لپ‌تاپ بیزنس پریمیوم با کیفیت ساخت بالا و امنیت سازمانی.`;
+  if (m.includes('ENVY') || m.includes('PAVILION X360')) return `لپ‌تاپ تبدیل‌پذیر لمسی با قابلیت چرخش ۳۶۰ درجه برای استفاده به عنوان تبلت.`;
+  if (m.includes('THINKPAD X1 CARBON')) return `ThinkPad X1 Carbon لپ‌تاپ اولترابوک پریمیوم با بدنه فیبر کربن فوق‌العاده سبک.`;
+  if (m.includes('THINKPAD')) return `Lenovo ThinkPad لپ‌تاپ بیزنس با کیبورد افسانه‌ای و استحکام بالا.`;
+  if (m.includes('SURFACE')) return `Microsoft Surface Laptop لپ‌تاپ پریمیوم با نمایشگر 2K لمسی و طراحی مینیمال.`;
+  if (m.includes('LATITUDE')) return `Dell Latitude لپ‌تاپ بیزنس قابل اعتماد با بدنه مقاوم.`;
+  if (m.includes('PROBOOK')) return `HP ProBook لپ‌تاپ بیزنس اقتصادی با عملکرد مناسب.`;
+  if (m.includes('CHROMEBOOK')) return `HP Chromebook Fortis لپ‌تاپ آموزشی و مقاوم با ChromeOS.`;
+  if (m.includes('لوازم') || m.includes('شبکه')) return `لوازم جانبی شبکه مناسب برای راه‌اندازی شبکه‌های کوچک و خانگی.`;
+  if (m.includes('قلم') || m.includes('STYLUS')) return `قلم اصلی سازگار با لپ‌تاپ‌های لمسی HP.`;
+  return `لپ‌تاپ استوک ${item.model} تست‌شده و تاییدشده توسط مهندس احسان صالحی.`;
+}
+
+export function generateStaticParams() {
   const slugCounts: Record<string, number> = {};
-  
+  return SEED_LAPTOPS.map((item) => {
+    const base = makeSlugDirect(item.model);
+    if (!slugCounts[base]) slugCounts[base] = 0;
+    slugCounts[base]++;
+    const slug = slugCounts[base] === 1 ? base : `${base}-${slugCounts[base]}`;
+    return { slug };
+  });
+}
+
+export default function ProductDetailPage({ params }: { params: { slug: string } }) {
+  // Build all products
+  const slugCounts: Record<string, number> = {};
   const products = SEED_LAPTOPS.map((item) => {
     const base = makeSlugDirect(item.model);
     if (!slugCounts[base]) slugCounts[base] = 0;
@@ -87,8 +121,8 @@ export default function HardwarePage() {
       title_en: item.model,
       specs: `پردازنده: ${item.cpu} | رم: ${item.ram} | حافظه: ${item.hard} | گرافیک: ${item.gpu} | نمایشگر: ${item.display}`,
       specs_en: `CPU: ${item.cpu} | RAM: ${item.ram} | Storage: ${item.hard} | GPU: ${item.gpu} | Display: ${item.display}`,
-      description: '',
-      description_en: '',
+      description: getDescriptionForProduct(item),
+      description_en: `Stock ${item.model} - Tested and verified by Eng. Ehsan Salehi.`,
       slug,
       cpu: item.cpu,
       ram: item.ram,
@@ -105,10 +139,12 @@ export default function HardwarePage() {
     };
   });
 
+  const product = products.find(p => p.slug === params.slug) || null;
+
   return (
-    <main className="min-h-screen bg-[#05070b] text-white py-24 px-4 font-vazir">
-      <div className="max-w-7xl mx-auto">
-        <HardwareContent initialProducts={products} />
+    <main className="min-h-screen bg-[#05070b] text-white py-12 px-4 font-vazir">
+      <div className="max-w-6xl mx-auto">
+        <ProductDetailClient product={product} allProducts={products} />
       </div>
     </main>
   );

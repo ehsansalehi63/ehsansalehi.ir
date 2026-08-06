@@ -6,23 +6,36 @@ import { ShieldCheck, Cpu, CheckCircle2, ArrowLeft, ArrowRight, MessageSquare, S
 import { toast } from 'sonner';
 
 interface Product {
-  id: number;
+  id: string | number;
   title: string;
   title_en?: string;
   specs: string;
   specs_en?: string;
+  description?: string;
+  slug?: string;
+  cpu: string;
+  ram: string;
+  hard: string;
+  gpu: string;
+  display: string;
   condition_grade: string;
   price_estimate: string;
+  final_price?: string;
   category: string;
   image_url: string;
   badge: string;
 }
 
-export default function HardwareContent() {
+interface HardwareContentProps {
+  initialProducts?: Product[];
+}
+
+export default function HardwareContent({ initialProducts = [] }: HardwareContentProps) {
   const { lang } = useI18n();
   const isEn = lang === 'en';
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [loading, setLoading] = useState(initialProducts.length === 0);
+  const [filter, setFilter] = useState<string>('all');
 
   // فرم مشاوره
   const [name, setName] = useState('');
@@ -33,14 +46,17 @@ export default function HardwareContent() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    fetch('/api/hardware')
-      .then(r => r.json())
-      .then(d => {
-        if (d.success && d.products) setProducts(d.products);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
+    // Only fetch if no initial products provided
+    if (initialProducts.length === 0) {
+      fetch('/api/hardware')
+        .then(r => r.json())
+        .then(d => {
+          if (d.success && d.products) setProducts(d.products);
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    }
+  }, [initialProducts.length]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,6 +87,11 @@ export default function HardwareContent() {
       setSubmitting(false);
     }
   };
+
+  // Extract unique categories
+  const categories = ['all', ...Array.from(new Set(products.map(p => p.category)))];
+
+  const filteredProducts = filter === 'all' ? products : products.filter(p => p.category === filter);
 
   return (
     <div dir={isEn ? 'ltr' : 'rtl'} className="space-y-16">
@@ -108,7 +129,7 @@ export default function HardwareContent() {
 
       {/* Products Catalog */}
       <div className="space-y-8">
-        <div className="flex items-center justify-between border-b border-white/10 pb-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
           <h2 className="text-2xl sm:text-3xl font-black text-white flex items-center gap-2.5">
             <Laptop className="text-orange-400" />
             {isEn ? 'Curated Hardware & Laptops Catalog' : 'کاتالوگ لپ‌تاپ‌های استوک و سخت‌افزارهای گلچین‌شده'}
@@ -118,6 +139,25 @@ export default function HardwareContent() {
           </span>
         </div>
 
+        {/* Category Filter */}
+        {!loading && products.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setFilter(cat)}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition border ${
+                  filter === cat
+                    ? 'bg-orange-500 text-black border-orange-500'
+                    : 'bg-zinc-900/60 text-zinc-300 border-white/10 hover:border-orange-500/40'
+                }`}
+              >
+                {cat === 'all' ? (isEn ? 'All Products' : 'همه محصولات') : cat}
+              </button>
+            ))}
+          </div>
+        )}
+
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[...Array(6)].map((_, i) => (
@@ -126,7 +166,7 @@ export default function HardwareContent() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {products.map((p) => {
+            {filteredProducts.map((p) => {
               const title = isEn ? (p.title_en || p.title) : p.title;
               const specs = isEn ? (p.specs_en || p.specs) : p.specs;
               const whatsappText = encodeURIComponent(
@@ -135,57 +175,83 @@ export default function HardwareContent() {
               return (
                 <div
                   key={p.id}
-                  className="bg-zinc-900/90 rounded-3xl border border-white/10 hover:border-orange-500/50 p-6 flex flex-col justify-between transition-all duration-300 hover:shadow-2xl hover:shadow-orange-500/10 space-y-6 group"
+                  className="bg-zinc-900/90 rounded-3xl border border-white/10 hover:border-orange-500/50 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-orange-500/10 group flex flex-col"
                 >
-                  <div className="space-y-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <span className="bg-orange-500/20 text-orange-400 border border-orange-500/30 text-[11px] font-black px-3 py-1 rounded-full">
+                  {/* Image */}
+                  <Link href={p.slug ? `/hardware/${p.slug}` : '#'} className="relative aspect-[16/10] overflow-hidden">
+                    <img
+                      src={p.image_url}
+                      alt={title}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                    <div className="absolute top-3 right-3 flex flex-col gap-1.5">
+                      <span className="bg-orange-500/90 text-white text-[10px] font-black px-2.5 py-1 rounded-full">
                         {p.category}
                       </span>
-                      <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold px-2.5 py-1 rounded-full">
+                    </div>
+                    <div className="absolute top-3 left-3">
+                      <span className="bg-emerald-500/90 text-white text-[10px] font-bold px-2 py-1 rounded-full">
                         {p.condition_grade}
                       </span>
                     </div>
+                  </Link>
 
-                    <h3 className="text-lg sm:text-xl font-black text-white group-hover:text-orange-400 transition leading-snug">
-                      {title}
-                    </h3>
+                  {/* Content */}
+                  <div className="p-5 flex flex-col flex-1 justify-between space-y-4">
+                    <div className="space-y-3">
+                      <Link href={p.slug ? `/hardware/${p.slug}` : '#'}>
+                        <h3 className="text-base sm:text-lg font-black text-white group-hover:text-orange-400 transition leading-snug line-clamp-2">
+                          {title}
+                        </h3>
+                      </Link>
 
-                    <div className="bg-black/50 p-4 rounded-2xl border border-white/5 text-xs text-zinc-300 leading-relaxed font-light">
-                      <p>{specs}</p>
+                      {/* Quick Specs Icons */}
+                      <div className="grid grid-cols-3 gap-1.5">
+                        <div className="bg-black/40 rounded-lg p-1.5 text-center">
+                          <p className="text-[9px] text-zinc-500">{isEn ? 'CPU' : 'پردازنده'}</p>
+                          <p className="text-[10px] font-bold text-white truncate">{p.cpu || '-'}</p>
+                        </div>
+                        <div className="bg-black/40 rounded-lg p-1.5 text-center">
+                          <p className="text-[9px] text-zinc-500">{isEn ? 'RAM' : 'رم'}</p>
+                          <p className="text-[10px] font-bold text-white truncate">{p.ram || '-'}</p>
+                        </div>
+                        <div className="bg-black/40 rounded-lg p-1.5 text-center">
+                          <p className="text-[9px] text-zinc-500">{isEn ? 'Storage' : 'حافظه'}</p>
+                          <p className="text-[10px] font-bold text-white truncate">{p.hard || '-'}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-xs font-bold text-amber-400 pt-1">
+                        <CheckCircle2 size={15} />
+                        <span>{p.badge}</span>
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-2 text-xs font-bold text-amber-400 pt-1">
-                      <CheckCircle2 size={15} />
-                      <span>{p.badge}</span>
-                    </div>
-                  </div>
+                    <div className="pt-4 border-t border-white/10 space-y-4">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-zinc-400 font-medium">{isEn ? 'Price:' : 'قیمت:'}</span>
+                        <span className="font-extrabold text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-lg">{p.final_price || p.price_estimate}</span>
+                      </div>
 
-                  <div className="pt-4 border-t border-white/10 space-y-4">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-zinc-400 font-medium">{isEn ? 'Estimated Price:' : 'برآورد قیمت استوک:'}</span>
-                      <span className="font-extrabold text-white bg-white/5 px-2.5 py-1 rounded-lg text-emerald-400">{p.price_estimate}</span>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2.5">
-                      <a
-                        href={`https://wa.me/989108308799?text=${whatsappText}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full py-3 rounded-xl bg-green-500 hover:bg-green-600 text-black font-extrabold text-xs transition text-center flex items-center justify-center gap-1.5 shadow-lg shadow-green-500/20"
-                      >
-                        <MessageSquare size={14} />
-                        <span>{isEn ? 'WhatsApp Order' : 'سفارش در واتساپ'}</span>
-                      </a>
-                      <a
-                        href="https://t.me/ehsansalehi_tech"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs transition text-center flex items-center justify-center gap-1.5 shadow-lg shadow-blue-500/20"
-                      >
-                        <Send size={14} />
-                        <span>{isEn ? 'Telegram Chat' : 'مشاوره در تلگرام'}</span>
-                      </a>
+                      <div className="grid grid-cols-2 gap-2.5">
+                        <a
+                          href={`https://wa.me/989108308799?text=${whatsappText}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full py-3 rounded-xl bg-green-500 hover:bg-green-600 text-black font-extrabold text-xs transition text-center flex items-center justify-center gap-1.5 shadow-lg shadow-green-500/20"
+                        >
+                          <MessageSquare size={14} />
+                          <span>{isEn ? 'WhatsApp' : 'واتساپ'}</span>
+                        </a>
+                        <Link
+                          href={p.slug ? `/hardware/${p.slug}` : '#'}
+                          className="w-full py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-extrabold text-xs transition text-center flex items-center justify-center gap-1.5 border border-white/10"
+                        >
+                          <span>{isEn ? 'Details' : 'مشاهده جزئیات'}</span>
+                          <ArrowLeft size={14} className={isEn ? '' : 'rotate-180'} />
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 </div>
