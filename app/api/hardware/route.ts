@@ -1,30 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SEED_LAPTOPS } from '@/lib/seedData';
+import { makeUniqueHardwareSlug } from '@/lib/hardwareSlug';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-// Utility: Generate URL-friendly slug - make unique by adding index
 const slugCounts: Record<string, number> = {};
-
-function makeSlug(model: string): string {
-  const base = model
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .substring(0, 80)
-    .replace(/-$/, '');
-  
-  // Make unique by adding a counter
-  if (!slugCounts[base]) {
-    slugCounts[base] = 0;
-  }
-  slugCounts[base]++;
-  
-  if (slugCounts[base] === 1) return base;
-  return `${base}-${slugCounts[base]}`;
-}
 
 // Utility: Get image for model (fallback if not in seed data)
 function getImageForModel(item: typeof SEED_LAPTOPS[0]): string {
@@ -308,8 +289,8 @@ export async function GET() {
     Object.keys(slugCounts).forEach(key => delete slugCounts[key]);
     
     // Build products array directly from seed data
-    const products = SEED_LAPTOPS.map((item) => {
-      const slug = makeSlug(item.model);
+    const products = SEED_LAPTOPS.map((item, index) => {
+      const slug = makeUniqueHardwareSlug(item.model, index, slugCounts);
       const category = getCategory(item.model);
       const imageUrl = item.image_url || getImageForModel(item);
       const badge = getBadge(item);

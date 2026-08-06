@@ -1,22 +1,12 @@
 import { Metadata } from 'next';
 import ProductDetailClient from './ProductDetailClient';
 import { SEED_LAPTOPS } from '@/lib/seedData';
+import { makeUniqueHardwareSlug } from '@/lib/hardwareSlug';
 
 export const metadata: Metadata = {
   title: 'جزئیات محصول | فروشگاه لپ‌تاپ استوک احسان صالحی',
   description: 'جزئیات کامل مشخصات فنی و توضیحات محصول استوک',
 };
-
-// Same slug generation logic as hardware page
-function makeSlugDirect(model: string): string {
-  return model
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .substring(0, 80)
-    .replace(/-$/, '');
-}
 
 function getCategoryDirect(model: string): string {
   const m = model.toUpperCase();
@@ -97,13 +87,9 @@ function getDescriptionForProduct(item: typeof SEED_LAPTOPS[0]): string {
 
 export function generateStaticParams() {
   const slugCounts: Record<string, number> = {};
-  return SEED_LAPTOPS.map((item) => {
-    const base = makeSlugDirect(item.model);
-    if (!slugCounts[base]) slugCounts[base] = 0;
-    slugCounts[base]++;
-    const slug = slugCounts[base] === 1 ? base : `${base}-${slugCounts[base]}`;
-    return { slug };
-  });
+  return SEED_LAPTOPS.map((item, index) => ({
+    slug: makeUniqueHardwareSlug(item.model, index, slugCounts),
+  }));
 }
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -111,12 +97,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
   // Build all products
   const slugCounts: Record<string, number> = {};
-  const products = SEED_LAPTOPS.map((item) => {
-    const base = makeSlugDirect(item.model);
-    if (!slugCounts[base]) slugCounts[base] = 0;
-    slugCounts[base]++;
-    const slug = slugCounts[base] === 1 ? base : `${base}-${slugCounts[base]}`;
-    
+  const products = SEED_LAPTOPS.map((item, index) => {
+    const slug = makeUniqueHardwareSlug(item.model, index, slugCounts);
+
     return {
       id: slug,
       title: item.model,

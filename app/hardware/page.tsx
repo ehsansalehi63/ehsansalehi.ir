@@ -1,23 +1,13 @@
 import HardwareContent from './HardwareContent';
 import { Metadata } from 'next';
 import { SEED_LAPTOPS } from '@/lib/seedData';
+import { makeUniqueHardwareSlug } from '@/lib/hardwareSlug';
 
 export const metadata: Metadata = {
   title: 'لپ‌تاپ‌های استوک مهندسی و سخت‌افزار Grade A++ | گلچین‌شده توسط احسان صالحی',
   description: 'فروش و مشاوره خرید تخصصی لپ‌تاپ‌های مهندسی، برنامه‌نویسی و استوک اروپایی (Grade A++) ۱۰۰٪ تست‌شده و تاییدشده توسط مهندس احسان صالحی با ۲۰ سال تجربه.',
   keywords: ['لپ تاپ استوک', 'لپ تاپ مهندسی', 'خرید لپ تاپ استوک', 'ThinkPad', 'MacBook Pro استوک', 'احسان صالحی', 'تجهیزات شبکه سیسکو'],
 };
-
-// Generate slug directly
-function makeSlugDirect(model: string): string {
-  return model
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .substring(0, 80)
-    .replace(/-$/, '');
-}
 
 function getCategoryDirect(model: string): string {
   const m = model.toUpperCase();
@@ -75,12 +65,9 @@ export default function HardwarePage() {
   // Build products directly at render time (SSR)
   const slugCounts: Record<string, number> = {};
   
-  const products = SEED_LAPTOPS.map((item) => {
-    const base = makeSlugDirect(item.model);
-    if (!slugCounts[base]) slugCounts[base] = 0;
-    slugCounts[base]++;
-    const slug = slugCounts[base] === 1 ? base : `${base}-${slugCounts[base]}`;
-    
+  const products = SEED_LAPTOPS.map((item, index) => {
+    const slug = makeUniqueHardwareSlug(item.model, index, slugCounts);
+
     return {
       id: slug,
       title: item.model,
