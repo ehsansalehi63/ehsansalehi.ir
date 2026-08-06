@@ -112,6 +112,16 @@ jobs:
           server-dir: /ehsansalehi.ir/
           local-dir: .next/standalone/
           state-name: .ftp-deploy-sync-state.json
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            .env
+            .ftp-deploy-sync-state.json
+            tmp/**
+            deploy-logs/**
+            backups/**
+            incoming/**
           timeout: 120000
           security: loose
           log-level: verbose
