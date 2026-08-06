@@ -74,8 +74,31 @@ deploy_api() {
     --data-urlencode "sourcefiles=${INCOMING}/${NAME}" \
     --data-urlencode "destdir=${APP_DIR}" \
     "${BASE}/Archive/extract_archive")
-  grep -q '"errors":null\|"status":1' <<<"$ex" || { c_err "استخراج ناموفق: $ex"; return 1; }
-  c_ok "استخراج کامل شد"
+
+  if grep -q '"errors":null\|"status":1' <<<"$ex"; then
+    c_ok "استخراج کامل شد"
+  else
+    c_info "UAPI Archive در این cPanel در دسترس نیست یا خطا داد؛ تلاش با API2 Fileman::fileop..."
+    local ex2
+    ex2=$(curl -G -sS --max-time 300 -H "$AUTH" \
+      --data-urlencode "cpanel_jsonapi_user=${CPANEL_USER}" \
+      --data-urlencode "cpanel_jsonapi_apiversion=2" \
+      --data-urlencode "cpanel_jsonapi_module=Fileman" \
+      --data-urlencode "cpanel_jsonapi_func=fileop" \
+      --data-urlencode "op=extract" \
+      --data-urlencode "sourcefiles=${INCOMING}/${NAME}" \
+      --data-urlencode "destfiles=${APP_DIR}" \
+      --data-urlencode "doubledecode=1" \
+      --data-urlencode "overwrite=1" \
+      "https://${CPANEL_HOST}:2083/json-api/cpanel")
+    if grep -q '"result":1' <<<"$ex2"; then
+      c_ok "استخراج با API2 کامل شد"
+    else
+      c_err "استخراج ناموفق (UAPI + API2). پاسخ UAPI: $ex"
+      c_err "پاسخ API2: $ex2"
+      return 1
+    fi
+  fi
 
   c_info "ساخت پوشه tmp..."
   curl -sS --max-time 30 -H "$AUTH" \
