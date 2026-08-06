@@ -1,0 +1,96 @@
+name: Deploy Site Only (Fast cPanel)
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-site-fast
+  cancel-in-progress: false
+
+jobs:
+  deploy-site:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Cache Next.js build
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/.next/cache
+          key: next-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/*.[jt]s','**/*.[jt]sx') }}
+          restore-keys: |
+            next-${{ hashFiles('package-lock.json') }}-
+            next-
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit --fund=false
+
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SITE_URL: https://ehsansalehi.ir
+          NEXT_TELEMETRY_DISABLED: '1'
+
+      - name: Prepare standalone output
+        run: |
+          set -euo pipefail
+          OUT=.next/standalone
+          cp -r public "$OUT/public"
+          mkdir -p "$OUT/.next"
+          cp -r .next/static "$OUT/.next/static"
+          mkdir -p "$OUT/tmp"
+          date -u +%FT%TZ > "$OUT/tmp/restart.txt"
+          cat > "$OUT/deploy-info.json" <<EOF
+          {
+            "commit": "${GITHUB_SHA}",
+            "shortSha": "${GITHUB_SHA:0:7}",
+            "ref": "${GITHUB_REF_NAME}",
+            "runId": "${GITHUB_RUN_ID}",
+            "builtAt": "$(date -u +%FT%TZ)",
+            "node": "$(node -v)"
+          }
+          EOF
+
+      - name: Create site bundle
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          tar -C .next/standalone -czf dist/site-bundle.tar.gz .
+          ls -lh dist/site-bundle.tar.gz
+
+      - name: Fast deploy site via cPanel API
+        env:
+          DEPLOY_METHOD: api
+          CPANEL_HOST: ${{ secrets.CPANEL_HOST }}
+          CPANEL_USER: ${{ secrets.CPANEL_USER }}
+          CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
+          APP_DIR: ${{ secrets.CPANEL_APP_DIR }}
+          HEALTH_URL: ${{ secrets.HEALTH_URL }}
+        run: |
+          chmod +x tools/deploy-cpanel.sh
+          bash tools/deploy-cpanel.sh dist/site-bundle.tar.gz
+
+      - name: Verify deployed version
+        run: |
+          set -euo pipefail
+          EXPECTED="${GITHUB_SHA:0:12}"
+          for i in $(seq 1 15); do
+            BODY=$(curl -sS --max-time 20 "${{ secrets.HEALTH_URL }}" || echo '{}')
+            DEPLOYED=$(echo "$BODY" | grep -o '"shortCommit":"[^"]*"' | head -1 | cut -d'"' -f4 || true)
+            echo "$BODY"
+            echo "Attempt $i/15 → deployed=${DEPLOYED:-?} expected=$EXPECTED"
+            if [ "${DEPLOYED:-}" = "$EXPECTED" ]; then
+              echo "::notice::✅ نسخه $EXPECTED روی سایت فعال است"
+              exit 0
+            fi
+            sleep 4
+          done
+          echo "::error::❌ نسخه جدید بعد از fast deploy روی سایت فعال نشد"
+          exit 1

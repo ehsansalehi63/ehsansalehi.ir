@@ -106,7 +106,9 @@ export function generateStaticParams() {
   });
 }
 
-export default function ProductDetailPage({ params }: { params: { slug: string } }) {
+export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug: routeSlug } = await params;
+
   // Build all products
   const slugCounts: Record<string, number> = {};
   const products = SEED_LAPTOPS.map((item) => {
@@ -139,7 +141,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
     };
   });
 
-  const product = products.find(p => p.slug === params.slug) || null;
+  const product = products.find(p => p.slug === routeSlug) || null;
 
   return (
     <main className="min-h-screen bg-[#05070b] text-white py-12 px-4 font-vazir">
