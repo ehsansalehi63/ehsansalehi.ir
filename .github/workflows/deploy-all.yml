@@ -1,15 +1,16 @@
 # ═══════════════════════════════════════════════════════════════
-#  دیپلوی کامل: سایت (FTP→میزبان‌فا) + رله (SSH→هاستینگر) + تست زنجیره
+#  دیپلوی کامل: سایت (cPanel API bundle→میزبان‌فا) + رله (SSH→هاستینگر) + تست زنجیره
 #
-#  FTP  → میزبان‌فا (سایت اصلی Next.js)
-#  SSH  → هاستینگر (رله PHP — شبکه‌های اجتماعی + هوش مصنوعی)
-#  تست  → زنجیره سایت↔رله پس از دیپلوی
+#  cPanel API → میزبان‌فا (سایت اصلی Next.js)
+#  SSH        → هاستینگر (رله PHP — شبکه‌های اجتماعی + هوش مصنوعی)
+#  تست        → زنجیره سایت↔رله پس از دیپلوی
 #
 #  Secrets لازم (همه در GitHub Secrets تنظیم شده‌اند):
-#    میزبان‌فا (FTP):
-#      FTP_SERVER       آدرس FTP
-#      FTP_USERNAME     نام کاربری
-#      FTP_PASSWORD     رمز FTP
+#    میزبان‌فا (cPanel API):
+#      CPANEL_HOST      آدرس cPanel
+#      CPANEL_USER      نام کاربری cPanel
+#      CPANEL_TOKEN     API Token
+#      CPANEL_APP_DIR   مسیر اپ روی هاست
 #    هاستینگر (SSH):
 #      SSH_IP           آدرس IP
 #      SSH_PORT         پورت SSH
@@ -22,7 +23,7 @@
 #      CRON_SECRET      کلید تست سرتاسری سایت
 # ═══════════════════════════════════════════════════════════════
 
-name: Deploy All (Site FTP + Relay SSH)
+name: Deploy All (Site cPanel + Relay SSH)
 
 on:
   push:
@@ -85,78 +86,62 @@ jobs:
           }
           EOF
 
+      - name: Create site bundle
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          tar -C .next/standalone -czf dist/site-bundle.tar.gz .
+          ls -lh dist/site-bundle.tar.gz
+
       - uses: actions/upload-artifact@v4
         with:
-          name: standalone
-          path: .next/standalone/
+          name: site-bundle
+          path: dist/site-bundle.tar.gz
           retention-days: 1
 
-  # ─── مرحله ۲: دیپلوی سایت به میزبان‌فا (FTP) ───────────
+  # ─── مرحله ۲: دیپلوی سریع سایت به میزبان‌فا (cPanel API) ──────
   deploy-site:
     needs: build
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 20
 
     steps:
+      - uses: actions/checkout@v4
+
       - uses: actions/download-artifact@v4
         with:
-          name: standalone
-          path: .next/standalone/
+          name: site-bundle
+          path: dist/
 
-      - name: Sync via FTP to Mizbanfa
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: /ehsansalehi.ir/
-          local-dir: .next/standalone/
-          state-name: .ftp-deploy-sync-state.json
-          exclude: |
-            **/.git*
-            **/.git*/**
-            .env
-            .ftp-deploy-sync-state.json
-            tmp/**
-            deploy-logs/**
-            backups/**
-            incoming/**
-          timeout: 120000
-          security: loose
-          log-level: verbose
-
-      - name: Verify site health
+      - name: Fast deploy site via cPanel API
+        env:
+          DEPLOY_METHOD: api
+          CPANEL_HOST: ${{ secrets.CPANEL_HOST }}
+          CPANEL_USER: ${{ secrets.CPANEL_USER }}
+          CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
+          APP_DIR: ${{ secrets.CPANEL_APP_DIR }}
+          HEALTH_URL: ${{ secrets.HEALTH_URL }}
         run: |
-          sleep 8
-          BODY=$(curl -sS --max-time 20 "${{ secrets.HEALTH_URL }}" || echo '{}')
-          DEPLOYED=$(echo "$BODY" | grep -o '"shortCommit":"[^"]*"' | head -1 | cut -d'"' -f4 || echo "?")
-          EXPECTED="${GITHUB_SHA:0:12}"
-          echo "$BODY"
-          echo "نسخه روی سایت: $DEPLOYED"
-          echo "نسخه مورد انتظار: $EXPECTED"
-          if [ "$DEPLOYED" = "$EXPECTED" ]; then
-            echo "::notice::✅ نسخه صحیح منتشر شد"
-          else
-            echo "::warning::نسخه‌ها مطابقت ندارند (ممکن است کش یا مسیر FTP اشتباه باشد)"
-          fi
+          chmod +x tools/deploy-cpanel.sh
+          bash tools/deploy-cpanel.sh dist/site-bundle.tar.gz
 
-      - name: Wait for Passenger auto-restart
+      - name: Verify deployed version
         run: |
-          # Passenger auto-detects tmp/restart.txt and restarts the Node.js app
-          # Just wait and verify the new version is live
-          echo "Waiting 20s for Passenger to detect tmp/restart.txt..."
-          sleep 20
-          BODY=$(curl -sS --max-time 20 "${{ secrets.HEALTH_URL }}" || echo '{}')
-          DEPLOYED=$(echo "$BODY" | grep -o '"shortCommit":"[^"]*"' | head -1 | cut -d'"' -f4 || echo "?")
+          set -euo pipefail
           EXPECTED="${GITHUB_SHA:0:12}"
-          echo "$BODY"
-          echo "After wait - deployed: $DEPLOYED, expected: $EXPECTED"
-          if [ "$DEPLOYED" = "$EXPECTED" ]; then
-            echo "::notice::✅ نسخه جدید روی سرور فعال شد"
-          else
-            echo "::error::❌ سرور هنوز نسخه جدید را اجرا نمی‌کند"
-            exit 1
-          fi
+          for i in $(seq 1 15); do
+            BODY=$(curl -sS --max-time 20 "${{ secrets.HEALTH_URL }}" || echo '{}')
+            DEPLOYED=$(echo "$BODY" | grep -o '"shortCommit":"[^"]*"' | head -1 | cut -d'"' -f4 || true)
+            echo "$BODY"
+            echo "Attempt $i/15 → deployed=${DEPLOYED:-?} expected=$EXPECTED"
+            if [ "${DEPLOYED:-}" = "$EXPECTED" ]; then
+              echo "::notice::✅ نسخه $EXPECTED روی سایت فعال است"
+              exit 0
+            fi
+            sleep 4
+          done
+          echo "::error::❌ نسخه جدید بعد از fast deploy روی سایت فعال نشد"
+          exit 1
   # ─── مرحله ۳: دیپلوی رله PHP به هاستینگر (SSH) ─────────
   deploy-relay:
     needs: build

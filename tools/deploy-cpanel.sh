@@ -77,6 +77,11 @@ deploy_api() {
   grep -q '"errors":null\|"status":1' <<<"$ex" || { c_err "استخراج ناموفق: $ex"; return 1; }
   c_ok "استخراج کامل شد"
 
+  c_info "ساخت پوشه tmp..."
+  curl -sS --max-time 30 -H "$AUTH" \
+    --data-urlencode "path=${APP_DIR}/tmp" \
+    "${BASE}/Fileman/mkdir" >/dev/null 2>&1 || true
+
   c_info "ری‌استارت اپ..."
   curl -sS --max-time 60 -H "$AUTH" \
     --data-urlencode "dir=${APP_DIR}/tmp" \
