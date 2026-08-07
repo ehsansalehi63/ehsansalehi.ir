@@ -16,10 +16,12 @@
 
 ## روش ۱ — Render
 
-فایل آماده:
+فایل‌های آماده:
 
-- `render.yaml`
-- `Dockerfile`
+- `render.yaml` در ریشه repo
+- `mcp-social/render.yaml`
+- `mcp-social/Dockerfile`
+- `mcp-social/RENDER-CHECKLIST.fa.md`
 
 ### envهای لازم
 
@@ -28,6 +30,8 @@
 - `MCP_STORAGE_BACKEND=mysql`
 - `MCP_SECRET_ENCRYPTION_KEY=...`
 - `MCP_DATABASE_URL=mysql://...`
+
+> blueprint ریشه repo روی `plan: free` تنظیم شده تا MVP با کمترین هزینه بالا بیاید.
 - `LINKEDIN_CLIENT_ID`
 - `LINKEDIN_CLIENT_SECRET`
 - `LINKEDIN_REDIRECT_URI=https://your-domain/oauth/linkedin/callback`
