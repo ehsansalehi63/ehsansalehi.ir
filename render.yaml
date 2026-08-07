@@ -5,8 +5,8 @@ services:
     plan: free
     autoDeploy: true
     rootDir: mcp-social
-    dockerContext: ./mcp-social
-    dockerfilePath: ./mcp-social/Dockerfile
+    dockerContext: .
+    dockerfilePath: ./Dockerfile
     healthCheckPath: /health
     envVars:
       - key: MCP_PUBLIC_BASE_URL
