@@ -6,8 +6,8 @@ MVP سرور MCP برای وصل کردن Arena.ai به کانکتورهای ش�
 
 این سرور به Arena اجازه می‌دهد از طریق MCP این کارها را انجام دهد:
 
-- اتصال LinkedIn با OAuth + PKCE
-- اتصال Instagram Business از طریق Meta OAuth
+- **حالت ساده (پیشنهادی): Make-Bridge** برای Instagram / Facebook / LinkedIn / Telegram
+- حالت مستقیم OAuth برای LinkedIn و Instagram در صورت داشتن app credentials
 - اتصال Telegram Bot با Bot Token + Chat ID
 - مشاهده وضعیت اتصال‌ها
 - تست زنده‌ی اتصال‌ها
@@ -31,6 +31,7 @@ Arena.ai (Host)
 - `social.connections.list`
 - `social.connect.start`
 - `social.connect.status`
+- `social.make_bridge.configure`
 - `social.telegram.connect`
 - `social.disconnect`
 - `social.refresh.token`
@@ -78,6 +79,16 @@ node server.mjs
 - `MCP_DEFAULT_PERMISSIONS`
 - `MCP_ALLOW_UNAUTHENTICATED`
 
+### Make-Bridge (مسیر ساده پیشنهادی)
+
+- `MAKE_BRIDGE_ENABLED=true`
+- `MAKE_BRIDGE_PLATFORMS=instagram,facebook,linkedin,telegram`
+- `MAKE_BRIDGE_PUBLISH_WEBHOOK_URL`
+- `MAKE_BRIDGE_TEST_WEBHOOK_URL` (اختیاری)
+- `MAKE_BRIDGE_CONNECTION_LABEL`
+- `MAKE_BRIDGE_AUTH_HEADER_NAME` (اختیاری)
+- `MAKE_BRIDGE_AUTH_HEADER_VALUE` (اختیاری)
+
 ### LinkedIn
 
 - `LINKEDIN_CLIENT_ID`
@@ -114,6 +125,27 @@ node server.mjs
 4. provider به callback همین سرور برمی‌گردد.
 5. tokenها در storage محلی MVP ذخیره می‌شوند.
 6. Arena از `social.connect.status` یا `social.connections.list` وضعیت را می‌خواند.
+
+## Make-Bridge flow (پیشنهادی برای Instagram/Facebook/LinkedIn/Telegram)
+
+در این حالت، به‌جای ساختن App روی Meta/LinkedIn، از connectorهای آماده Make استفاده می‌کنید و MCP فقط به webhook سناریوی Make پست می‌زند.
+
+نمونه تنظیم دستی از داخل Arena:
+
+```json
+{
+  "name": "social.make_bridge.configure",
+  "arguments": {
+    "workspaceId": "default",
+    "platforms": ["instagram", "facebook", "linkedin", "telegram"],
+    "publishWebhookUrl": "https://hook.eu2.make.com/xxxx",
+    "testWebhookUrl": "https://hook.eu2.make.com/yyyy",
+    "connectionLabel": "Make Bridge"
+  }
+}
+```
+
+بعد از آن `social.test.connection` و `social.publish.post` از طریق Make کار می‌کنند.
 
 ## Telegram flow
 

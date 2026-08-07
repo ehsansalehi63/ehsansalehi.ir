@@ -1,9 +1,10 @@
 import { publishToLinkedIn, testLinkedInConnection } from '../connectors/linkedin.mjs';
 import { publishToInstagram, testInstagramConnection } from '../connectors/instagram.mjs';
 import { publishToTelegram, testTelegramConnection } from '../connectors/telegram.mjs';
-import { addDelivery } from '../lib/store.mjs';
+import { publishViaMakeBridge, testMakeBridgeConnection } from '../connectors/make-bridge.mjs';
+import { addDelivery, getConnection } from '../lib/store.mjs';
 
-const PLATFORM_MAP = {
+const DIRECT_PLATFORM_MAP = {
   linkedin: {
     publish: publishToLinkedIn,
     test: testLinkedInConnection,
@@ -18,17 +19,36 @@ const PLATFORM_MAP = {
   },
 };
 
-export const SUPPORTED_PLATFORMS = Object.keys(PLATFORM_MAP);
+export const SUPPORTED_PLATFORMS = ['linkedin', 'instagram', 'telegram', 'facebook'];
+
+async function resolveHandlers(workspaceId, platform) {
+  const connection = await getConnection(workspaceId, platform);
+  if (String(connection?.provider || '').startsWith('make')) {
+    return {
+      provider: connection.provider,
+      publish: (payload) => publishViaMakeBridge(workspaceId, platform, payload),
+      test: () => testMakeBridgeConnection(workspaceId, platform),
+    };
+  }
+
+  const direct = DIRECT_PLATFORM_MAP[platform];
+  if (!direct) return null;
+  return {
+    provider: connection?.provider || platform,
+    publish: (payload) => direct.publish(workspaceId, payload),
+    test: () => direct.test(workspaceId),
+  };
+}
 
 export async function testPlatforms(workspaceId, platforms = SUPPORTED_PLATFORMS) {
   const results = {};
   for (const platform of platforms) {
-    const handler = PLATFORM_MAP[platform]?.test;
-    if (!handler) {
+    const handlers = await resolveHandlers(workspaceId, platform);
+    if (!handlers) {
       results[platform] = { ok: false, error: 'Unsupported platform' };
       continue;
     }
-    results[platform] = await handler(workspaceId);
+    results[platform] = await handlers.test();
   }
   return results;
 }
@@ -39,8 +59,8 @@ export async function publishPost(workspaceId, payload) {
   const results = {};
   const errors = {};
   for (const platform of platforms) {
-    const handler = PLATFORM_MAP[platform]?.publish;
-    if (!handler) {
+    const handlers = await resolveHandlers(workspaceId, platform);
+    if (!handlers) {
       results[platform] = { ok: false, error: 'Unsupported platform' };
       errors[platform] = 'Unsupported platform';
       continue;
@@ -50,6 +70,7 @@ export async function publishPost(workspaceId, payload) {
       results[platform] = {
         ok: true,
         dryRun: true,
+        provider: handlers.provider,
         preview: {
           title: payload.title,
           content: payload.content,
@@ -60,7 +81,7 @@ export async function publishPost(workspaceId, payload) {
       continue;
     }
 
-    const response = await handler(workspaceId, payload);
+    const response = await handlers.publish(payload);
     results[platform] = response;
     if (!response.ok) {
       errors[platform] = response.error || 'Unknown publish error';

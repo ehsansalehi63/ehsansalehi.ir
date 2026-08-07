@@ -14,20 +14,18 @@ services:
       - key: MCP_BEARER_TOKEN
         generateValue: true
       - key: MCP_STORAGE_BACKEND
-        value: mysql
-      - key: MCP_SECRET_ENCRYPTION_KEY
-        generateValue: true
-      - key: MCP_DATABASE_URL
+        value: file
+      - key: MAKE_BRIDGE_ENABLED
+        value: true
+      - key: MAKE_BRIDGE_PLATFORMS
+        value: instagram,facebook,linkedin,telegram
+      - key: MAKE_BRIDGE_PUBLISH_WEBHOOK_URL
         sync: false
-      - key: LINKEDIN_CLIENT_ID
+      - key: MAKE_BRIDGE_TEST_WEBHOOK_URL
         sync: false
-      - key: LINKEDIN_CLIENT_SECRET
+      - key: MAKE_BRIDGE_CONNECTION_LABEL
+        value: Make Bridge
+      - key: MAKE_BRIDGE_AUTH_HEADER_NAME
         sync: false
-      - key: LINKEDIN_REDIRECT_URI
-        sync: false
-      - key: META_APP_ID
-        sync: false
-      - key: META_APP_SECRET
-        sync: false
-      - key: META_REDIRECT_URI
+      - key: MAKE_BRIDGE_AUTH_HEADER_VALUE
         sync: false

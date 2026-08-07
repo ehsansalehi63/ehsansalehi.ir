@@ -1,20 +1,21 @@
 # استقرار Production برای Arena Social MCP
 
-این سرویس یک HTTP MCP server است و برای اتصال Arena باید **public URL** و **OAuth callback URL** داشته باشد.
+این سرویس یک HTTP MCP server است و برای اتصال Arena باید **public URL** داشته باشد.
 
-## گزینه پیشنهادی
+## مسیر پیشنهادی فعلی: Render + Make-Bridge
 
-برای MVP production این‌ها مناسب‌اند:
+برای شرایط فعلی شما، بهترین مسیر این است:
 
-1. **Render**
-2. **Railway**
-3. هر VPS با Docker
+1. `arena-social-mcp` روی Render بالا بیاید
+2. Make نقش connector hub را برای Instagram / Facebook / LinkedIn / Telegram بازی کند
+3. Arena فقط به MCP وصل شود
+4. MCP فقط به webhook سناریوی Make payload بفرستد
 
-> برای شروع سریع، Render یا Railway از cPanel ساده‌تر و مناسب‌ترند، چون callback و public HTTPS راحت‌تر می‌دهند.
+این مسیر باعث می‌شود **نیازی به Meta App یا LinkedIn App نداشته باشید**.
 
 ---
 
-## روش ۱ — Render
+## روش ۱ — Render (پیشنهادی)
 
 فایل‌های آماده:
 
@@ -22,22 +23,26 @@
 - `mcp-social/render.yaml`
 - `mcp-social/Dockerfile`
 - `mcp-social/RENDER-CHECKLIST.fa.md`
+- `mcp-social/MAKE-BRIDGE.fa.md`
 
-### envهای لازم
+### envهای لازم در حالت ساده
 
 - `MCP_PUBLIC_BASE_URL=https://your-render-domain.onrender.com`
-- `MCP_BEARER_TOKEN=...`
-- `MCP_STORAGE_BACKEND=mysql`
-- `MCP_SECRET_ENCRYPTION_KEY=...`
-- `MCP_DATABASE_URL=mysql://...`
+- `MAKE_BRIDGE_PUBLISH_WEBHOOK_URL=https://hook.eu2.make.com/XXXX`
 
-> blueprint ریشه repo روی `plan: free` تنظیم شده تا MVP با کمترین هزینه بالا بیاید.
-- `LINKEDIN_CLIENT_ID`
-- `LINKEDIN_CLIENT_SECRET`
-- `LINKEDIN_REDIRECT_URI=https://your-domain/oauth/linkedin/callback`
-- `META_APP_ID`
-- `META_APP_SECRET`
-- `META_REDIRECT_URI=https://your-domain/oauth/instagram/callback`
+### envهای اختیاری
+
+- `MAKE_BRIDGE_TEST_WEBHOOK_URL=https://hook.eu2.make.com/YYYY`
+- `MAKE_BRIDGE_AUTH_HEADER_NAME`
+- `MAKE_BRIDGE_AUTH_HEADER_VALUE`
+
+### envهایی که blueprint خودش تنظیم می‌کند
+
+- `MCP_BEARER_TOKEN`
+- `MCP_STORAGE_BACKEND=file`
+- `MAKE_BRIDGE_ENABLED=true`
+- `MAKE_BRIDGE_PLATFORMS=instagram,facebook,linkedin,telegram`
+- `MAKE_BRIDGE_CONNECTION_LABEL=Make Bridge`
 
 ### Health
 
@@ -51,16 +56,13 @@
 
 ## روش ۲ — Railway
 
-فایل آماده:
-
-- `railway.json`
-- `Dockerfile`
-
-همان envها را تنظیم کنید.
+ممکن است، اما چون free tier دائمی‌اش مثل Render راحت نیست، برای شروع پیشنهاد نمی‌شود.
 
 ---
 
 ## روش ۳ — VPS با Docker
+
+اگر خواستید self-managed بروید:
 
 ```bash
 cd mcp-social
@@ -72,15 +74,6 @@ docker run -d \
   arena-social-mcp
 ```
 
-اگر پشت nginx یا caddy هستید، HTTPS و reverse proxy را روی این endpointها بگذارید:
-
-- `/health`
-- `/mcp`
-- `/oauth/linkedin/start`
-- `/oauth/linkedin/callback`
-- `/oauth/instagram/start`
-- `/oauth/instagram/callback`
-
 ---
 
 ## تنظیم Arena پس از deploy
@@ -88,43 +81,23 @@ docker run -d \
 - MCP URL: `https://your-domain/mcp`
 - Header:
   - `Authorization: Bearer <MCP_BEARER_TOKEN>`
-  - `X-MCP-Workspace-Id: default` یا workspace واقعی
+  - `X-MCP-Workspace-Id: default`
   - `X-MCP-Permissions: social.connections.read,social.connections.write,social.publish,social.schedule,social.diagnostics.read`
 
 ---
 
-## Redirect URIها
+## سناریوی Make چه می‌کند؟
 
-### LinkedIn
+- Webhook ورودی می‌گیرد
+- روی `action` و `platform` route می‌کند
+- از connectorهای آماده Make برای publish استفاده می‌کند
+- JSON استاندارد به MCP برمی‌گرداند
 
-در LinkedIn App حتماً ثبت شود:
-
-- `https://your-domain/oauth/linkedin/callback`
-
-### Meta / Instagram
-
-در Meta App حتماً ثبت شود:
-
-- `https://your-domain/oauth/instagram/callback`
+برای جزئیات کامل:
+- `mcp-social/MAKE-BRIDGE.fa.md`
 
 ---
 
-## اگر از دیتابیس فعلی سایت استفاده می‌کنید
+## اگر بعداً direct OAuth خواستید
 
-می‌توانید MCP را به همان MySQL وصل کنید.
-
-سپس با tool زیر، تنظیمات قدیمی social را import کنید:
-
-- `social.import.legacy_settings`
-
-این tool از جدول `automation_settings` می‌خواند و مقادیر LinkedIn / Instagram / Telegram را به connectionهای MCP تبدیل می‌کند.
-
----
-
-## توصیه امنیتی
-
-- `MCP_SECRET_ENCRYPTION_KEY` را حتماً تنظیم کنید.
-- `MCP_BEARER_TOKEN` را قوی بگذارید.
-- callback URLها فقط روی HTTPS باشند.
-- لاگ عمومی tokenها را چاپ نکنید.
-- در صورت امکان DB مخصوص MCP بسازید یا حداقل یوزر DB محدود بدهید.
+MCP هنوز قابلیت direct OAuth برای LinkedIn و Instagram را هم نگه داشته است؛ ولی آن حالت app credential می‌خواهد و مسیر فعلی توصیه نمی‌شود.

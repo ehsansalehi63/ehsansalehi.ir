@@ -2,36 +2,57 @@
 
 این راهنما برای وصل کردن همین MCP Server به Arena.ai است.
 
+## مسیر پیشنهادی فعلی
+
+برای شرایط شما، مسیر پیشنهادی این است:
+
+- MCP روی Render
+- اتصال به Arena از طریق `POST /mcp`
+- publish واقعی از طریق **Make-Bridge**
+- Connect/Approve حساب‌ها داخل Make
+
+> یعنی Arena مستقیم Meta/LinkedIn app credential نمی‌خواهد.
+
+---
+
 ## ۱) سرور را deploy کنید
 
 حداقل این endpointها باید public باشند:
 
 - `GET /health`
 - `POST /mcp`
+
+اگر بعداً خواستید direct OAuth هم داشته باشید، این‌ها هم لازم می‌شوند:
+
 - `GET /oauth/linkedin/start`
 - `GET /oauth/linkedin/callback`
 - `GET /oauth/instagram/start`
 - `GET /oauth/instagram/callback`
 
-## ۲) متغیرهای محیطی را تنظیم کنید
+---
+
+## ۲) متغیرهای محیطی برای مسیر ساده Make-Bridge
 
 ### عمومی
 
 - `MCP_PUBLIC_BASE_URL=https://your-mcp-domain.com`
 - `MCP_BEARER_TOKEN=...`
 - `MCP_ALLOW_UNAUTHENTICATED=false`
+- `MCP_STORAGE_BACKEND=file`
 
-### LinkedIn
+### Make-Bridge
 
-- `LINKEDIN_CLIENT_ID`
-- `LINKEDIN_CLIENT_SECRET`
-- `LINKEDIN_REDIRECT_URI=https://your-mcp-domain.com/oauth/linkedin/callback`
+- `MAKE_BRIDGE_ENABLED=true`
+- `MAKE_BRIDGE_PLATFORMS=instagram,facebook,linkedin,telegram`
+- `MAKE_BRIDGE_PUBLISH_WEBHOOK_URL=https://hook.eu2.make.com/XXXX`
+- `MAKE_BRIDGE_TEST_WEBHOOK_URL=https://hook.eu2.make.com/YYYY` (اختیاری)
+- `MAKE_BRIDGE_CONNECTION_LABEL=Make Bridge`
+- `MAKE_BRIDGE_AUTH_HEADER_NAME` (اختیاری)
+- `MAKE_BRIDGE_AUTH_HEADER_VALUE` (اختیاری)
 
-### Meta / Instagram
+> در این مسیر نه LinkedIn App لازم است و نه Meta App.
 
-- `META_APP_ID`
-- `META_APP_SECRET`
-- `META_REDIRECT_URI=https://your-mcp-domain.com/oauth/instagram/callback`
+---
 
 ## ۳) MCP Server را در Arena ثبت کنید
 
@@ -43,30 +64,41 @@
   - `X-MCP-Workspace-Id: your-workspace-id`
   - `X-MCP-Permissions: social.connections.read,social.connections.write,social.publish,social.schedule,social.diagnostics.read`
 
+---
+
 ## ۴) flow اتصال در عمل
 
-### LinkedIn / Instagram
+### حالت ساده — Make-Bridge
 
-از داخل Arena این tool را صدا بزنید:
+اول اکانت‌های Instagram / Facebook / LinkedIn / Telegram را داخل Make connect می‌کنید.
 
-- `social.connect.start`
+بعد از آن، از داخل Arena این tool را صدا می‌زنید:
 
-نمونه ورودی:
+- `social.make_bridge.configure`
+
+نمونه:
 
 ```json
 {
   "workspaceId": "default",
-  "platform": "linkedin"
+  "platforms": ["instagram", "facebook", "linkedin", "telegram"],
+  "publishWebhookUrl": "https://hook.eu2.make.com/XXXX",
+  "testWebhookUrl": "https://hook.eu2.make.com/YYYY",
+  "connectionLabel": "Make Bridge"
 }
 ```
 
-خروجی یک `authUrl` می‌دهد. همان را در browser باز کنید.
+بعد از configure شدن:
 
-بعد از authorize شدن، provider به callback همین MCP برمی‌گردد و connection ذخیره می‌شود.
+- `social.connections.list`
+- `social.test.connection`
+- `social.publish.post`
 
-### Telegram
+از طریق Make کار می‌کنند.
 
-از داخل Arena این tool را صدا بزنید:
+### Telegram مستقیم
+
+اگر بخواهید Telegram را مستقیم به MCP بدهید، این tool را صدا بزنید:
 
 ```json
 {
@@ -76,23 +108,37 @@
 }
 ```
 
+Tool:
+- `social.telegram.connect`
+
+---
+
 ## ۵) ابزارهای اصلی روزمره
 
 - `social.connections.list`
 - `social.connect.status`
+- `social.make_bridge.configure`
 - `social.test.connection`
-- `social.import.legacy_settings`
 - `social.publish.post`
 - `social.schedule.post`
 - `social.publish.status`
 - `social.cancel.scheduled_post`
 - `social.diagnostics`
 
-## ۶) توصیه برای فاز بعدی
+## ۶) ابزارهای اختیاری/پیشرفته
+
+- `social.connect.start` (برای direct OAuth اگر بعداً app credential داشتید)
+- `social.import.legacy_settings` (اگر MCP را به DB فعلی سایت وصل کنید)
+- `social.refresh.token` (برای direct OAuth)
+
+---
+
+## ۷) توصیه برای فاز بعدی
 
 بعد از تأیید MVP:
 
-1. scheduler را queue-based کنید.
-2. permission grants را per-workspace در دیتابیس enforce کنید.
-3. webhook signing و replay protection کامل‌تر کنید.
-4. token rotation / refresh policies را کامل‌تر کنید.
+1. queue-based scheduler
+2. webhook signing سخت‌گیرانه‌تر
+3. persistent storage بهتر
+4. template per platform
+5. richer audit dashboard

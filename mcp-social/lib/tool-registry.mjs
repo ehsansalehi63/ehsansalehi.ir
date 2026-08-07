@@ -25,8 +25,27 @@ export const TOOL_DEFS = [
     requiredPermission: 'social.connections.read',
     inputSchema: {
       type: 'object',
-      properties: { workspaceId: { type: 'string' }, platform: { type: 'string', enum: ['linkedin', 'instagram', 'telegram'] } },
+      properties: { workspaceId: { type: 'string' }, platform: { type: 'string', enum: ['linkedin', 'instagram', 'telegram', 'facebook'] } },
       required: ['platform']
+    },
+  },
+  {
+    name: 'social.make_bridge.configure',
+    description: 'Configure Make.com webhook bridge for one or many platforms.',
+    requiredPermission: 'social.connections.write',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        workspaceId: { type: 'string' },
+        platforms: { type: 'array', items: { type: 'string', enum: ['linkedin', 'instagram', 'telegram', 'facebook'] } },
+        publishWebhookUrl: { type: 'string', description: 'Make custom webhook URL used for publish actions.' },
+        testWebhookUrl: { type: 'string', description: 'Optional Make custom webhook URL used for test actions.' },
+        connectionLabel: { type: 'string' },
+        authHeaderName: { type: 'string', description: 'Optional extra header name sent to Make.' },
+        authHeaderValue: { type: 'string', description: 'Optional extra header value sent to Make.' },
+        note: { type: 'string' }
+      },
+      required: ['publishWebhookUrl']
     },
   },
   {
@@ -50,7 +69,7 @@ export const TOOL_DEFS = [
     requiredPermission: 'social.connections.write',
     inputSchema: {
       type: 'object',
-      properties: { workspaceId: { type: 'string' }, platform: { type: 'string', enum: ['linkedin', 'instagram', 'telegram'] } },
+      properties: { workspaceId: { type: 'string' }, platform: { type: 'string', enum: ['linkedin', 'instagram', 'telegram', 'facebook'] } },
       required: ['platform']
     },
   },
@@ -72,7 +91,7 @@ export const TOOL_DEFS = [
       type: 'object',
       properties: {
         workspaceId: { type: 'string' },
-        platform: { type: 'string', enum: ['linkedin', 'instagram', 'telegram'] }
+        platform: { type: 'string', enum: ['linkedin', 'instagram', 'telegram', 'facebook'] }
       }
     },
   },
@@ -97,7 +116,7 @@ export const TOOL_DEFS = [
       type: 'object',
       properties: {
         workspaceId: { type: 'string' },
-        platforms: { type: 'array', items: { type: 'string', enum: ['linkedin', 'instagram', 'telegram'] } },
+        platforms: { type: 'array', items: { type: 'string', enum: ['linkedin', 'instagram', 'telegram', 'facebook'] } },
         title: { type: 'string' },
         content: { type: 'string' },
         imageUrl: { type: 'string' },
@@ -115,7 +134,7 @@ export const TOOL_DEFS = [
       type: 'object',
       properties: {
         workspaceId: { type: 'string' },
-        platforms: { type: 'array', items: { type: 'string', enum: ['linkedin', 'instagram', 'telegram'] } },
+        platforms: { type: 'array', items: { type: 'string', enum: ['linkedin', 'instagram', 'telegram', 'facebook'] } },
         title: { type: 'string' },
         content: { type: 'string' },
         imageUrl: { type: 'string' },

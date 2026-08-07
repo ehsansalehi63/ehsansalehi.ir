@@ -80,6 +80,42 @@ function normalizeMysqlConnection(row) {
   };
 }
 
+function makeEnvBridgeConnections() {
+  if (!config.makeBridge.enabled || !config.makeBridge.publishWebhookUrl) return {};
+
+  const createdAt = new Date(0).toISOString();
+  const updatedAt = new Date().toISOString();
+  const meta = {
+    bridgeMode: 'make',
+    source: 'env',
+    hasTestWebhook: Boolean(config.makeBridge.testWebhookUrl),
+  };
+
+  return Object.fromEntries(
+    config.makeBridge.platforms.map((platform) => [platform, {
+      platform,
+      connected: true,
+      accountLabel: config.makeBridge.connectionLabel,
+      provider: 'make-env',
+      scopes: ['bridge.publish'],
+      meta,
+      expiresAt: null,
+      lastError: null,
+      createdAt,
+      updatedAt,
+      publishWebhookUrl: config.makeBridge.publishWebhookUrl,
+      testWebhookUrl: config.makeBridge.testWebhookUrl || null,
+      bridgeAuthHeaderName: config.makeBridge.authHeaderName || null,
+      bridgeAuthHeaderValue: config.makeBridge.authHeaderValue || null,
+    }])
+  );
+}
+
+function mergeBridgeConnections(storedConnections) {
+  const envConnections = makeEnvBridgeConnections();
+  return { ...envConnections, ...(storedConnections || {}) };
+}
+
 async function ensureFileDb() {
   await fs.mkdir(config.dataDir, { recursive: true });
   try {
@@ -134,11 +170,11 @@ export async function listConnections(workspaceId) {
     for (const row of rows) {
       out[row.platform] = normalizeMysqlConnection(row);
     }
-    return out;
+    return mergeBridgeConnections(out);
   }
 
   const db = await readFileDb();
-  return db.connections[workspaceId] || {};
+  return mergeBridgeConnections(db.connections[workspaceId] || {});
 }
 
 export async function getConnection(workspaceId, platform) {
@@ -147,11 +183,12 @@ export async function getConnection(workspaceId, platform) {
       'SELECT * FROM mcp_social_connections WHERE workspace_id = ? AND platform = ? LIMIT 1',
       [workspaceId, platform]
     );
-    return normalizeMysqlConnection(rows[0] || null);
+    const stored = normalizeMysqlConnection(rows[0] || null);
+    return stored || makeEnvBridgeConnections()[platform] || null;
   }
 
   const db = await readFileDb();
-  return db.connections?.[workspaceId]?.[platform] || null;
+  return db.connections?.[workspaceId]?.[platform] || makeEnvBridgeConnections()[platform] || null;
 }
 
 export async function setConnection(workspaceId, platform, connection) {

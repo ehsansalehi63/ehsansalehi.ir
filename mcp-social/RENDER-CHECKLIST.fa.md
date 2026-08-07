@@ -1,14 +1,21 @@
-# چک‌لیست Render برای Arena Social MCP
+# چک‌لیست Render برای Arena Social MCP — حالت Make-Bridge
 
-این سریع‌ترین مسیر برای بالا آوردن MCP روی Render است.
+این الان **ساده‌ترین و واقعی‌ترین مسیر** برای شماست:
+
+- MCP روی Render بالا می‌آید
+- Make نقش connector hub را بازی می‌کند
+- شما داخل Make فقط Instagram / Facebook / LinkedIn / Telegram را **Approve / Connect** می‌کنید
+- Arena از طریق MCP فقط دستور publish می‌دهد
+
+---
 
 ## ۱) Deploy از GitHub
 
 - وارد Render شوید
-- New +
-- Blueprint را انتخاب کنید
-- همین ریپو GitHub را وصل کنید
-- فایل `render.yaml` ریشه repo را Render می‌خواند
+- **New +**
+- **Blueprint** را انتخاب کنید
+- همین ریپوی GitHub را وصل کنید
+- Render فایل `render.yaml` ریشه repo را می‌خواند
 
 > این blueprint فقط سرویس `arena-social-mcp` را از پوشه `mcp-social` deploy می‌کند.
 
@@ -16,64 +23,109 @@
 
 ## ۲) سرویس رایگان
 
-فعلاً روی free plan تنظیم شده است.
+فعلاً blueprint روی **free plan** تنظیم شده است.
 
 نکته:
-- برای MVP خوب است
-- ولی free plan ممکن است sleep / cold start داشته باشد
-- برای OAuth callback و publish تستی مشکلی ندارد، اما برای استفاده production جدی بهتر است بعداً paid شود
+- برای MVP مناسب است
+- ممکن است sleep / cold start داشته باشد
+- برای تست connect/publish کافی است
+- اگر بعداً استفاده سنگین شد، سرویس را paid می‌کنیم
 
 ---
 
-## ۳) envهایی که باید بعد از ساخت سرویس ست کنید
+## ۳) envهایی که بعد از ساخت سرویس باید ست شوند
 
-### عمومی
+### اجباری
 
 - `MCP_PUBLIC_BASE_URL=https://YOUR-RENDER-SERVICE.onrender.com`
-- `MCP_BEARER_TOKEN` → Render خودش generate می‌کند
-- `MCP_STORAGE_BACKEND=mysql`
-- `MCP_SECRET_ENCRYPTION_KEY` → Render خودش generate می‌کند
-- `MCP_DATABASE_URL=mysql://USER:PASS@HOST:3306/DBNAME`
+- `MAKE_BRIDGE_PUBLISH_WEBHOOK_URL=https://hook.eu2.make.com/XXXX`
 
-### LinkedIn
+### اختیاری ولی توصیه‌شده
 
-- `LINKEDIN_CLIENT_ID`
-- `LINKEDIN_CLIENT_SECRET`
-- `LINKEDIN_REDIRECT_URI=https://YOUR-RENDER-SERVICE.onrender.com/oauth/linkedin/callback`
+- `MAKE_BRIDGE_TEST_WEBHOOK_URL=https://hook.eu2.make.com/YYYY`
+- `MAKE_BRIDGE_AUTH_HEADER_NAME=X-Bridge-Token`
+- `MAKE_BRIDGE_AUTH_HEADER_VALUE=YOUR_SECRET`
 
-### Meta / Instagram
+### envهایی که Render خودش آماده می‌کند یا از blueprint می‌آید
 
-- `META_APP_ID`
-- `META_APP_SECRET`
-- `META_REDIRECT_URI=https://YOUR-RENDER-SERVICE.onrender.com/oauth/instagram/callback`
+- `MCP_BEARER_TOKEN` → خودش generate می‌شود
+- `MCP_STORAGE_BACKEND=file`
+- `MAKE_BRIDGE_ENABLED=true`
+- `MAKE_BRIDGE_PLATFORMS=instagram,facebook,linkedin,telegram`
+- `MAKE_BRIDGE_CONNECTION_LABEL=Make Bridge`
+
+> در این مسیر **نه DB لازم دارید، نه LinkedIn App، نه Meta App**.
 
 ---
 
-## ۴) اگر می‌خواهید از DB فعلی سایت استفاده شود
+## ۴) در Make چه بسازید؟
 
-می‌توانید `MCP_DATABASE_URL` را به همان MySQL فعلی سایت بدهید.
+یک سناریو بسازید با این ساختار:
 
-بعد از بالا آمدن MCP، این tool را اجرا کنید:
+1. **Custom Webhook** trigger
+2. **Router** بر اساس `action` و `platform`
+3. برای هر پلتفرم action مناسب:
+   - Instagram for Business (Facebook login)
+   - Facebook Pages
+   - LinkedIn
+   - Telegram Bot
+4. در انتها **Webhook Response** بدهید
 
-- `social.import.legacy_settings`
+### payloadی که MCP به Make می‌فرستد
 
-نمونه:
+برای publish:
 
 ```json
 {
+  "action": "publish",
   "workspaceId": "default",
-  "platforms": ["linkedin", "instagram", "telegram"],
-  "verify": true
+  "platform": "instagram",
+  "title": "عنوان پست",
+  "content": "متن پست",
+  "imageUrl": "https://...",
+  "link": "https://...",
+  "dryRun": false,
+  "sentAt": "2026-08-07T11:00:00.000Z"
 }
 ```
 
-این tool تلاش می‌کند تنظیمات فعلی social را از `automation_settings` وارد کند.
+برای test:
+
+```json
+{
+  "action": "test_connection",
+  "platform": "instagram",
+  "workspaceId": "default",
+  "sentAt": "2026-08-07T11:00:00.000Z"
+}
+```
+
+### پاسخ پیشنهادی Make به MCP
+
+```json
+{
+  "ok": true,
+  "platform": "instagram",
+  "message": "Published successfully",
+  "postUrl": "https://..."
+}
+```
+
+یا برای تست:
+
+```json
+{
+  "ok": true,
+  "platform": "instagram",
+  "message": "Connection looks healthy"
+}
+```
 
 ---
 
 ## ۵) ثبت MCP در Arena
 
-در Arena این مقادیر را لازم دارید:
+در Arena این مقادیر را ثبت می‌کنید:
 
 - MCP URL:
   - `https://YOUR-RENDER-SERVICE.onrender.com/mcp`
@@ -89,7 +141,32 @@
 
 ---
 
-## ۶) تست اولیه بعد از deploy
+## ۶) کانفیگ Make Bridge از داخل Arena
+
+بعد از deploy، یکی از این دو راه را دارید:
+
+### راه ۱ — فقط env
+اگر `MAKE_BRIDGE_PUBLISH_WEBHOOK_URL` را در Render ست کرده باشید، MCP خودش connectionهای bridge را می‌بیند.
+
+### راه ۲ — tool-based config
+از داخل Arena این tool را صدا بزنید:
+
+```json
+{
+  "workspaceId": "default",
+  "platforms": ["instagram", "facebook", "linkedin", "telegram"],
+  "publishWebhookUrl": "https://hook.eu2.make.com/XXXX",
+  "testWebhookUrl": "https://hook.eu2.make.com/YYYY",
+  "connectionLabel": "Make Bridge"
+}
+```
+
+Tool:
+- `social.make_bridge.configure`
+
+---
+
+## ۷) تست اولیه بعد از deploy
 
 ### health
 
@@ -115,37 +192,38 @@ curl -s https://YOUR-RENDER-SERVICE.onrender.com/mcp \
   -d '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}'
 ```
 
----
+### diagnostics
 
-## ۷) اولین اتصال واقعی
-
-### LinkedIn
-
-Tool:
-- `social.connect.start`
-- `platform=linkedin`
-
-### Instagram
-
-Tool:
-- `social.connect.start`
-- `platform=instagram`
-
-### Telegram
-
-Tool:
-- `social.telegram.connect`
+```bash
+curl -s https://YOUR-RENDER-SERVICE.onrender.com/mcp \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer YOUR_TOKEN' \
+  -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"social.diagnostics","arguments":{"workspaceId":"default"}}}'
+```
 
 ---
 
-## ۸) اگر خواستی فقط سریع MVP تست شود
+## ۸) اولین تست واقعی در Arena
 
 ترتیب پیشنهادی من:
+
 1. deploy روی Render
-2. set کردن `MCP_DATABASE_URL`
-3. ثبت MCP در Arena
-4. اجرای `social.connections.list`
-5. اجرای `social.import.legacy_settings`
-6. اگر import کافی نبود، `social.connect.start`
-7. بعد `social.publish.post` با `dryRun=true`
+2. ساخت سناریوی Make
+3. ست کردن `MAKE_BRIDGE_PUBLISH_WEBHOOK_URL`
+4. ثبت MCP در Arena
+5. اجرای `social.connections.list`
+6. اجرای `social.test.connection`
+7. اجرای `social.publish.post` با `dryRun=true`
 8. بعد publish واقعی
+
+---
+
+## ۹) اگر بعداً خواستی حرفه‌ای‌تر شود
+
+بعداً می‌توانیم این را اضافه کنیم:
+- DB واقعی
+- queue scheduler
+- history قوی‌تر
+- webhook signing سخت‌گیرانه‌تر
+- template per platform
+- retry/fallback policy

@@ -47,6 +47,15 @@ export const config = {
   telegram: {
     defaultParseMode: process.env.TELEGRAM_DEFAULT_PARSE_MODE || 'HTML',
   },
+  makeBridge: {
+    enabled: readBool('MAKE_BRIDGE_ENABLED', false),
+    platforms: readList('MAKE_BRIDGE_PLATFORMS', 'instagram,facebook,linkedin,telegram'),
+    publishWebhookUrl: process.env.MAKE_BRIDGE_PUBLISH_WEBHOOK_URL || '',
+    testWebhookUrl: process.env.MAKE_BRIDGE_TEST_WEBHOOK_URL || '',
+    connectionLabel: process.env.MAKE_BRIDGE_CONNECTION_LABEL || 'Make Bridge',
+    authHeaderName: process.env.MAKE_BRIDGE_AUTH_HEADER_NAME || '',
+    authHeaderValue: process.env.MAKE_BRIDGE_AUTH_HEADER_VALUE || '',
+  },
 };
 
 export function getWorkspaceId(inputWorkspaceId) {

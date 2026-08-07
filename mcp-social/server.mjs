@@ -15,9 +15,10 @@ import {
   cancelJob,
 } from './lib/store.mjs';
 import { createLinkedInAuthorization, exchangeLinkedInCode, createInstagramAuthorization, exchangeInstagramCode } from './lib/oauth.mjs';
-import { saveLinkedInConnection, refreshLinkedInConnection, testLinkedInConnection } from './connectors/linkedin.mjs';
-import { saveInstagramConnection, refreshInstagramConnection, testInstagramConnection } from './connectors/instagram.mjs';
-import { saveTelegramConnection, testTelegramConnection } from './connectors/telegram.mjs';
+import { saveLinkedInConnection, refreshLinkedInConnection } from './connectors/linkedin.mjs';
+import { saveInstagramConnection, refreshInstagramConnection } from './connectors/instagram.mjs';
+import { saveTelegramConnection } from './connectors/telegram.mjs';
+import { configureMakeBridge } from './connectors/make-bridge.mjs';
 import { publishPost, testPlatforms, SUPPORTED_PLATFORMS } from './services/publisher.mjs';
 import { createScheduledPost, hydrateScheduler } from './services/scheduler.mjs';
 import { importLegacyAutomationSettings } from './services/legacy-import.mjs';
@@ -129,10 +130,17 @@ async function handleToolCall(name, args, auth) {
         workspaceId,
         platform: args.platform,
         connected: true,
+        provider: connection.provider || null,
         accountLabel: connection.accountLabel || null,
         expiresAt: connection.expiresAt || null,
         lastError: connection.lastError || null,
+        bridgeMode: String(connection.provider || '').startsWith('make'),
       });
+    }
+
+    case 'social.make_bridge.configure': {
+      const configured = await configureMakeBridge(workspaceId, args);
+      return mcpTextResult('Make bridge configured.', configured);
     }
 
     case 'social.telegram.connect': {
@@ -141,12 +149,21 @@ async function handleToolCall(name, args, auth) {
         workspaceId,
         platform: 'telegram',
         connected: true,
+        provider: saved.provider,
         accountLabel: saved.accountLabel,
         chatId: saved.chatId,
       });
     }
 
     case 'social.disconnect': {
+      const current = await getConnection(workspaceId, args.platform);
+      if (current && current.provider === 'make-env') {
+        return mcpTextResult(
+          `${args.platform} is configured from environment variables. Remove MAKE_BRIDGE_* envs to disconnect it.`,
+          { workspaceId, platform: args.platform, disconnected: false, source: 'env' },
+          true
+        );
+      }
       const existed = await deleteConnection(workspaceId, args.platform);
       return mcpTextResult(existed ? `${args.platform} disconnected.` : `${args.platform} had no saved connection.`, {
         workspaceId,
@@ -165,12 +182,10 @@ async function handleToolCall(name, args, auth) {
 
     case 'social.test.connection': {
       if (args.platform) {
-        const result = args.platform === 'linkedin'
-          ? await testLinkedInConnection(workspaceId)
-          : args.platform === 'instagram'
-            ? await testInstagramConnection(workspaceId)
-            : await testTelegramConnection(workspaceId);
-        return mcpTextResult(result.ok ? `${args.platform} connection is healthy.` : `${args.platform} connection check failed: ${result.error}`, result, !result.ok);
+        const [platform] = [args.platform];
+        const results = await testPlatforms(workspaceId, [platform]);
+        const result = results[platform];
+        return mcpTextResult(result.ok ? `${platform} connection is healthy.` : `${platform} connection check failed: ${result.error}`, result, !result.ok);
       }
       const results = await testPlatforms(workspaceId);
       return mcpTextResult('Completed connection checks.', { workspaceId, results });
