@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: arena-social-mcp
+    runtime: docker
+    plan: starter
+    autoDeploy: true
+    healthCheckPath: /health
+    dockerContext: .
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: MCP_PUBLIC_BASE_URL
+        sync: false
+      - key: MCP_BEARER_TOKEN
+        generateValue: true
+      - key: MCP_STORAGE_BACKEND
+        value: mysql
+      - key: MCP_SECRET_ENCRYPTION_KEY
+        generateValue: true
+      - key: MCP_DATABASE_URL
+        sync: false
+      - key: LINKEDIN_CLIENT_ID
+        sync: false
+      - key: LINKEDIN_CLIENT_SECRET
+        sync: false
+      - key: LINKEDIN_REDIRECT_URI
+        sync: false
+      - key: META_APP_ID
+        sync: false
+      - key: META_APP_SECRET
+        sync: false
+      - key: META_REDIRECT_URI
+        sync: false

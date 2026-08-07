@@ -81,6 +81,7 @@
 - `social.connections.list`
 - `social.connect.status`
 - `social.test.connection`
+- `social.import.legacy_settings`
 - `social.publish.post`
 - `social.schedule.post`
 - `social.publish.status`

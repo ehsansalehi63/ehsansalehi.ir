@@ -77,6 +77,19 @@ export const TOOL_DEFS = [
     },
   },
   {
+    name: 'social.import.legacy_settings',
+    description: 'Import existing social credentials from the legacy automation_settings table into MCP connections.',
+    requiredPermission: 'social.connections.write',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        workspaceId: { type: 'string' },
+        platforms: { type: 'array', items: { type: 'string', enum: ['linkedin', 'instagram', 'telegram'] } },
+        verify: { type: 'boolean', description: 'If true, run live verification after import.' }
+      }
+    },
+  },
+  {
     name: 'social.publish.post',
     description: 'Publish a post to one or many social platforms now.',
     requiredPermission: 'social.publish',

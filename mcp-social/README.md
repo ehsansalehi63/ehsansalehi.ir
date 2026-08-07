@@ -130,6 +130,32 @@ Telegram در این MVP با OAuth نیست. Arena باید این tool را ص
 }
 ```
 
+## Import از تنظیمات قدیمی سایت
+
+اگر MCP را به همان MySQL سایت وصل کنید، می‌توانید credentialهای قدیمی را از جدول `automation_settings` وارد کنید.
+
+نمونه:
+
+```json
+{
+  "name": "social.import.legacy_settings",
+  "arguments": {
+    "workspaceId": "default",
+    "platforms": ["linkedin", "instagram", "telegram"],
+    "verify": true
+  }
+}
+```
+
+این tool تنظیمات زیر را می‌خواند:
+
+- `telegram_bot_token`
+- `telegram_channel_id` / `telegram_chat_id`
+- `linkedin_access_token`
+- `linkedin_author_urn`
+- `instagram_access_token` / `fb_access_token`
+- `instagram_account_id`
+
 ## Storage در MVP / فاز بعدی
 
 این نسخه الان **دو backend** دارد:

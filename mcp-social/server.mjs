@@ -20,6 +20,7 @@ import { saveInstagramConnection, refreshInstagramConnection, testInstagramConne
 import { saveTelegramConnection, testTelegramConnection } from './connectors/telegram.mjs';
 import { publishPost, testPlatforms, SUPPORTED_PLATFORMS } from './services/publisher.mjs';
 import { createScheduledPost, hydrateScheduler } from './services/scheduler.mjs';
+import { importLegacyAutomationSettings } from './services/legacy-import.mjs';
 import { TOOL_DEFS, getToolDef, RESOURCE_DEFS, PROMPT_DEFS } from './lib/tool-registry.mjs';
 
 const workspaceBootstrap = new Set();
@@ -186,6 +187,18 @@ async function handleToolCall(name, args, auth) {
       };
       const result = await publishPost(workspaceId, payload);
       return mcpTextResult(result.ok ? 'Publish workflow completed.' : 'Publish workflow completed with errors.', result, !result.ok);
+    }
+
+    case 'social.import.legacy_settings': {
+      const imported = await importLegacyAutomationSettings(workspaceId, {
+        platforms: args.platforms,
+        verify: args.verify !== false,
+      });
+      return mcpTextResult(
+        imported.ok ? 'Legacy social settings were imported.' : 'Legacy import finished with no imported connections.',
+        imported,
+        !imported.ok
+      );
     }
 
     case 'social.schedule.post': {
