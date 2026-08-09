@@ -51,6 +51,61 @@ export async function isMcpSocialConfigured(): Promise<boolean> {
   return cfg.configured;
 }
 
+async function warmMcpHealth(url: string, timeoutMs = 20000) {
+  try {
+    await fetch(`${url}/health`, {
+      method: 'GET',
+      signal: AbortSignal.timeout(timeoutMs),
+      cache: 'no-store',
+    });
+  } catch {
+    // best-effort warm-up for sleeping Render instances
+  }
+}
+
+async function performToolRequest(cfg: Awaited<ReturnType<typeof getMcpSocialConfig>>, name: string, args: Record<string, unknown>, timeoutMs: number) {
+  const response = await fetch(`${cfg.url}/mcp`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${cfg.token}`,
+      'X-MCP-Workspace-Id': cfg.workspaceId,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      jsonrpc: '2.0',
+      id: `site-${Date.now()}`,
+      method: 'tools/call',
+      params: {
+        name,
+        arguments: {
+          workspaceId: cfg.workspaceId,
+          ...args,
+        },
+      },
+    }),
+    signal: AbortSignal.timeout(timeoutMs),
+  });
+
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    return { ok: false, message: `MCP HTTP ${response.status}` } satisfies McpToolResult;
+  }
+  if (data?.error) {
+    return { ok: false, message: data.error.message || 'MCP tool call failed' } satisfies McpToolResult;
+  }
+
+  const result = data?.result || {};
+  const structured = result?.structuredContent || {};
+
+  return {
+    ok: result?.isError ? false : Boolean(structured?.ok ?? true),
+    deliveryId: structured?.deliveryId,
+    results: structured?.results,
+    errors: structured?.errors,
+    message: result?.content?.[0]?.text || structured?.message || undefined,
+  } satisfies McpToolResult;
+}
+
 async function callMcpTool(name: string, args: Record<string, unknown>, timeoutMs = MCP_SOCIAL_TIMEOUT_MS): Promise<McpToolResult> {
   const cfg = await getMcpSocialConfig();
   if (!cfg.configured) {
@@ -58,48 +113,17 @@ async function callMcpTool(name: string, args: Record<string, unknown>, timeoutM
   }
 
   try {
-    const response = await fetch(`${cfg.url}/mcp`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${cfg.token}`,
-        'X-MCP-Workspace-Id': cfg.workspaceId,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        jsonrpc: '2.0',
-        id: `site-${Date.now()}`,
-        method: 'tools/call',
-        params: {
-          name,
-          arguments: {
-            workspaceId: cfg.workspaceId,
-            ...args,
-          },
-        },
-      }),
-      signal: AbortSignal.timeout(timeoutMs),
-    });
-
-    const data = await response.json().catch(() => null);
-    if (!response.ok) {
-      return { ok: false, message: `MCP HTTP ${response.status}` };
-    }
-    if (data?.error) {
-      return { ok: false, message: data.error.message || 'MCP tool call failed' };
-    }
-
-    const result = data?.result || {};
-    const structured = result?.structuredContent || {};
-
-    return {
-      ok: result?.isError ? false : Boolean(structured?.ok ?? true),
-      deliveryId: structured?.deliveryId,
-      results: structured?.results,
-      errors: structured?.errors,
-      message: result?.content?.[0]?.text || structured?.message || undefined,
-    };
+    await warmMcpHealth(cfg.url, Math.max(15000, Math.min(timeoutMs, 30000)));
+    return await performToolRequest(cfg, name, args, timeoutMs);
   } catch (error: any) {
-    return { ok: false, message: error?.message || String(error) };
+    const firstMessage = error?.message || String(error);
+    try {
+      await warmMcpHealth(cfg.url, 25000);
+      return await performToolRequest(cfg, name, args, Math.max(timeoutMs, 60000));
+    } catch (retryError: any) {
+      const retryMessage = retryError?.message || String(retryError);
+      return { ok: false, message: `${firstMessage}; retry failed: ${retryMessage}` };
+    }
   }
 }
 
