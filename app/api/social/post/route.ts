@@ -19,6 +19,7 @@ type SocialNewsRow = {
 
 async function getPendingNewsRows(limit: number): Promise<SocialNewsRow[]> {
   const safeLimit = Math.min(Math.max(Number.isFinite(limit) ? Math.floor(limit) : 2, 1), 10);
+  const queryLimit = Math.min(Math.max(safeLimit * 5, safeLimit), 50);
   const [columnRows] = await pool.execute('SHOW COLUMNS FROM news_posts');
   const available = new Set((columnRows as ColumnRow[]).map((column) => column.Field));
 
@@ -54,7 +55,7 @@ async function getPendingNewsRows(limit: number): Promise<SocialNewsRow[]> {
      FROM news_posts
      ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
      ORDER BY ${orderBy}
-     LIMIT ${safeLimit}`
+     LIMIT ${queryLimit}`
   );
 
   return (rows as any[]).map((row) => ({
@@ -117,6 +118,7 @@ export async function GET(request: NextRequest) {
 
     const results = [];
     for (const news of rows) {
+      if (results.length >= limit) break;
       const link = `https://ehsansalehi.ir/news/${news.id}`;
       const result = await postNewsToAllChannels(
         news.id,
@@ -129,12 +131,19 @@ export async function GET(request: NextRequest) {
       results.push({ id: news.id, title: news.title, ...result });
     }
 
+    const publishedCount = results.filter((item) => item.success).length;
+    const skippedCount = results.filter((item) => !item.success).length;
+
     return NextResponse.json({
       success: true,
       source,
       databaseWarning,
+      scannedRows: rows.length,
+      requestedLimit: limit,
+      publishedCount,
+      skippedCount,
       results,
-      message: `🎉 تعداد ${results.length} خبر روی شبکه‌های اجتماعی بررسی/منتشر شد`,
+      message: `🎉 ${publishedCount} خبر منتشر/بررسی شد و ${skippedCount} مورد اسکیپ یا ناموفق بود`,
     });
   } catch (error: any) {
     console.error('Social post error:', error);
