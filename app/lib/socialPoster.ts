@@ -2,6 +2,7 @@ import { pool } from './db';
 import { sendToLinkedIn } from './linkedinPoster';
 import { addWatermarkToImage } from './watermark';
 import { publishViaRelay, isRelayConfigured } from './relayClient';
+import { getMcpSocialConfig, publishToMcpSocialBridge } from './mcpSocialClient';
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
 const TELEGRAM_CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID || '';
@@ -553,20 +554,29 @@ export async function postNewsToAllChannels(
     return { success: false, results: {}, errors: { skip: 'News not translated to Persian' } };
   }
 
-  // Platforms managed by Base44 workflows
-  const SKIP_PLATFORMS = ['linkedin', 'instagram'];
+  const mcpConfig = await getMcpSocialConfig();
+  const mcpPlatforms = new Set((mcpConfig.platforms || []).map((item) => item.toLowerCase()));
+  const skip = (platform: string) => mcpPlatforms.has(platform);
 
-  const skip = (p: string) => SKIP_PLATFORMS.includes(p);
-
-  const [tg, li, bl, et, rb, fb, wa, ig] = await Promise.all([
-    sendToTelegram(title, summary, imageUrl, link, sourceName),
-    skip('linkedin') ? Promise.resolve({ success: false, error: 'skipped' }) : sendToLinkedIn(title, summary, imageUrl, link),
+  const [tg, li, bl, et, rb, fb, wa, ig, mcpBridge] = await Promise.all([
+    skip('telegram') ? Promise.resolve({ success: false, error: 'handled-by-mcp' }) : sendToTelegram(title, summary, imageUrl, link, sourceName),
+    skip('linkedin') ? Promise.resolve({ success: false, error: 'handled-by-mcp' }) : sendToLinkedIn(title, summary, imageUrl, link),
     sendToBale(title, summary, imageUrl, link, sourceName),
     sendToEitaa(title, summary, imageUrl, link, sourceName),
     sendToRubika(title, summary, imageUrl, link, sourceName),
-    sendToFacebook(title, summary, imageUrl, link),
+    skip('facebook') ? Promise.resolve({ success: false, error: 'handled-by-mcp' }) : sendToFacebook(title, summary, imageUrl, link),
     sendToWhatsAppChannel(title, summary, link),
-    skip('instagram') ? Promise.resolve({ success: false, error: 'skipped' }) : sendToInstagram(title, summary, imageUrl, link),
+    skip('instagram') ? Promise.resolve({ success: false, error: 'handled-by-mcp' }) : sendToInstagram(title, summary, imageUrl, link),
+    mcpConfig.configured && mcpPlatforms.size > 0
+      ? publishToMcpSocialBridge({
+          title,
+          content: summary,
+          imageUrl: resolveImageUrl(imageUrl),
+          link,
+          platforms: [...mcpPlatforms],
+          dryRun: false,
+        })
+      : Promise.resolve(null),
   ]);
 
   const results: Record<string, boolean> = {
@@ -581,14 +591,29 @@ export async function postNewsToAllChannels(
   };
 
   const errors: Record<string, string> = {};
-  if (!tg.success && tg.error) errors.telegram = tg.error;
-  if (!li.success && li.error) errors.linkedin = li.error;
+  if (!tg.success && tg.error && tg.error !== 'handled-by-mcp') errors.telegram = tg.error;
+  if (!li.success && li.error && li.error !== 'handled-by-mcp') errors.linkedin = li.error;
   if (!bl.success && bl.error) errors.bale = bl.error;
   if (!et.success && et.error) errors.eitaa = et.error;
   if (!rb.success && rb.error) errors.rubika = rb.error;
-  if (!fb.success && fb.error) errors.facebook = fb.error;
+  if (!fb.success && fb.error && fb.error !== 'handled-by-mcp') errors.facebook = fb.error;
   if (!wa.success && wa.error) errors.whatsapp = wa.error;
-  if (!ig.success && ig.error) errors.instagram = ig.error;
+  if (!ig.success && ig.error && ig.error !== 'handled-by-mcp') errors.instagram = ig.error;
+
+  if (mcpBridge) {
+    for (const platform of Object.keys(mcpBridge.results || {})) {
+      const item = (mcpBridge.results as Record<string, any>)[platform];
+      results[platform] = Boolean(item?.ok);
+    }
+    for (const [platform, message] of Object.entries(mcpBridge.errors || {})) {
+      if (message) errors[platform] = message;
+    }
+    if (!mcpBridge.ok && mcpBridge.message) {
+      for (const platform of mcpPlatforms) {
+        if (!results[platform]) errors[platform] ||= mcpBridge.message;
+      }
+    }
+  }
 
   const success = Object.values(results).some((val) => val === true);
 
@@ -597,7 +622,7 @@ export async function postNewsToAllChannels(
       `UPDATE news_posts
        SET posted_to_social = ?
        WHERE id = ?`,
-      [JSON.stringify({ results, errors }), newsId]
+      [JSON.stringify({ results, errors, mcp: mcpBridge ? { ok: mcpBridge.ok, message: mcpBridge.message, deliveryId: mcpBridge.deliveryId } : null }), newsId]
     );
   } catch (error: any) {
     console.error('⚠️ Social posting completed, but DB status update failed:', {
