@@ -253,6 +253,48 @@ async function testWhatsApp(settings: Record<string, string>): Promise<TestResul
   return notConfigured('WhatsApp');
 }
 
+async function testMcpSocial(settings: Record<string, string>): Promise<TestResult> {
+  const baseUrl = (pick(settings, ['MCP_SOCIAL_URL'], ['mcp_social_url']) || '').replace(/\/+$/, '');
+  const token = pick(settings, ['MCP_SOCIAL_TOKEN'], ['mcp_social_token']);
+  const workspaceId = pick(settings, ['MCP_SOCIAL_WORKSPACE_ID'], ['mcp_social_workspace_id']) || 'default';
+
+  if (!baseUrl || !token) return notConfigured('MCP Social Bridge');
+
+  try {
+    const { response, data } = await getJson(`${baseUrl}/mcp`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'X-MCP-Workspace-Id': workspaceId,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 'site-test',
+        method: 'tools/call',
+        params: {
+          name: 'social.connections.list',
+          arguments: { workspaceId },
+        },
+      }),
+    }, 15000);
+
+    const structured = data?.result?.structuredContent;
+    const connections = structured?.connections || {};
+    return {
+      configured: true,
+      ok: response.ok && !data?.error,
+      status: response.status,
+      message: response.ok && !data?.error ? 'MCP Social Bridge پاسخ داد.' : 'MCP Social Bridge خطا داد.',
+      detail: response.ok && !data?.error
+        ? { workspaceId, connections: Object.keys(connections) }
+        : summarizeApiResponse(data?.error || data),
+    };
+  } catch (error: any) {
+    return { configured: true, ok: false, status: 'exception', message: 'تست MCP Social Bridge ناموفق شد.', detail: error?.message || String(error) };
+  }
+}
+
 async function testRssFeeds(): Promise<TestResult> {
   const feeds = [
     'https://www.coindesk.com/arc/outboundfeeds/rss/',
@@ -293,7 +335,7 @@ export async function GET(request: NextRequest) {
   const settings = await getAutomationSettings();
   const startedAt = Date.now();
 
-  const [database, openai, telegram, linkedin, bale, eitaa, rubika, facebook, instagram, whatsapp, rssFeeds] = await Promise.all([
+  const [database, openai, telegram, linkedin, bale, eitaa, rubika, facebook, instagram, whatsapp, mcpSocial, rssFeeds] = await Promise.all([
     testDatabase(),
     testOpenAI(settings),
     testTelegram(settings),
@@ -304,10 +346,11 @@ export async function GET(request: NextRequest) {
     testFacebook(settings),
     testInstagram(settings),
     testWhatsApp(settings),
+    testMcpSocial(settings),
     testRssFeeds(),
   ]);
 
-  const tests = { database, openai, telegram, linkedin, bale, eitaa, rubika, facebook, instagram, whatsapp, rssFeeds };
+  const tests = { database, openai, telegram, linkedin, bale, eitaa, rubika, facebook, instagram, whatsapp, mcpSocial, rssFeeds };
   const configured = Object.values(tests).filter((test) => test.configured).length;
   const ok = Object.values(tests).filter((test) => test.ok).length;
 
