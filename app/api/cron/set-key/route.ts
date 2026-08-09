@@ -41,6 +41,10 @@ export async function POST(request: NextRequest) {
       'linkedin_author_urn',
       'instagram_access_token',
       'instagram_account_id',
+      'mcp_social_url',
+      'mcp_social_token',
+      'mcp_social_workspace_id',
+      'mcp_social_platforms',
     ];
 
     if (!allowedKeys.includes(key)) {
