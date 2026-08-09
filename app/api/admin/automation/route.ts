@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     // 2. وضعیت اتصال شبکه‌های اجتماعی (ترکیب متغیرهای Vercel و تنظیمات دیتابیس هاستینگر)
     const status = {
       openai: Boolean(process.env.OPENAI_API_KEY || dbSettings['openai_api_key']),
-      telegram: Boolean((process.env.TELEGRAM_BOT_TOKEN || dbSettings['telegram_bot_token']) && (process.env.TELEGRAM_CHANNEL_ID || dbSettings['telegram_channel_id'] || dbSettings['telegram_chat_id'])),
+      telegram: Boolean((process.env.TELEGRAM_BOT_TOKEN || dbSettings['telegram_bot_token']) && (process.env.TELEGRAM_CHANNEL_ID || process.env.TELEGRAM_CHAT_ID || dbSettings['telegram_channel_id'] || dbSettings['telegram_chat_id'])),
       linkedin: Boolean(process.env.LINKEDIN_ACCESS_TOKEN || dbSettings['linkedin_access_token']),
       bale: Boolean((process.env.BALE_BOT_TOKEN || dbSettings['bale_bot_token'] || dbSettings['bale_token']) && (process.env.BALE_CHANNEL_ID || process.env.BALE_CHAT_ID || dbSettings['bale_channel_id'] || dbSettings['bale_chat_id'])),
       eitaa: Boolean((process.env.EITAA_BOT_TOKEN || dbSettings['eitaa_bot_token'] || dbSettings['eitaa_token']) && (process.env.EITAA_CHANNEL_ID || process.env.EITAA_CHAT_ID || dbSettings['eitaa_channel_id'] || dbSettings['eitaa_chat_id'])),
@@ -41,6 +41,7 @@ export async function GET(request: NextRequest) {
       whatsapp: Boolean(process.env.CALLMEBOT_API_KEY || dbSettings['callmebot_key'] || process.env.WHATSAPP_ACCESS_TOKEN || dbSettings['whatsapp_access_token']),
       facebook: Boolean(process.env.FB_PAGE_ACCESS_TOKEN || dbSettings['fb_access_token']),
       instagram: Boolean(process.env.INSTAGRAM_ACCESS_TOKEN || dbSettings['instagram_access_token'] || process.env.FB_PAGE_ACCESS_TOKEN || dbSettings['fb_access_token']),
+      mcp_social: Boolean((process.env.MCP_SOCIAL_URL || dbSettings['mcp_social_url']) && (process.env.MCP_SOCIAL_TOKEN || dbSettings['mcp_social_token'])),
       webhook: true, // وب‌هوک داخلی سایت همیشه فعال است
     };
 
@@ -99,6 +100,10 @@ export async function POST(request: NextRequest) {
       'rubika_bot_token',
       'rubika_channel_id',
       'rubika_chat_id',
+      'mcp_social_url',
+      'mcp_social_token',
+      'mcp_social_workspace_id',
+      'mcp_social_platforms',
     ];
 
     for (const key of keysToSave) {
