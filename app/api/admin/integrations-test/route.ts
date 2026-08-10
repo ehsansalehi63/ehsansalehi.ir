@@ -103,7 +103,7 @@ async function testOpenAI(settings: Record<string, string>): Promise<TestResult>
   const apiKey = pick(settings, ['OPENAI_API_KEY'], ['openai_api_key']).trim();
   if (!apiKey || apiKey.includes('placeholder')) return notConfigured('OPENAI_API_KEY');
 
-  const baseURL = (pick(settings, ['OPENAI_BASE_URL'], ['openai_base_url']) || 'https://api.gapgpt.ir/v1').replace(/\/+$/, '');
+  const baseURL = (pick(settings, ['OPENAI_BASE_URL'], ['openai_base_url']) || 'https://api.gapgpt.app/v1').replace(/\/+$/, '');
   const model = pick(settings, ['OPENAI_MODEL'], ['openai_model']) || 'gpt-4o-mini';
 
   try {
