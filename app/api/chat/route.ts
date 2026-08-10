@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
 
     const openai = new OpenAI({
       apiKey: apiKey,
-      baseURL: process.env.OPENAI_BASE_URL || 'https://api.gapgpt.ir/v1',
+      baseURL: process.env.OPENAI_BASE_URL || 'https://api.gapgpt.app/v1',
     });
 
     const response = await openai.chat.completions.create({
