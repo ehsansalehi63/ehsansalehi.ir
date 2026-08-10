@@ -25,48 +25,51 @@ export async function analyzeAndTranslateNews(
     };
   }
 
-  const apiKey = FALLBACK_GATE_KEY;
-  console.log('🔄 Using gate_key with gapgpt.app for translation');
+  const configuredKey = process.env.OPENAI_API_KEY || await getAutomationSetting('openai_api_key');
+  const apiKey = configuredKey || FALLBACK_GATE_KEY;
+  const baseUrl = (process.env.OPENAI_BASE_URL || await getAutomationSetting('openai_base_url') || 'https://api.gapgpt.app/v1').replace(/\/+$/, '');
 
   try {
-    const prompt = `شما یک نویسنده و مترجم حرفه‌ای هستید که اخبار فناوری را به فارسی روان و جذاب ترجمه و خلاصه‌نویسی می‌کند.
+    const prompt = `شما یک دبیر حرفه‌ای خبر هستید. خبر انگلیسی را به فارسی روان و استاندارد خبری تبدیل کن.
 عنوان اصلی خبر: "${title}"
 منبع: "${sourceName}"
 متن اصلی خبر: """
-${content.slice(0, 2000)}
+${content.slice(0, 2500)}
 """
 
-وظایف شما:
-1. یک عنوان فارسی جذاب و سئوشده (حداکثر ۱۰۰ کاراکتر).
-2. یک خلاصه ۲-۳ خطی (حدود ۲۰۰ کاراکتر).
-3. کل متن را به فارسی روان و دقیق ترجمه کنید.
+خروجی باید کاملاً فارسی باشد و این شروط را رعایت کند:
+1. title: فقط فارسی، جذاب، خبری، حداکثر ۱۰۰ کاراکتر.
+2. summary: فقط فارسی، ۲ تا ۳ جمله، حداکثر ۲۵۰ کاراکتر.
+3. content: فقط فارسی، بدون انگلیسی‌نویسی غیرضروری، روان و کامل.
+4. هیچ توضیح اضافه، markdown، code fence یا متن بیرون از JSON نده.
 
-پاسخ را در قالب JSON معتبر ارسال کنید (بدون مارک‌داون):
-{"title":"عنوان","summary":"خلاصه","content":"متن کامل"}`;
+فقط این JSON را برگردان:
+{"title":"...","summary":"...","content":"..."}`;
 
     const model = process.env.OPENAI_MODEL || await getAutomationSetting('openai_model') || 'gpt-4o-mini';
-    console.log('🔄 Calling gapgpt.app with model:', model);
+    console.log('🔄 Calling translation provider:', { baseUrl, model, configuredKey: Boolean(configuredKey) });
 
-    const res = await fetch('https://api.gapgpt.app/v1/chat/completions', {
+    const res = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: model,
+        model,
         messages: [{ role: 'user', content: prompt }],
-        temperature: 0.7,
+        temperature: 0.2,
+        response_format: { type: 'json_object' },
       }),
-      signal: AbortSignal.timeout(25000),
+      signal: AbortSignal.timeout(30000),
     });
 
-    console.log('🔄 gapgpt.app response status:', res.status);
+    console.log('🔄 Translation provider response status:', res.status);
 
     if (!res.ok) {
       const errText = await res.text();
-      console.error('❌ gapgpt.app error:', res.status, errText.slice(0, 200));
-      throw new Error(`gapgpt.app returned ${res.status}: ${errText.slice(0, 100)}`);
+      console.error('❌ Translation provider error:', res.status, errText.slice(0, 200));
+      throw new Error(`translation provider returned ${res.status}: ${errText.slice(0, 120)}`);
     }
 
     const data = await res.json();
