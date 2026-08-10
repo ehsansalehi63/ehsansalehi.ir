@@ -3,6 +3,7 @@ import { sendToLinkedIn } from './linkedinPoster';
 import { addWatermarkToImage } from './watermark';
 import { publishViaRelay, isRelayConfigured } from './relayClient';
 import { getMcpSocialConfig, publishToMcpSocialBridge } from './mcpSocialClient';
+import { getMakeSocialConfig, publishViaMakeSocialBridge } from './makeSocialClient';
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
 const TELEGRAM_CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID || '';
@@ -554,29 +555,41 @@ export async function postNewsToAllChannels(
     return { success: false, results: {}, errors: { skip: 'News not translated to Persian' } };
   }
 
+  const makeConfig = await getMakeSocialConfig();
+  const makePlatforms = new Set((makeConfig.platforms || []).map((item) => item.toLowerCase()));
   const mcpConfig = await getMcpSocialConfig();
   const mcpPlatforms = new Set((mcpConfig.platforms || []).map((item) => item.toLowerCase()));
-  const skip = (platform: string) => mcpPlatforms.has(platform);
+  const bridgePlatforms = makeConfig.configured && makePlatforms.size > 0 ? makePlatforms : mcpPlatforms;
+  const bridgeMode = makeConfig.configured && makePlatforms.size > 0 ? 'make' : (mcpConfig.configured && mcpPlatforms.size > 0 ? 'mcp' : null);
+  const skip = (platform: string) => bridgePlatforms.has(platform);
 
-  const [tg, li, bl, et, rb, fb, wa, ig, mcpBridge] = await Promise.all([
-    skip('telegram') ? Promise.resolve({ success: false, error: 'handled-by-mcp' }) : sendToTelegram(title, summary, imageUrl, link, sourceName),
-    skip('linkedin') ? Promise.resolve({ success: false, error: 'handled-by-mcp' }) : sendToLinkedIn(title, summary, imageUrl, link),
+  const [tg, li, bl, et, rb, fb, wa, ig, bridgeResult] = await Promise.all([
+    skip('telegram') ? Promise.resolve({ success: false, error: `handled-by-${bridgeMode}` }) : sendToTelegram(title, summary, imageUrl, link, sourceName),
+    skip('linkedin') ? Promise.resolve({ success: false, error: `handled-by-${bridgeMode}` }) : sendToLinkedIn(title, summary, imageUrl, link),
     sendToBale(title, summary, imageUrl, link, sourceName),
     sendToEitaa(title, summary, imageUrl, link, sourceName),
     sendToRubika(title, summary, imageUrl, link, sourceName),
-    skip('facebook') ? Promise.resolve({ success: false, error: 'handled-by-mcp' }) : sendToFacebook(title, summary, imageUrl, link),
+    skip('facebook') ? Promise.resolve({ success: false, error: `handled-by-${bridgeMode}` }) : sendToFacebook(title, summary, imageUrl, link),
     sendToWhatsAppChannel(title, summary, link),
-    skip('instagram') ? Promise.resolve({ success: false, error: 'handled-by-mcp' }) : sendToInstagram(title, summary, imageUrl, link),
-    mcpConfig.configured && mcpPlatforms.size > 0
-      ? publishToMcpSocialBridge({
+    skip('instagram') ? Promise.resolve({ success: false, error: `handled-by-${bridgeMode}` }) : sendToInstagram(title, summary, imageUrl, link),
+    bridgeMode === 'make'
+      ? publishViaMakeSocialBridge({
           title,
           content: summary,
           imageUrl: resolveImageUrl(imageUrl),
           link,
-          platforms: [...mcpPlatforms],
-          dryRun: false,
+          platforms: [...bridgePlatforms],
         })
-      : Promise.resolve(null),
+      : bridgeMode === 'mcp'
+        ? publishToMcpSocialBridge({
+            title,
+            content: summary,
+            imageUrl: resolveImageUrl(imageUrl),
+            link,
+            platforms: [...bridgePlatforms],
+            dryRun: false,
+          })
+        : Promise.resolve(null),
   ]);
 
   const results: Record<string, boolean> = {
@@ -591,38 +604,46 @@ export async function postNewsToAllChannels(
   };
 
   const errors: Record<string, string> = {};
-  if (!tg.success && tg.error && tg.error !== 'handled-by-mcp') errors.telegram = tg.error;
-  if (!li.success && li.error && li.error !== 'handled-by-mcp') errors.linkedin = li.error;
+  if (!tg.success && tg.error && !String(tg.error).startsWith('handled-by-')) errors.telegram = tg.error;
+  if (!li.success && li.error && !String(li.error).startsWith('handled-by-')) errors.linkedin = li.error;
   if (!bl.success && bl.error) errors.bale = bl.error;
   if (!et.success && et.error) errors.eitaa = et.error;
   if (!rb.success && rb.error) errors.rubika = rb.error;
-  if (!fb.success && fb.error && fb.error !== 'handled-by-mcp') errors.facebook = fb.error;
+  if (!fb.success && fb.error && !String(fb.error).startsWith('handled-by-')) errors.facebook = fb.error;
   if (!wa.success && wa.error) errors.whatsapp = wa.error;
-  if (!ig.success && ig.error && ig.error !== 'handled-by-mcp') errors.instagram = ig.error;
+  if (!ig.success && ig.error && !String(ig.error).startsWith('handled-by-')) errors.instagram = ig.error;
 
-  if (mcpBridge) {
-    for (const platform of Object.keys(mcpBridge.results || {})) {
-      const item = (mcpBridge.results as Record<string, any>)[platform];
+  if (bridgeResult) {
+    for (const platform of Object.keys((bridgeResult as any).results || {})) {
+      const item = ((bridgeResult as any).results as Record<string, any>)[platform];
       results[platform] = Boolean(item?.ok);
     }
-    for (const [platform, message] of Object.entries(mcpBridge.errors || {})) {
-      if (message) errors[platform] = message;
+    for (const [platform, message] of Object.entries((bridgeResult as any).errors || {})) {
+      if (message) errors[platform] = message as string;
     }
-    if (!mcpBridge.ok && mcpBridge.message) {
-      for (const platform of mcpPlatforms) {
-        if (!results[platform]) errors[platform] ||= mcpBridge.message;
+    if (!bridgeResult.ok && (bridgeResult as any).message) {
+      for (const platform of bridgePlatforms) {
+        if (!results[platform]) errors[platform] ||= (bridgeResult as any).message;
       }
     }
   }
 
   const success = Object.values(results).some((val) => val === true);
+  const bridgeMeta = bridgeResult
+    ? {
+        ok: bridgeResult.ok,
+        mode: bridgeMode,
+        message: (bridgeResult as any).message || null,
+        deliveryId: (bridgeResult as any).deliveryId || null,
+      }
+    : null;
 
   try {
     await pool.execute(
       `UPDATE news_posts
        SET posted_to_social = ?
        WHERE id = ?`,
-      [JSON.stringify({ results, errors, mcp: mcpBridge ? { ok: mcpBridge.ok, message: mcpBridge.message, deliveryId: mcpBridge.deliveryId } : null }), newsId]
+      [JSON.stringify({ results, errors, bridge: bridgeMeta }), newsId]
     );
   } catch (error: any) {
     console.error('⚠️ Social posting completed, but DB status update failed:', {
