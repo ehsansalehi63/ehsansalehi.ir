@@ -261,7 +261,9 @@ async function testMcpSocial(settings: Record<string, string>): Promise<TestResu
   if (!baseUrl || !token) return notConfigured('MCP Social Bridge');
 
   try {
-    const { response, data } = await getJson(`${baseUrl}/mcp`, {
+    await fetch(`${baseUrl}/health`, { signal: timeoutSignal(20000), cache: 'no-store' }).catch(() => null);
+
+    const callOnce = async (ms: number) => getJson(`${baseUrl}/mcp`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -277,7 +279,16 @@ async function testMcpSocial(settings: Record<string, string>): Promise<TestResu
           arguments: { workspaceId },
         },
       }),
-    }, 15000);
+    }, ms);
+
+    let response: Response;
+    let data: any;
+    try {
+      ({ response, data } = await callOnce(20000));
+    } catch {
+      await fetch(`${baseUrl}/health`, { signal: timeoutSignal(25000), cache: 'no-store' }).catch(() => null);
+      ({ response, data } = await callOnce(45000));
+    }
 
     const structured = data?.result?.structuredContent;
     const connections = structured?.connections || {};
