@@ -45,6 +45,9 @@ export async function POST(request: NextRequest) {
       'mcp_social_token',
       'mcp_social_workspace_id',
       'mcp_social_platforms',
+      'make_translate_webhook_url',
+      'make_translate_auth_header_name',
+      'make_translate_auth_header_value',
     ];
 
     if (!allowedKeys.includes(key)) {
