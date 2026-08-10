@@ -86,11 +86,15 @@ ${content.slice(0, 2000)}
       }
     }
 
-    console.log('✅ Translation succeeded:', parsed.title?.slice(0, 50));
+    const faTitle = String(parsed.title || title).trim();
+    const faSummary = String(parsed.summary || content.slice(0, 200)).trim();
+    const faContent = String(parsed.content || content).trim();
+
+    console.log('✅ Translation succeeded:', faTitle.slice(0, 50));
     return {
-      title: parsed.title || title,
-      summary: parsed.summary || content.slice(0, 200),
-      content: parsed.content || content,
+      title: faTitle,
+      summary: faSummary,
+      content: faContent,
     };
   } catch (error) {
     console.error('❌ خطا در ترجمه:', (error as Error)?.message || String(error));
