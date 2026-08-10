@@ -1,4 +1,5 @@
 import { pool } from './db';
+import { isMakeTranslateConfigured, translateViaMake } from './makeTranslateClient';
 
 // Fallback gate key for gapgpt.app (also stored in relay config)
 const FALLBACK_GATE_KEY = 'sk-DGNaVGvNi7RhsW1FpsweR1GxrqQRq11wuJo53NSr1Fw1PMwE';
@@ -23,6 +24,16 @@ export async function analyzeAndTranslateNews(
       summary: title,
       content: title,
     };
+  }
+
+  if (await isMakeTranslateConfigured()) {
+    try {
+      const translated = await translateViaMake({ title, content, sourceName });
+      console.log('✅ Translation succeeded via Make:', translated.title.slice(0, 50));
+      return translated;
+    } catch (error) {
+      console.error('⚠️ Make translation failed, falling back to direct provider:', (error as Error)?.message || String(error));
+    }
   }
 
   const configuredKey = process.env.OPENAI_API_KEY || await getAutomationSetting('openai_api_key');
