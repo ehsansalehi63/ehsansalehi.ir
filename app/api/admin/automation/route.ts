@@ -42,6 +42,7 @@ export async function GET(request: NextRequest) {
       facebook: Boolean(process.env.FB_PAGE_ACCESS_TOKEN || dbSettings['fb_access_token']),
       instagram: Boolean(process.env.INSTAGRAM_ACCESS_TOKEN || dbSettings['instagram_access_token'] || process.env.FB_PAGE_ACCESS_TOKEN || dbSettings['fb_access_token']),
       mcp_social: Boolean((process.env.MCP_SOCIAL_URL || dbSettings['mcp_social_url']) && (process.env.MCP_SOCIAL_TOKEN || dbSettings['mcp_social_token'])),
+      make_social: Boolean(process.env.MAKE_SOCIAL_WEBHOOK_URL || dbSettings['make_social_webhook_url']),
       make_translate: Boolean(process.env.MAKE_TRANSLATE_WEBHOOK_URL || dbSettings['make_translate_webhook_url']),
       webhook: true, // وب‌هوک داخلی سایت همیشه فعال است
     };
@@ -105,6 +106,10 @@ export async function POST(request: NextRequest) {
       'mcp_social_token',
       'mcp_social_workspace_id',
       'mcp_social_platforms',
+      'make_social_webhook_url',
+      'make_social_auth_header_name',
+      'make_social_auth_header_value',
+      'make_social_platforms',
       'make_translate_webhook_url',
       'make_translate_auth_header_name',
       'make_translate_auth_header_value',
