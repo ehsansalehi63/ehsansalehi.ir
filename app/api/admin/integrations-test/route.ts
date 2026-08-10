@@ -253,6 +253,44 @@ async function testWhatsApp(settings: Record<string, string>): Promise<TestResul
   return notConfigured('WhatsApp');
 }
 
+async function testMakeTranslate(settings: Record<string, string>): Promise<TestResult> {
+  const webhookUrl = (pick(settings, ['MAKE_TRANSLATE_WEBHOOK_URL'], ['make_translate_webhook_url']) || '').replace(/\/+$/, '');
+  const authHeaderName = pick(settings, ['MAKE_TRANSLATE_AUTH_HEADER_NAME'], ['make_translate_auth_header_name']);
+  const authHeaderValue = pick(settings, ['MAKE_TRANSLATE_AUTH_HEADER_VALUE'], ['make_translate_auth_header_value']);
+
+  if (!webhookUrl) return notConfigured('Make Translate Bridge');
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'X-Make-Bridge-Source': 'ehsansalehi-site',
+  };
+  if (authHeaderName && authHeaderValue) headers[authHeaderName] = authHeaderValue;
+
+  try {
+    const { response, data } = await getJson(webhookUrl, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        action: 'translate_news',
+        title: 'Test English Headline',
+        content: 'This is a short English article body used to verify the Make translation bridge.',
+        sourceName: 'Integration Test',
+        sentAt: new Date().toISOString(),
+      }),
+    }, 45000);
+
+    return {
+      configured: true,
+      ok: response.ok && Boolean(data?.title && data?.summary && data?.content),
+      status: response.status,
+      message: response.ok ? 'Make Translate Bridge پاسخ داد.' : 'Make Translate Bridge خطا داد.',
+      detail: response.ok ? { title: String(data?.title || '').slice(0, 40) } : summarizeApiResponse(data),
+    };
+  } catch (error: any) {
+    return { configured: true, ok: false, status: 'exception', message: 'تست Make Translate Bridge ناموفق شد.', detail: error?.message || String(error) };
+  }
+}
+
 async function testMcpSocial(settings: Record<string, string>): Promise<TestResult> {
   const baseUrl = (pick(settings, ['MCP_SOCIAL_URL'], ['mcp_social_url']) || '').replace(/\/+$/, '');
   const token = pick(settings, ['MCP_SOCIAL_TOKEN'], ['mcp_social_token']);
@@ -346,9 +384,10 @@ export async function GET(request: NextRequest) {
   const settings = await getAutomationSettings();
   const startedAt = Date.now();
 
-  const [database, openai, telegram, linkedin, bale, eitaa, rubika, facebook, instagram, whatsapp, mcpSocial, rssFeeds] = await Promise.all([
+  const [database, openai, makeTranslate, telegram, linkedin, bale, eitaa, rubika, facebook, instagram, whatsapp, mcpSocial, rssFeeds] = await Promise.all([
     testDatabase(),
     testOpenAI(settings),
+    testMakeTranslate(settings),
     testTelegram(settings),
     testLinkedIn(settings),
     testBale(settings),
@@ -361,7 +400,7 @@ export async function GET(request: NextRequest) {
     testRssFeeds(),
   ]);
 
-  const tests = { database, openai, telegram, linkedin, bale, eitaa, rubika, facebook, instagram, whatsapp, mcpSocial, rssFeeds };
+  const tests = { database, openai, makeTranslate, telegram, linkedin, bale, eitaa, rubika, facebook, instagram, whatsapp, mcpSocial, rssFeeds };
   const configured = Object.values(tests).filter((test) => test.configured).length;
   const ok = Object.values(tests).filter((test) => test.ok).length;
 
