@@ -63,6 +63,8 @@
 
 ## ۴. استک فنی (الزامی — بدون انحراف)
 
+> **به‌روزرسانی:** نسخهٔ معتبر استک، پرامپت `18-master-build-prompt.md` است. به‌صورت خلاصه: Next.js نصب‌شده (RSC + Server Actions + ISR)، TypeScript strict، Tailwind + shadcn/ui + Radix + Framer Motion، TanStack Query + Zustand، React Hook Form + zod، mysql2 پارامتری، next/image + next/font، PWA، a11y، Core Web Vitals ≥ ۹۵. RTL درجه‌یک فارسی (فونت وزیرمتن + ارزشمند، اعداد/تاریخ fa-IR). همهٔ درایورهای زیرساخت پشت متغیرهای محیطی.
+
 | لایه | انتخاب | نکته |
 |---|---|---|
 | فریم‌ورک | **Next.js App Router (نسخهٔ نصب‌شده در package.json) + TypeScript** | نسخهٔ Next نصب‌شده ممکن است breaking change داشته باشد؛ قبل از کدنویسی راهنمای داخل `node_modules/next/dist/docs/` را بخوان (AGENTS.md همین را می‌گوید). |
